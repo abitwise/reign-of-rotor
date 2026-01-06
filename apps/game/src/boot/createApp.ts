@@ -7,6 +7,7 @@ import { createAppLayout } from './layout';
 import type { PhysicsWorldContext } from '../physics/world';
 import { bootstrapRenderer, type RenderContext } from '../render/bootstrap';
 import { bootstrapPlayerInput, type PlayerInputContext } from '../core/input/playerInput';
+import { bootstrapGameplay, type GameplayContext } from './gameplay';
 
 export type GameApp = {
   config: AppConfig;
@@ -14,6 +15,7 @@ export type GameApp = {
   loop: FixedTimestepLoop;
   physics: Promise<PhysicsWorldContext>;
   renderer: Promise<RenderContext>;
+  gameplay: Promise<GameplayContext>;
   input: PlayerInputContext;
   destroy: () => void;
 };
@@ -49,6 +51,30 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       console.error('Failed to wire renderer to physics transforms', error);
     });
 
+  const gameplay = physics
+    .then((context) => {
+      const gameplayContext = bootstrapGameplay({
+        physics: context,
+        scheduler,
+        input: input.state
+      });
+
+      renderer
+        .then((renderContext) => {
+          renderContext.bindEntityMesh(gameplayContext.player.entity, 'apache-gunship');
+          renderContext.setCameraTarget(gameplayContext.player.entity);
+        })
+        .catch((error) => {
+          console.error('Failed to bind player helicopter mesh', error);
+        });
+
+      return gameplayContext;
+    })
+    .catch((error) => {
+      console.error('Failed to bootstrap gameplay', error);
+      throw error;
+    });
+
   loop.start();
 
   return {
@@ -56,6 +82,7 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
     scheduler,
     physics,
     renderer,
+    gameplay,
     input,
     loop,
     destroy: () => {
