@@ -27,7 +27,7 @@ export const createAltimeterState = (): AltimeterState => ({
   impactSeverity: 0
 });
 
-const MAX_RAY_DISTANCE = 500;
+const MAX_RAY_DISTANCE = 2000;
 const GROUNDED_ALTITUDE_THRESHOLD = 0.9;
 const LANDED_VERTICAL_SPEED_THRESHOLD = 0.8;
 const HARD_LANDING_SPEED_THRESHOLD = 4.5;
@@ -46,10 +46,10 @@ export const createAltimeterSystem = (
 
 const updateAltimeter = (heli: PlayerHelicopter, physics: PhysicsWorldContext): void => {
   const translation = heli.body.translation();
-  const ray = new physics.rapier.Ray(translation, { x: 0, y: -1, z: 0 });
+  const downRay = new physics.rapier.Ray(translation, { x: 0, y: -1, z: 0 });
 
-  const hit = physics.world.castRay(
-    ray,
+  let hit = physics.world.castRay(
+    downRay,
     MAX_RAY_DISTANCE,
     true,
     undefined,
@@ -58,7 +58,24 @@ const updateAltimeter = (heli: PlayerHelicopter, physics: PhysicsWorldContext): 
     heli.body
   );
 
-  const altitude = hit?.timeOfImpact ?? Infinity;
+  let altitude = hit?.timeOfImpact ?? Infinity;
+
+  // If downward ray didn't hit (e.g., helicopter below ground), try upward ray
+  if (altitude === Infinity) {
+    const upRay = new physics.rapier.Ray(translation, { x: 0, y: 1, z: 0 });
+    hit = physics.world.castRay(
+      upRay,
+      MAX_RAY_DISTANCE,
+      true,
+      undefined,
+      undefined,
+      undefined,
+      heli.body
+    );
+    if (hit) {
+      altitude = -hit.timeOfImpact; // Negative because we're below ground
+    }
+  }
   const velocity = heli.body.linvel();
   const verticalSpeed = velocity.y;
   const horizontalSpeed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);

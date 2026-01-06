@@ -24,13 +24,13 @@ export const createGroundPlane = (physics: PhysicsWorldContext): Entity => {
 
   const body = createRigidBodyForEntity(physics, {
     entity,
-    descriptor: rapier.RigidBodyDesc.fixed().setTranslation(0, -0.25, 0)
+    descriptor: rapier.RigidBodyDesc.fixed().setTranslation(0, -2, 0)
   });
 
   createColliderForEntity(physics, {
     entity,
     rigidBody: body,
-    descriptor: rapier.ColliderDesc.cuboid(48, 0.25, 48).setFriction(1.1)
+    descriptor: rapier.ColliderDesc.cuboid(48, 2, 48).setFriction(1.1)
   });
 
   return entity;
@@ -82,6 +82,14 @@ export const createHelicopterFlightSystem = (heli: PlayerHelicopter, gameState: 
     } else {
       if (heli.body.bodyType() !== 0) { // 0 = Dynamic
         heli.body.setBodyType(0, true); // Set to dynamic
+        
+        // Ensure helicopter doesn't start below ground when unpausing
+        const translation = heli.body.translation();
+        if (translation.y < 0.5) {
+          heli.body.setTranslation({ x: translation.x, y: 0.8, z: translation.z }, true);
+          heli.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+          heli.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        }
       }
     }
     

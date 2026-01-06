@@ -96,6 +96,42 @@ export class CockpitCameraRig {
 
   setTargetEntity(entity: Entity | null): void {
     this.targetEntity = entity;
+    // Snap to position immediately if transform is available
+    if (entity !== null) {
+      const transform = this.transformProvider(entity);
+      if (transform) {
+        this.basePosition.set(transform.translation.x, transform.translation.y, transform.translation.z);
+        this.baseRotation.set(transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w);
+
+        Matrix.FromQuaternionToRef(this.baseRotation, this.rotationMatrix);
+        Vector3.TransformCoordinatesToRef(
+          this.cockpitOffset,
+          this.rotationMatrix,
+          this.cockpitOffsetWorld
+        );
+
+        this.desiredPosition.copyFrom(this.basePosition).addInPlace(this.cockpitOffsetWorld);
+
+        Quaternion.FromEulerAnglesToRef(
+          this.lookCurrent.pitch,
+          this.lookCurrent.yaw,
+          0,
+          this.lookRotation
+        );
+        this.baseRotation.multiplyToRef(this.lookRotation, this.desiredRotation);
+
+        this.currentPosition.copyFrom(this.desiredPosition);
+        this.currentRotation.copyFrom(this.desiredRotation);
+        this.initialized = true;
+
+        this.camera.position.copyFrom(this.currentPosition);
+        if (this.camera.rotationQuaternion) {
+          this.camera.rotationQuaternion.copyFrom(this.currentRotation);
+        } else {
+          this.camera.rotationQuaternion = this.currentRotation.clone();
+        }
+      }
+    }
   }
 
   setFallbackTransform(transform: Transform | null): void {
@@ -129,25 +165,6 @@ export class CockpitCameraRig {
     this.basePosition.set(transform.translation.x, transform.translation.y, transform.translation.z);
     this.baseRotation.set(transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w);
 
-    // On first frame, snap to position immediately without smoothing
-    if (!this.initialized) {
-      this.currentPosition.copyFrom(this.basePosition);
-      this.currentRotation.copyFrom(this.baseRotation);
-    }
-
-    this.lookCurrent.yaw = this.interpolate(
-      this.lookCurrent.yaw,
-      this.lookTarget.yaw,
-      this.smoothing.look,
-      deltaSeconds
-    );
-    this.lookCurrent.pitch = this.interpolate(
-      this.lookCurrent.pitch,
-      this.lookTarget.pitch,
-      this.smoothing.look,
-      deltaSeconds
-    );
-
     Matrix.FromQuaternionToRef(this.baseRotation, this.rotationMatrix);
     Vector3.TransformCoordinatesToRef(
       this.cockpitOffset,
@@ -157,6 +174,10 @@ export class CockpitCameraRig {
 
     this.desiredPosition.copyFrom(this.basePosition).addInPlace(this.cockpitOffsetWorld);
 
+    // Interpolate look current towards target
+    this.lookCurrent.yaw = this.interpolate(this.lookCurrent.yaw, this.lookTarget.yaw, this.smoothing.look, deltaSeconds);
+    this.lookCurrent.pitch = this.interpolate(this.lookCurrent.pitch, this.lookTarget.pitch, this.smoothing.look, deltaSeconds);
+
     Quaternion.FromEulerAnglesToRef(
       this.lookCurrent.pitch,
       this.lookCurrent.yaw,
@@ -165,21 +186,31 @@ export class CockpitCameraRig {
     );
     this.baseRotation.multiplyToRef(this.lookRotation, this.desiredRotation);
 
+    // On first frame, snap to position immediately without smoothing
     if (!this.initialized) {
       this.currentPosition.copyFrom(this.desiredPosition);
       this.currentRotation.copyFrom(this.desiredRotation);
       this.initialized = true;
     } else {
-      const positionLerp = toLerpAlpha(this.smoothing.position, deltaSeconds);
-      const rotationLerp = toLerpAlpha(this.smoothing.rotation, deltaSeconds);
+      const distance = Vector3.Distance(this.currentPosition, this.desiredPosition);
+      const snapThreshold = 50; // Snap if distance > 50 units
+      
+      if (distance > snapThreshold) {
+        // Snap to position for large jumps
+        this.currentPosition.copyFrom(this.desiredPosition);
+        this.currentRotation.copyFrom(this.desiredRotation);
+      } else {
+        const positionLerp = toLerpAlpha(this.smoothing.position, deltaSeconds);
+        const rotationLerp = toLerpAlpha(this.smoothing.rotation, deltaSeconds);
 
-      Vector3.LerpToRef(this.currentPosition, this.desiredPosition, positionLerp, this.currentPosition);
-      Quaternion.SlerpToRef(
-        this.currentRotation,
-        this.desiredRotation,
-        rotationLerp,
-        this.currentRotation
-      );
+        Vector3.LerpToRef(this.currentPosition, this.desiredPosition, positionLerp, this.currentPosition);
+        Quaternion.SlerpToRef(
+          this.currentRotation,
+          this.desiredRotation,
+          rotationLerp,
+          this.currentRotation
+        );
+      }
     }
 
     this.camera.position.copyFrom(this.currentPosition);

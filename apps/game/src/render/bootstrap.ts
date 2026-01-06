@@ -63,6 +63,7 @@ export const bootstrapRenderer = async ({
 
   const scene = new Scene(engine);
   scene.clearColor = DEFAULT_CLEAR_COLOR;
+  scene.collisionsEnabled = false; // Disable scene collision detection
 
   const camera = new UniversalCamera('cockpitCamera', new Vector3(0, 1.6, -5), scene);
   camera.inputs.clear();
@@ -70,6 +71,8 @@ export const bootstrapRenderer = async ({
   camera.minZ = 0.05;
   camera.maxZ = 5000;
   camera.fov = 0.94;
+  camera.inertia = 0;
+  camera.checkCollisions = false;
 
   const light = new HemisphericLight('skyLight', new Vector3(0.25, 1, 0.4), scene);
   light.intensity = 0.9;
