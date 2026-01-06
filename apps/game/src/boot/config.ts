@@ -21,7 +21,7 @@ export const buildConfig = (env: AppEnvironment = import.meta.env): AppConfig =>
     isDev: env.DEV,
     isProd: env.PROD,
     enableDebugOverlay,
-    buildLabel: env.VITE_BUILD_LABEL ?? 'Reign of Rotor — Cockpit Rig'
+    buildLabel: env.VITE_BUILD_LABEL ?? 'Reign of Rotor — Input Mapping'
   };
 };
 

@@ -116,6 +116,68 @@ body {
   color: #8bc4ff;
 }
 
+.controls-panel {
+  margin-top: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.controls-panel h3 {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: 0.4px;
+  color: #8bc4ff;
+}
+
+.controls-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.control-row {
+  display: grid;
+  gap: 6px;
+}
+
+.control-label {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.control-detail {
+  display: grid;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.control-bind {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #c2d1df;
+}
+
+.control-bind strong {
+  color: #e6ecf2;
+  font-weight: 700;
+}
+
+.control-note {
+  color: #c2d1df;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
 .debug-overlay {
   margin-top: 16px;
   padding: 12px;

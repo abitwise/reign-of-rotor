@@ -6,6 +6,7 @@ import { bootstrapPhysics } from '../physics/bootstrap';
 import { createAppLayout } from './layout';
 import type { PhysicsWorldContext } from '../physics/world';
 import { bootstrapRenderer, type RenderContext } from '../render/bootstrap';
+import { bootstrapPlayerInput, type PlayerInputContext } from '../core/input/playerInput';
 
 export type GameApp = {
   config: AppConfig;
@@ -13,13 +14,18 @@ export type GameApp = {
   loop: FixedTimestepLoop;
   physics: Promise<PhysicsWorldContext>;
   renderer: Promise<RenderContext>;
+  input: PlayerInputContext;
   destroy: () => void;
 };
 
 export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfig): GameApp => {
   const layout = createAppLayout(rootElement);
-  const rootUi = createRootUi({ target: layout.uiHost, config });
   const scheduler = createSystemScheduler();
+  const input = bootstrapPlayerInput(
+    scheduler,
+    rootElement.ownerDocument?.defaultView ?? (typeof window === 'undefined' ? null : window)
+  );
+  const rootUi = createRootUi({ target: layout.uiHost, config, bindings: input.bindings });
   const physics = bootstrapPhysics(scheduler);
   const renderer = bootstrapRenderer({
     host: layout.renderHost,
@@ -50,9 +56,11 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
     scheduler,
     physics,
     renderer,
+    input,
     loop,
     destroy: () => {
       loop.stop();
+      input.destroy();
       rootUi.destroy();
       renderer.then((renderContext) => renderContext.dispose()).catch((error) => {
         console.error('Error disposing renderer', error);

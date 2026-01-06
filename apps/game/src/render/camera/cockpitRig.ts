@@ -1,6 +1,5 @@
 import { Matrix, Quaternion, Vector3 } from '@babylonjs/core';
 import type { TargetCamera } from '@babylonjs/core';
-import type { Nullable } from '@babylonjs/core/types';
 import type { Entity, Transform } from '../../physics/types';
 import type { TransformProvider } from '../meshBindingSystem';
 
@@ -14,8 +13,6 @@ export type CockpitCameraRigOptions = {
   rotationLerp?: number;
   lookLerp?: number;
   lookLimits?: { yaw: number; pitchUp: number; pitchDown: number };
-  lookSensitivity?: number;
-  pointerLockElement?: Nullable<HTMLElement>;
 };
 
 const DEFAULT_LOOK_LIMITS = {
@@ -46,7 +43,6 @@ export class CockpitCameraRig {
   private readonly lookTarget = { yaw: 0, pitch: 0 };
   private readonly lookCurrent = { yaw: 0, pitch: 0 };
   private readonly smoothing: { position: number; rotation: number; look: number };
-  private readonly lookSensitivity: number;
 
   private readonly basePosition = new Vector3();
   private readonly cockpitOffsetWorld = new Vector3();
@@ -61,9 +57,6 @@ export class CockpitCameraRig {
 
   private initialized = false;
 
-  private pointerLockElement: Nullable<HTMLElement>;
-  private isPointerLocked = false;
-
   constructor({
     camera,
     transformProvider,
@@ -76,9 +69,7 @@ export class CockpitCameraRig {
     positionLerp = 10,
     rotationLerp = 12,
     lookLerp = 10,
-    lookLimits = DEFAULT_LOOK_LIMITS,
-    lookSensitivity = 0.0025,
-    pointerLockElement = null
+    lookLimits = DEFAULT_LOOK_LIMITS
   }: CockpitCameraRigOptions) {
     this.camera = camera;
     this.camera.rotationQuaternion = this.camera.rotationQuaternion ?? new Quaternion();
@@ -88,10 +79,6 @@ export class CockpitCameraRig {
     this.cockpitOffset = new Vector3(cockpitOffset.x, cockpitOffset.y, cockpitOffset.z);
     this.lookLimits = lookLimits;
     this.smoothing = { position: positionLerp, rotation: rotationLerp, look: lookLerp };
-    this.lookSensitivity = lookSensitivity;
-    this.pointerLockElement = pointerLockElement;
-
-    this.bindPointerLockListeners();
   }
 
   setTransformProvider(provider: TransformProvider): void {
@@ -184,7 +171,6 @@ export class CockpitCameraRig {
   }
 
   dispose(): void {
-    this.detachPointerLockListeners();
   }
 
   private readTransform(): Transform | null {
@@ -203,59 +189,4 @@ export class CockpitCameraRig {
     return current + (target - current) * alpha;
   }
 
-  private bindPointerLockListeners(): void {
-    if (!this.pointerLockElement) {
-      return;
-    }
-
-    const ownerDocument = this.pointerLockElement.ownerDocument;
-    if (!ownerDocument) {
-      return;
-    }
-
-    this.pointerLockElement.addEventListener('pointerdown', this.handlePointerDown);
-    this.pointerLockElement.addEventListener('pointermove', this.handlePointerMove);
-    ownerDocument.addEventListener('pointerlockchange', this.handlePointerLockChange);
-  }
-
-  private detachPointerLockListeners(): void {
-    if (!this.pointerLockElement) {
-      return;
-    }
-
-    const ownerDocument = this.pointerLockElement.ownerDocument;
-    if (ownerDocument) {
-      ownerDocument.removeEventListener('pointerlockchange', this.handlePointerLockChange);
-    }
-
-    this.pointerLockElement.removeEventListener('pointerdown', this.handlePointerDown);
-    this.pointerLockElement.removeEventListener('pointermove', this.handlePointerMove);
-    this.pointerLockElement = null;
-  }
-
-  private handlePointerDown = (): void => {
-    if (!this.pointerLockElement || typeof this.pointerLockElement.requestPointerLock !== 'function') {
-      return;
-    }
-
-    this.pointerLockElement.requestPointerLock();
-  };
-
-  private handlePointerMove = (event: PointerEvent): void => {
-    if (!this.isPointerLocked) {
-      return;
-    }
-
-    this.applyLookDelta(event.movementX * this.lookSensitivity, event.movementY * this.lookSensitivity);
-  };
-
-  private handlePointerLockChange = (): void => {
-    if (!this.pointerLockElement) {
-      this.isPointerLocked = false;
-      return;
-    }
-
-    const ownerDocument = this.pointerLockElement.ownerDocument;
-    this.isPointerLocked = ownerDocument?.pointerLockElement === this.pointerLockElement;
-  };
 }

@@ -71,7 +71,7 @@
   - [ ] Minimal mouse-look/pointer lock support hooks
 
 ### [P1-6] Keyboard + Mouse Input Mapping (MVP)
-- Status: Backlog
+- Status: Done
 - Summary: Implement KB+mouse input pipeline and map to `CPlayerInput`.
 - Context: Input priority is keyboard and mouse first.
 - Functional behavior (GIVEN/WHEN/THEN):
