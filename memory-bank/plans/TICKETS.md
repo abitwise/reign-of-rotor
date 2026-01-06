@@ -11,7 +11,6 @@
   - GIVEN a production build, WHEN previewed, THEN it loads without dev-only tooling.
 - Technical notes:
   - Use Vite + pnpm workspace layout consistent with ARCHITECTURE.md.
-  - Add simple “dev HUD” toggle flag (fps/entity count placeholder).
 - Tasks:
   - [ ] Initialize project structure + scripts
   - [ ] Add lint/format/test scaffolding
@@ -28,7 +27,7 @@
   - Keep sim independent from Babylon frame delta.
 - Tasks:
   - [ ] Implement loop and catch-up strategy
-  - [ ] Define system pipeline phases (input→sensors→forces→physics→combat→mission→events)
+  - [ ] Define system pipeline phases
   - [ ] Add minimal instrumentation (dt, steps per frame)
 
 ### [P1-3] Rapier World Integration + Entity↔Handle Mapping
@@ -38,8 +37,6 @@
 - Functional behavior (GIVEN/WHEN/THEN):
   - GIVEN a spawned physics entity, WHEN stepped, THEN transforms update and are readable by render.
   - GIVEN collisions, WHEN they occur, THEN we can attribute them to ECS entities.
-- Technical notes:
-  - Maintain bidirectional maps: eid→rbHandle and rbHandle→eid.
 - Tasks:
   - [ ] Rapier init + step in fixed loop
   - [ ] Entity factory helpers for rigid bodies/colliders
@@ -59,186 +56,164 @@
   - [ ] Mesh registry + binding system
   - [ ] Asset manifest + loader skeleton
 
-### [P1-5] Player Helicopter Spawn + Basic Flight Forces (Rapier)
+### [P1-5] Render Binding Layer + Cockpit-First Camera Rig
 - Status: Backlog
-- Summary: Spawn a helicopter rigid body and apply lift/torques driven by input.
-- Context: Core “feel” of the game.
+- Summary: Bind ECS/physics transforms to meshes and implement cockpit-first camera.
+- Context: Camera choice impacts HUD readability and flight feel; cockpit is MVP default.
+- Functional behavior (GIVEN/WHEN/THEN):
+  - GIVEN an entity with render binding, WHEN its transform updates, THEN the mesh follows.
+  - GIVEN cockpit view, WHEN the heli moves/rotates, THEN camera follows with stable smoothing.
+- Technical notes:
+  - Third-person camera is explicitly out-of-scope for MVP (backlog).
+- Tasks:
+  - [ ] Mesh registry + binding system
+  - [ ] Cockpit camera rig (pose, smoothing, clamp)
+  - [ ] Minimal mouse-look/pointer lock support hooks
+
+### [P1-6] Keyboard + Mouse Input Mapping (MVP)
+- Status: Backlog
+- Summary: Implement KB+mouse input pipeline and map to `CPlayerInput`.
+- Context: Input priority is keyboard and mouse first.
+- Functional behavior (GIVEN/WHEN/THEN):
+  - GIVEN keyboard controls, WHEN pressing inputs, THEN collective/cyclic/yaw update predictably.
+  - GIVEN mouse look, WHEN enabled, THEN cockpit view rotates smoothly.
+- Technical notes:
+  - Keep input sampling separate from sim; write once per sim tick.
+- Tasks:
+  - [ ] Keybind defaults (WASD/arrow/QE/etc.)
+  - [ ] Mouse look with optional pointer lock
+  - [ ] Simple in-game “Controls” help panel (dev)
+
+### [P1-7] Player Helicopter Spawn + Basic Flight Forces (Rapier)
+- Status: Backlog
+- Summary: Spawn helicopter rigid body and apply lift/torques driven by input.
 - Functional behavior (GIVEN/WHEN/THEN):
   - GIVEN player input, WHEN applying collective, THEN the helicopter gains altitude.
   - GIVEN cyclic and yaw input, WHEN applied, THEN the helicopter rotates predictably.
-  - GIVEN no input, WHEN in-air, THEN damping prevents uncontrolled spin.
-- Technical notes:
-  - Implement a flight controller system applying forces/torques each fixed tick.
 - Tasks:
   - [ ] Add heli ECS components (input/flight/assists)
   - [ ] Apply lift + pitch/roll/yaw torque
   - [ ] Baseline damping tuning values
 
-### [P1-6] Altimeter Raycast + Landing Detection
+### [P1-8] Altimeter Raycast + Landing Detection
 - Status: Backlog
 - Summary: Add AGL sensing and landed/crash state transitions.
-- Context: Enables “return to base + land” as mission completion rule and supports hover assist.
-- Functional behavior (GIVEN/WHEN/THEN):
-  - GIVEN raycast to terrain, WHEN near ground, THEN AGL is reported.
-  - GIVEN a soft touchdown, WHEN landing, THEN state becomes “landed”.
-  - GIVEN a hard impact, WHEN landing too fast, THEN helicopter takes damage or fails mission.
-- Technical notes:
-  - Use Rapier raycasts; store AGL + ground normal.
 - Tasks:
-  - [ ] Altimeter system
-  - [ ] Landing thresholds and state transitions
-  - [ ] Minimal feedback (UI indicator)
+  - [ ] Altimeter system (raycast)
+  - [ ] Landing thresholds + impact damage hooks
+  - [ ] HUD indicator for AGL and landing state
 
-### [P1-7] Assist Toggles: Stability + Hover Assist
+### [P1-9] Assist Toggles: Stability + Hover Assist
 - Status: Backlog
-- Summary: Add optional assists to keep handling accessible.
-- Context: Browser demo should be playable on keyboard/gamepad.
-- Functional behavior (GIVEN/WHEN/THEN):
-  - GIVEN stability assist on, WHEN the player releases controls, THEN angular velocity damps quickly.
-  - GIVEN hover assist on, WHEN near target altitude, THEN lateral drift reduces.
-- Technical notes:
-  - Assists should be explicit toggles; must not fight the player excessively.
+- Summary: Add optional assists to keep handling accessible on KB+mouse.
 - Tasks:
-  - [ ] Stability torque/damping assist
-  - [ ] Hover assist (velocity damping + optional altitude hold using AGL)
+  - [ ] Stability assist (angular damping/torque)
+  - [ ] Hover assist (lateral velocity damping; optional altitude hold)
   - [ ] UI indicators for assist states
 
-### [P1-8] HUD v1 (HTML Overlay)
+### [P1-10] HUD v1 (Cockpit-First, HTML Overlay)
 - Status: Backlog
 - Summary: Implement minimal HUD for flight and combat awareness.
-- Context: Without HUD, tuning and fairness suffer.
-- Functional behavior (GIVEN/WHEN/THEN):
-  - GIVEN flight, WHEN playing, THEN HUD shows speed, AGL, heading.
-  - GIVEN weapons, WHEN switching/firing, THEN HUD shows active weapon, ammo, lock state.
-  - GIVEN threats, WHEN locked/launched at, THEN warnings are visible.
-- Technical notes:
-  - HUD reads ECS state; no direct sim mutation.
+- Context: Cockpit-first requires readable, minimal clutter HUD.
 - Tasks:
-  - [ ] Layout + typography baseline
-  - [ ] Flight readouts
-  - [ ] Weapon + lock + threat indicators
+  - [ ] Flight readouts: speed, AGL, heading
+  - [ ] Weapon + ammo + lock state
+  - [ ] Threat warnings (lock/launch)
 
-### [P1-9] Cannon Weapon (Raycast) + Hit Feedback
+### [P1-11] Cannon Weapon (Raycast) + Hit Feedback
 - Status: Backlog
-- Summary: Implement primary weapon as raycast-based cannon with damage and FX hooks.
-- Context: Provides fast “fun” feedback early.
-- Functional behavior (GIVEN/WHEN/THEN):
-  - GIVEN a target in range, WHEN firing cannon, THEN it takes damage and shows hit feedback.
-  - GIVEN no target, WHEN firing, THEN tracer/FX still displays direction.
-- Technical notes:
-  - Use Rapier raycast; spawn lightweight FX events.
+- Summary: Raycast cannon, damage, and FX hooks.
 - Tasks:
   - [ ] Gun component + cooldown
-  - [ ] Raycast hit resolution + damage apply
-  - [ ] Impact FX event emission
+  - [ ] Raycast hits + damage apply
+  - [ ] Impact FX events
 
-### [P1-10] Missile Weapon: Acquire/Lock/Launch + Guidance
+### [P1-12] Missile Weapon: Acquire/Lock/Launch + Guidance
 - Status: Backlog
-- Summary: Implement lock-on missiles and guidance behavior.
-- Context: Signature “LHX” combat loop includes lock and evasion.
-- Functional behavior (GIVEN/WHEN/THEN):
-  - GIVEN a target in cone and range, WHEN holding lock, THEN lock state transitions to locked after time.
-  - GIVEN locked target, WHEN launching, THEN missile tracks target and can miss if outmaneuvered.
-- Technical notes:
-  - Guidance applies forces/torques via Rapier; lock uses cone/range + optional LOS.
+- Summary: Lock-on missiles and guidance behavior.
 - Tasks:
-  - [ ] Lock state machine + timers
-  - [ ] Missile entity spawn + physics
-  - [ ] Guidance system + impact/explosion
+  - [ ] Lock state machine + timers (cone/range; optional LOS)
+  - [ ] Missile spawn + physics
+  - [ ] Guidance system + explosion
 
-### [P1-11] Enemy Units v1: Vehicles + Radar Site + SAM
+### [P1-13] Enemy Units v1: Vehicles + Radar Site + SAM
 - Status: Backlog
-- Summary: Add core enemy actors for the 3 mission templates.
-- Context: MVP missions need credible threats and targets.
-- Functional behavior (GIVEN/WHEN/THEN):
-  - GIVEN a SAM, WHEN player enters detection range, THEN it can scan→lock→launch.
-  - GIVEN a radar site, WHEN active, THEN it increases threat detection/alerts.
-- Technical notes:
-  - Keep AI simple FSM; tune fairness (lock delay, cooldown).
+- Summary: Core enemy actors for mission templates.
 - Tasks:
-  - [ ] Vehicle target entity + basic movement/patrol (optional MVP)
-  - [ ] Radar emitter entity + detection model
-  - [ ] SAM controller (scan/lock/fire) + missile spawn
+  - [ ] Radar emitter entity
+  - [ ] SAM scan/lock/fire FSM
+  - [ ] Basic vehicle target entities (static or simple patrol)
 
-### [P1-12] Countermeasures + Threat Warning Receiver (RWR)
+### [P1-14] Countermeasures + Threat Warning Receiver (RWR)
 - Status: Backlog
-- Summary: Implement flares/chaff simplified and warning UI when targeted/launched.
-- Context: Evade loop is central to helicopter combat fantasy.
-- Functional behavior (GIVEN/WHEN/THEN):
-  - GIVEN missile launch, WHEN detected, THEN player gets a clear launch warning.
-  - GIVEN countermeasure use, WHEN timed well, THEN missile may lose lock (probabilistic).
-- Technical notes:
-  - Use events for “lock/launch”; keep countermeasure logic transparent and tunable.
+- Summary: Flares/chaff simplified + warnings.
 - Tasks:
   - [ ] Countermeasure inventory + cooldown
-  - [ ] Missile reacquire/decoy logic
-  - [ ] RWR HUD integration
+  - [ ] Missile decoy/lost-lock logic
+  - [ ] RWR warnings wired to HUD
 
-### [P1-13] Mission Director v1 + 3 Templates
+### [P1-15] Mission Director v1 + 3 Templates (In-Air Completion)
 - Status: Backlog
-- Summary: Generate missions with seeded RNG and objectives.
-- Context: Replayability and demo pacing.
+- Summary: Generate missions with seeded RNG and objectives; allow mission completion in-air.
 - Functional behavior (GIVEN/WHEN/THEN):
-  - GIVEN “Quick Mission”, WHEN started, THEN one of 3 templates spawns objectives and enemies.
-  - GIVEN objectives completed, WHEN returning and landing, THEN mission completes with debrief.
-- Technical notes:
-  - Define mission templates as JSON-like content with spawn groups + objective definitions.
+  - GIVEN objectives complete, WHEN player triggers mission end, THEN mission completes even if airborne.
+  - GIVEN landing, WHEN performed, THEN it may be recorded as a bonus stat (optional).
 - Tasks:
   - [ ] Mission runtime state + seed
   - [ ] Spawn groups + waypoints
-  - [ ] Objective tracking + success/fail conditions
+  - [ ] Objective tracking + completion trigger (UI action or auto)
 
-### [P1-14] Debrief Screen v1 (Stats + Outcome)
+### [P1-16] Debrief Screen v1 (Stats + Outcome)
 - Status: Backlog
-- Summary: Show mission results and basic stats; enable quick replay.
-- Context: Completes the loop and improves retention.
-- Functional behavior (GIVEN/WHEN/THEN):
-  - GIVEN mission end, WHEN debrief shows, THEN player sees success/fail and key stats.
-  - GIVEN replay, WHEN selected, THEN a new seeded mission starts quickly.
-- Technical notes:
-  - Persist minimal session stats; progression optional MVP.
+- Summary: Show results; enable quick replay.
 - Tasks:
-  - [ ] Collect stats (time, kills, damage taken, shots fired)
+  - [ ] Collect stats (time, kills, damage, shots fired)
   - [ ] Debrief UI
-  - [ ] Replay button wiring
+  - [ ] Replay flow (new seed)
 
-### [P1-15] Performance Pass + Pooling + Smoke Tests
+### [P1-17] Difficulty Tuning: “Arcade but Hardcore”
+- Status: Backlog
+- Summary: Tune damage/threat fairness to the intended midpoint between arcade and sim.
+- Context: Damage should matter and degrade capability, but not be constant instant-fail.
+- Tasks:
+  - [ ] Define tuning presets (Easy/Normal/Hard) for SAM accuracy/lock time/damage scaling
+  - [ ] Tune subsystem degradation curves
+  - [ ] Add minimal telemetry (average mission time, deaths, causes)
+
+### [P1-18] Performance Pass + Pooling + Smoke Tests
 - Status: Backlog
 - Summary: Reduce GC spikes, ensure stable FPS, add basic e2e checks.
-- Context: Browser demo needs smoothness.
-- Functional behavior (GIVEN/WHEN/THEN):
-  - GIVEN repeated combat, WHEN spawning missiles/FX, THEN performance stays stable.
-  - GIVEN CI tests, WHEN running, THEN boot/smoke passes in headless browser.
-- Technical notes:
-  - Pool missiles/flares/FX entities; avoid per-frame allocations in hot systems.
 - Tasks:
-  - [ ] Entity pooling strategy
-  - [ ] Perf overlay (fps, draw calls placeholder)
-  - [ ] Playwright smoke tests
+  - [ ] Pool missiles/flares/FX entities
+  - [ ] Perf overlay (fps, entity counts, steps/frame)
+  - [ ] Playwright smoke tests (boot + start mission)
 
 ## Backlog / Future
 
-### [B-1] Additional Helicopters (Apache / Utility)
+### [B-1] Third-Person Chase Camera
 - Status: Backlog
-- Summary: Add different flight profiles and loadouts.
-- Context: Replayability and authenticity.
+- Summary: Add optional chase camera with smoothing and obstruction avoidance.
 
-### [B-2] More Theaters (Arctic / Jungle) + Weather
+### [B-2] Gamepad Support
+- Status: Backlog
+- Summary: Input mapping + tuning for controller ergonomics.
+
+### [B-3] Additional Helicopters (Apache / Utility)
+- Status: Backlog
+- Summary: Different flight profiles and loadouts.
+
+### [B-4] More Theaters (Arctic / Jungle) + Weather
 - Status: Backlog
 - Summary: New maps and visibility challenges.
 
-### [B-3] Progression (Rank/Medals/Unlocks)
+### [B-5] Progression (Rank/Medals/Unlocks)
 - Status: Backlog
 - Summary: Pilot profile persistence and rewards loop.
 
-### [B-4] Advanced Damage & Repair / Maintenance
-- Status: Backlog
-- Summary: More subsystem granularity; pre-flight loadout and repair costs.
-
-### [B-5] Modding (Mission JSON Packs)
+### [B-6] Modding (Mission JSON Packs)
 - Status: Backlog
 - Summary: External mission packs and tuning overrides.
 
-### [B-6] VR / Cockpit Interaction (Stretch)
+### [B-7] VR / Cockpit Interaction (Stretch)
 - Status: Backlog
 - Summary: Full cockpit immersion and input mapping.
