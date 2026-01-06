@@ -158,7 +158,9 @@ export const bootstrapRenderer = async ({
 
   const cameraRig = new CockpitCameraRig({
     camera,
-    transformProvider: transformReader
+    transformProvider: transformReader,
+    // Third-person chase view: slightly above and behind the helicopter.
+    cockpitOffset: { x: 0, y: 2.4, z: -7.5 }
   });
 
   const mouseLook = new MouseLookController({
@@ -174,18 +176,8 @@ export const bootstrapRenderer = async ({
   const manifest = await loadAssetManifest(manifestUrl);
   const assets = new RenderAssetLoader(scene, manifest);
 
-  if (manifest.assets.length > 0) {
-    assets
-      .instantiateMesh(manifest.assets[0].id, 'manifest-preview')
-      .then((mesh) => {
-        mesh.position.y = 1.2;
-      })
-      .catch((error) => {
-        if (process.env.NODE_ENV !== 'production') {
-          console.warn('Failed to instantiate preview mesh from manifest', error);
-        }
-      });
-  }
+  // Note: we intentionally do not spawn a "manifest preview" mesh here because
+  // the gameplay bootstrap spawns/binds the player helicopter mesh.
 
   const resize = (): void => {
     engine.resize();
