@@ -23,6 +23,7 @@ export type PlayerInputState = {
   yaw: number;
   toggleStability: boolean; // One-frame pulse
   toggleHover: boolean;      // One-frame pulse
+  togglePause: boolean;      // One-frame pulse
 };
 
 // Alias used by ECS-facing layers.
@@ -77,7 +78,8 @@ export const createPlayerInputState = (): PlayerInputState => ({
   cyclicY: 0,
   yaw: 0,
   toggleStability: false,
-  toggleHover: false
+  toggleHover: false,
+  togglePause: false
 });
 
 export const samplePlayerInput = (
@@ -93,6 +95,7 @@ export const samplePlayerInput = (
   // Toggle keys (edge-triggered)
   state.toggleStability = sampler.wasJustPressed('KeyZ');
   state.toggleHover = sampler.wasJustPressed('KeyX');
+  state.togglePause = sampler.wasJustPressed('Space');
 
   return state;
 };

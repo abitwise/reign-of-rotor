@@ -1,4 +1,5 @@
 export type HelicopterFlightTuning = {
+  density: number;
   maxLiftForce: number;
   maxPitchTorque: number;
   maxRollTorque: number;

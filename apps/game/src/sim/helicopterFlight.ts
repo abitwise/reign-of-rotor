@@ -7,6 +7,7 @@ import { createColliderForEntity, createRigidBodyForEntity } from '../physics/fa
 import type { Entity } from '../physics/types';
 import type { PhysicsWorldContext } from '../physics/world';
 import { createAltimeterState, type AltimeterState } from './altimeter';
+import type { GameState } from '../boot/createApp';
 
 export type PlayerHelicopter = {
   entity: Entity;
@@ -23,13 +24,13 @@ export const createGroundPlane = (physics: PhysicsWorldContext): Entity => {
 
   const body = createRigidBodyForEntity(physics, {
     entity,
-    descriptor: rapier.RigidBodyDesc.fixed().setTranslation(0, -0.25, 0)
+    descriptor: rapier.RigidBodyDesc.fixed().setTranslation(0, -2, 0)
   });
 
   createColliderForEntity(physics, {
     entity,
     rigidBody: body,
-    descriptor: rapier.ColliderDesc.cuboid(48, 0.25, 48).setFriction(1.1)
+    descriptor: rapier.ColliderDesc.cuboid(48, 2, 48).setFriction(1.1)
   });
 
   return entity;
@@ -55,7 +56,7 @@ export const spawnPlayerHelicopter = (
   createColliderForEntity(physics, {
     entity,
     rigidBody: body,
-    descriptor: rapier.ColliderDesc.cuboid(1.2, 0.6, 2.5).setDensity(0.7)
+    descriptor: rapier.ColliderDesc.cuboid(1.2, 0.6, 2.5).setDensity(flight.density)
   });
 
   return {
@@ -68,10 +69,30 @@ export const spawnPlayerHelicopter = (
   };
 };
 
-export const createHelicopterFlightSystem = (heli: PlayerHelicopter): LoopSystem => ({
+export const createHelicopterFlightSystem = (heli: PlayerHelicopter, gameState: GameState): LoopSystem => ({
   id: `sim.helicopterFlight.${heli.entity}`,
   phase: SystemPhase.Simulation,
   step: () => {
+    // Toggle body type based on pause state
+    if (gameState.isPaused) {
+      if (heli.body.bodyType() !== 1) { // 1 = Kinematic
+        heli.body.setBodyType(1, true); // Set to kinematic
+      }
+      return;
+    } else {
+      if (heli.body.bodyType() !== 0) { // 0 = Dynamic
+        heli.body.setBodyType(0, true); // Set to dynamic
+        
+        // Ensure helicopter doesn't start below ground when unpausing
+        const translation = heli.body.translation();
+        if (translation.y < 0.5) {
+          heli.body.setTranslation({ x: translation.x, y: 0.8, z: translation.z }, true);
+          heli.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+          heli.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        }
+      }
+    }
+    
     applyRotorForces(heli);
     applyControlTorques(heli);
     applyStabilityAssist(heli);
@@ -92,8 +113,21 @@ export const createAssistToggleSystem = (heli: PlayerHelicopter): LoopSystem => 
   }
 });
 
+export const createPauseToggleSystem = (input: PlayerInputState, gameState: GameState): LoopSystem => ({
+  id: 'sim.pauseToggle',
+  phase: SystemPhase.Simulation,
+  step: () => {
+    if (input.togglePause) {
+      gameState.isPaused = !gameState.isPaused;
+    }
+  }
+});
+
 const applyRotorForces = (heli: PlayerHelicopter): void => {
-  const liftInput = clamp01((heli.input.collective + 1) / 2);
+  // Collective is sampled as an axis in [-1, 1], but it is effectively a throttle-like input.
+  // With keyboard sampling, idle state is 0 (no keys pressed), so map directly to lift [0, 1]
+  // to avoid applying ~50% lift at rest.
+  const liftInput = clamp01(heli.input.collective);
   if (liftInput <= 0) {
     return;
   }

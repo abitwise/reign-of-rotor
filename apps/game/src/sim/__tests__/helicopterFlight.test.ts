@@ -4,6 +4,7 @@ import type { FixedStepContext } from '../../core/loop/types';
 import { DEFAULT_HELICOPTER_FLIGHT } from '../../content/helicopters';
 import { loadRapier } from '../../physics/rapierInstance';
 import { createPhysicsWorld } from '../../physics/world';
+import type { GameState } from '../../boot/createApp';
 import {
   createHelicopterFlightSystem,
   createAssistToggleSystem,
@@ -30,7 +31,8 @@ describe('helicopter flight system', () => {
     input.collective = 1;
 
     const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
-    const system = createHelicopterFlightSystem(heli);
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
 
     system.step(stepContext);
     physics.step(stepContext.fixedDeltaSeconds);
@@ -44,7 +46,8 @@ describe('helicopter flight system', () => {
     input.yaw = 1;
 
     const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
-    const system = createHelicopterFlightSystem(heli);
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
 
     system.step(stepContext);
     physics.step(stepContext.fixedDeltaSeconds);
@@ -82,7 +85,8 @@ describe('stability assist system', () => {
     heli.body.setAngvel({ x: 1, y: 1, z: 1 }, true);
 
     const initialAngvel = heli.body.angvel();
-    const system = createHelicopterFlightSystem(heli);
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
 
     // Step multiple times to see damping effect
     for (let i = 0; i < 10; i++) {
@@ -109,7 +113,8 @@ describe('stability assist system', () => {
     // Set initial angular velocity
     heli.body.setAngvel({ x: 1, y: 0, z: 0 }, true);
 
-    const system = createHelicopterFlightSystem(heli);
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
     system.step(stepContext);
     physics.step(stepContext.fixedDeltaSeconds);
 
@@ -131,7 +136,8 @@ describe('stability assist system', () => {
     heli.body.setAngvel({ x: 1, y: 1, z: 1 }, true);
     const initialAngvelMagnitude = Math.sqrt(1 * 1 + 1 * 1 + 1 * 1);
 
-    const system = createHelicopterFlightSystem(heli);
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
 
     // Step a few times
     for (let i = 0; i < 5; i++) {
@@ -175,7 +181,8 @@ describe('hover assist system', () => {
     // Set lateral velocity
     heli.body.setLinvel({ x: 5, y: 0, z: 5 }, true);
 
-    const system = createHelicopterFlightSystem(heli);
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
 
     // Step multiple times to see damping effect
     for (let i = 0; i < 10; i++) {
@@ -201,7 +208,8 @@ describe('hover assist system', () => {
     // Set lateral velocity
     heli.body.setLinvel({ x: 5, y: 0, z: 5 }, true);
 
-    const system = createHelicopterFlightSystem(heli);
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
     system.step(stepContext);
     physics.step(stepContext.fixedDeltaSeconds);
 
@@ -225,7 +233,8 @@ describe('hover assist system', () => {
     heli.body.setLinvel({ x: 5, y: 0, z: 5 }, true);
     const initialSpeed = Math.sqrt(5 * 5 + 5 * 5);
 
-    const system = createHelicopterFlightSystem(heli);
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
 
     // Step a few times
     for (let i = 0; i < 5; i++) {
