@@ -39,7 +39,7 @@ export const spawnPlayerHelicopter = (
   physics: PhysicsWorldContext,
   flight: CHelicopterFlight,
   input: PlayerInputState,
-  startHeight = 1.5
+  startHeight = 0.8
 ): PlayerHelicopter => {
   const entity = createEntityId();
   const { rapier } = physics;
@@ -55,7 +55,7 @@ export const spawnPlayerHelicopter = (
   createColliderForEntity(physics, {
     entity,
     rigidBody: body,
-    descriptor: rapier.ColliderDesc.cuboid(0.8, 0.4, 2).setDensity(0.55)
+    descriptor: rapier.ColliderDesc.cuboid(1.2, 0.6, 2.5).setDensity(0.7)
   });
 
   return {

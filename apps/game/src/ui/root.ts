@@ -73,7 +73,7 @@ const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBinding
   hero.innerHTML = `
     <h1>Reign of Rotor</h1>
     <p>
-      LHX-inspired browser demo. Keyboard + mouse input control your helicopter.
+      LHX-inspired browser demo. You start on the ground - <strong>hold R (or Page Up)</strong> to apply collective and take off.
       Click the scene to engage pointer lock for mouse look.
     </p>
     <div class="app-cta">
@@ -181,14 +181,16 @@ const createFlightHud = (): FlightHudController => {
   const grid = document.createElement('div');
   grid.className = 'flight-grid';
 
+  const speedMetric = createHudMetric('Airspeed');
   const altitudeMetric = createHudMetric('Altitude AGL');
   const verticalMetric = createHudMetric('Vertical speed');
   const impactMetric = createHudMetric('Impact severity');
 
-  grid.append(altitudeMetric.element, verticalMetric.element, impactMetric.element);
+  grid.append(speedMetric.element, altitudeMetric.element, verticalMetric.element, impactMetric.element);
   wrapper.append(heading, landingState.row, grid);
 
   const update = (readout: AltimeterState | null): void => {
+    speedMetric.setValue(formatHorizontalSpeed(readout?.horizontalSpeed));
     altitudeMetric.setValue(formatAltitude(readout?.altitude));
     verticalMetric.setValue(formatVerticalSpeed(readout?.verticalSpeed));
     impactMetric.setValue(formatImpact(readout?.impactSeverity));
@@ -275,6 +277,15 @@ const formatAltitude = (altitude: number | undefined): string => {
   }
 
   return `${altitude.toFixed(1)} m AGL`;
+};
+
+const formatHorizontalSpeed = (speed: number | undefined): string => {
+  if (speed === undefined || !Number.isFinite(speed)) {
+    return '—';
+  }
+
+  const kmh = speed * 3.6;
+  return `${kmh.toFixed(0)} km/h`;
 };
 
 const formatVerticalSpeed = (verticalSpeed: number | undefined): string => {
