@@ -79,6 +79,8 @@
   - GIVEN mouse look, WHEN enabled, THEN cockpit view rotates smoothly.
 - Technical notes:
   - Keep input sampling separate from sim; write once per sim tick.
+  - Mouse controls camera look only (cockpit head look), not cyclic.
+  - Cyclic is keyboard (WASD), yaw Q/E, collective R/F.
 - Tasks:
   - [ ] Keybind defaults (WASD/arrow/QE/etc.)
   - [ ] Mouse look with optional pointer lock
@@ -115,6 +117,8 @@
 - Status: Backlog
 - Summary: Implement minimal HUD for flight and combat awareness.
 - Context: Cockpit-first requires readable, minimal clutter HUD.
+- Technical notes:
+  - Include out-of-bounds warning + countdown when applicable.
 - Tasks:
   - [ ] Flight readouts: speed, AGL, heading
   - [ ] Weapon + ammo + lock state
@@ -131,6 +135,10 @@
 ### [P1-12] Missile Weapon: Acquire/Lock/Launch + Guidance
 - Status: Backlog
 - Summary: Lock-on missiles and guidance behavior.
+- Technical notes:
+  - Target selection is reticle-centric (best candidate near center within cone/range).
+  - Consider LOS raycast gating lock for terrain masking fairness.
+  - No target cycling in MVP.
 - Tasks:
   - [ ] Lock state machine + timers (cone/range; optional LOS)
   - [ ] Missile spawn + physics
@@ -139,6 +147,8 @@
 ### [P1-13] Enemy Units v1: Vehicles + Radar Site + SAM
 - Status: Backlog
 - Summary: Core enemy actors for mission templates.
+- Technical notes:
+  - Escort ally movement uses waypoint rails; no navmesh/pathfinding in MVP.
 - Tasks:
   - [ ] Radar emitter entity
   - [ ] SAM scan/lock/fire FSM
@@ -156,12 +166,14 @@
 - Status: Backlog
 - Summary: Generate missions with seeded RNG and objectives; allow mission completion in-air.
 - Functional behavior (GIVEN/WHEN/THEN):
-  - GIVEN objectives complete, WHEN player triggers mission end, THEN mission completes even if airborne.
+  - GIVEN objectives complete, WHEN the completion prompt is shown, THEN the player can confirm “Complete mission now” in-air.
+  - GIVEN objectives complete, WHEN the player chooses “Continue flying”, THEN mission remains active until they complete or fail.
   - GIVEN landing, WHEN performed, THEN it may be recorded as a bonus stat (optional).
 - Tasks:
   - [ ] Mission runtime state + seed
   - [ ] Spawn groups + waypoints
   - [ ] Objective tracking + completion trigger (UI action or auto)
+  - [ ] Add in-air completion prompt state + input action to confirm
 
 ### [P1-16] Debrief Screen v1 (Stats + Outcome)
 - Status: Backlog
@@ -187,6 +199,21 @@
   - [ ] Pool missiles/flares/FX entities
   - [ ] Perf overlay (fps, entity counts, steps/frame)
   - [ ] Playwright smoke tests (boot + start mission)
+ 
+### [P1-19] Out-of-Bounds Rules + Warning UI
+- Status: Backlog
+- Summary: Define mission area bounds and implement warning + fail countdown.
+- Context: Prevents players from wandering indefinitely and supports consistent mission pacing.
+- Functional behavior (GIVEN/WHEN/THEN):
+  - GIVEN the player exits mission bounds, WHEN out-of-bounds, THEN show warning + countdown.
+  - GIVEN the player returns within bounds before countdown ends, THEN warning clears and mission continues.
+  - GIVEN countdown expires, THEN mission fails.
+- Technical notes:
+  - Bounds can be simple rectangle/circle centered on mission area for MVP.
+- Tasks:
+  - [ ] Define bounds model (rect/circle) in mission runtime
+  - [ ] Implement countdown + fail trigger
+  - [ ] Wire to HUD warning banner
 
 ## Backlog / Future
 
