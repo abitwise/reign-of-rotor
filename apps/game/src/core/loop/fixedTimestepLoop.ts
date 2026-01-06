@@ -1,5 +1,6 @@
-import { createSystemScheduler, SystemScheduler } from './systemScheduler';
-import { FixedStepContext, LoopFrameMetrics } from './types';
+import { createSystemScheduler } from './systemScheduler';
+import type { SystemScheduler } from './systemScheduler';
+import type { FixedStepContext, LoopFrameMetrics } from './types';
 
 export type FixedTimestepLoopOptions = {
   scheduler?: SystemScheduler;
