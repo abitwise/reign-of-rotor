@@ -2,6 +2,7 @@ import type { AppConfig } from '../boot/config';
 import { createDebugOverlay } from './debugOverlay';
 import type { PlayerInputBindings } from '../core/input/playerInput';
 import { LandingState, type AltimeterState } from '../sim/altimeter';
+import type { CHelicopterAssists } from '../ecs/components/helicopter';
 
 export type RootUiOptions = {
   target: HTMLElement;
@@ -10,6 +11,7 @@ export type RootUiOptions = {
 };
 
 export type FlightReadoutProvider = () => AltimeterState | null;
+export type AssistsProvider = () => CHelicopterAssists | null;
 
 export const createRootUi = ({ target, config, bindings }: RootUiOptions) => {
   const container = document.createElement('div');
@@ -17,9 +19,11 @@ export const createRootUi = ({ target, config, bindings }: RootUiOptions) => {
 
   const instructionsPanel = createInstructionsPanel(config, bindings);
   const flightHud = createFlightHud();
+  const assistsHud = createAssistsHud();
 
   container.appendChild(instructionsPanel.element);
   container.appendChild(flightHud.element);
+  container.appendChild(assistsHud.element);
   target.replaceChildren(container);
 
   const debugOverlay = config.enableDebugOverlay
@@ -30,6 +34,7 @@ export const createRootUi = ({ target, config, bindings }: RootUiOptions) => {
   instructionsPanel.show();
 
   let flightReadoutProvider: FlightReadoutProvider | null = null;
+  let assistsProvider: AssistsProvider | null = null;
   let hudFrameHandle: number | null = null;
 
   const hudLoop = (): void => {
@@ -39,6 +44,7 @@ export const createRootUi = ({ target, config, bindings }: RootUiOptions) => {
     }
 
     flightHud.update(flightReadoutProvider());
+    assistsHud.update(assistsProvider?.() ?? null);
     hudFrameHandle = scheduleFrame(hudLoop);
   };
 
@@ -57,6 +63,9 @@ export const createRootUi = ({ target, config, bindings }: RootUiOptions) => {
       if (hudFrameHandle === null) {
         hudFrameHandle = scheduleFrame(hudLoop);
       }
+    },
+    setAssistsProvider: (provider: AssistsProvider) => {
+      assistsProvider = provider;
     }
   };
 };
@@ -96,7 +105,9 @@ const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBinding
     createAxisRow('Cyclic Pitch', bindings.cyclicY, 'Forward', 'Back'),
     createAxisRow('Cyclic Roll', bindings.cyclicX, 'Right', 'Left'),
     createAxisRow('Yaw', bindings.yaw, 'Right', 'Left'),
-    createNoteRow('Mouse Look', 'Click canvas to lock pointer; drag if lock unavailable.')
+    createNoteRow('Mouse Look', 'Click canvas to lock pointer; drag if lock unavailable.'),
+    createNoteRow('Stability Assist', 'Press Z to toggle auto-leveling'),
+    createNoteRow('Hover Assist', 'Press X to toggle drift damping')
   );
 
   controlsSection.append(controlsHeading, controlsGrid);
@@ -200,6 +211,65 @@ const createFlightHud = (): FlightHudController => {
   update(null);
 
   return { element: wrapper, update };
+};
+
+type AssistsHudController = {
+  element: HTMLElement;
+  update: (assists: CHelicopterAssists | null) => void;
+};
+
+const createAssistsHud = (): AssistsHudController => {
+  const wrapper = document.createElement('section');
+  wrapper.className = 'assists-hud';
+
+  const heading = document.createElement('div');
+  heading.className = 'hud-heading';
+  heading.textContent = 'Flight Assists';
+
+  const grid = document.createElement('div');
+  grid.className = 'assists-grid';
+
+  const stabilityRow = createAssistRow('Stability', 'Z');
+  const hoverRow = createAssistRow('Hover', 'X');
+
+  grid.append(stabilityRow.element, hoverRow.element);
+  wrapper.append(heading, grid);
+
+  const update = (assists: CHelicopterAssists | null): void => {
+    stabilityRow.setState(assists?.stability ?? false);
+    hoverRow.setState(assists?.hover ?? false);
+  };
+
+  update(null);
+
+  return { element: wrapper, update };
+};
+
+const createAssistRow = (label: string, toggleKey: string) => {
+  const container = document.createElement('div');
+  container.className = 'assist-row';
+
+  const indicator = document.createElement('span');
+  indicator.className = 'assist-indicator assist-off';
+  indicator.textContent = '○';
+
+  const title = document.createElement('span');
+  title.className = 'assist-label';
+  title.textContent = label;
+
+  const hint = document.createElement('span');
+  hint.className = 'assist-hint';
+  hint.textContent = `(${toggleKey})`;
+
+  container.append(indicator, title, hint);
+
+  return {
+    element: container,
+    setState: (enabled: boolean) => {
+      indicator.textContent = enabled ? '●' : '○';
+      indicator.className = `assist-indicator ${enabled ? 'assist-on' : 'assist-off'}`;
+    }
+  };
 };
 
 const createHudMetric = (label: string) => {

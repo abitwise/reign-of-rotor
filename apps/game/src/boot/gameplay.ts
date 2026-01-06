@@ -5,6 +5,7 @@ import type { Entity } from '../physics/types';
 import type { PhysicsWorldContext } from '../physics/world';
 import {
   createHelicopterFlightSystem,
+  createAssistToggleSystem,
   createGroundPlane,
   spawnPlayerHelicopter,
   type PlayerHelicopter
@@ -28,6 +29,7 @@ export const bootstrapGameplay = ({
   const ground = createGroundPlane(physics);
   const player = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
 
+  scheduler.addSystem(createAssistToggleSystem(player));
   scheduler.addSystem(createHelicopterFlightSystem(player));
   scheduler.addSystem(createAltimeterSystem(player, physics));
 

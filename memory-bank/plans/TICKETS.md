@@ -101,17 +101,17 @@
 - Status: Done
 - Summary: Add AGL sensing and landed/crash state transitions.
 - Tasks:
-  - [ ] Altimeter system (raycast)
-  - [ ] Landing thresholds + impact damage hooks
-  - [ ] HUD indicator for AGL and landing state
+  - [x] Altimeter system (raycast)
+  - [x] Landing thresholds + impact damage hooks
+  - [x] HUD indicator for AGL and landing state
 
 ### [P1-9] Assist Toggles: Stability + Hover Assist
-- Status: Backlog
+- **Status:** Done
 - Summary: Add optional assists to keep handling accessible on KB+mouse.
 - Tasks:
-  - [ ] Stability assist (angular damping/torque)
-  - [ ] Hover assist (lateral velocity damping; optional altitude hold)
-  - [ ] UI indicators for assist states
+  - [x] Stability assist (angular damping/torque)
+  - [x] Hover assist (lateral velocity damping; optional altitude hold)
+  - [x] UI indicators for assist states
 
 ### [P1-10] HUD v1 (Cockpit-First, HTML Overlay)
 - Status: Backlog

@@ -21,6 +21,8 @@ export type PlayerInputState = {
   cyclicX: number;
   cyclicY: number;
   yaw: number;
+  toggleStability: boolean; // One-frame pulse
+  toggleHover: boolean;      // One-frame pulse
 };
 
 // Alias used by ECS-facing layers.
@@ -73,7 +75,9 @@ export const createPlayerInputState = (): PlayerInputState => ({
   collective: 0,
   cyclicX: 0,
   cyclicY: 0,
-  yaw: 0
+  yaw: 0,
+  toggleStability: false,
+  toggleHover: false
 });
 
 export const samplePlayerInput = (
@@ -85,6 +89,10 @@ export const samplePlayerInput = (
   state.cyclicX = resolveAxis(bindings.cyclicX, sampler);
   state.cyclicY = resolveAxis(bindings.cyclicY, sampler);
   state.yaw = resolveAxis(bindings.yaw, sampler);
+
+  // Toggle keys (edge-triggered)
+  state.toggleStability = sampler.wasJustPressed('KeyZ');
+  state.toggleHover = sampler.wasJustPressed('KeyX');
 
   return state;
 };
@@ -104,6 +112,7 @@ export const createPlayerInputSystem = ({
   phase: SystemPhase.Input,
   step: () => {
     samplePlayerInput(state, sampler, bindings);
+    sampler.clearJustPressed(); // Clear edge-triggered flags after sampling
   }
 });
 
