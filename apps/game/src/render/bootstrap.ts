@@ -73,6 +73,7 @@ export const bootstrapRenderer = async ({
   camera.fov = 0.94;
   camera.inertia = 0;
   camera.checkCollisions = false;
+  camera.applyGravity = false;
 
   const light = new HemisphericLight('skyLight', new Vector3(0.25, 1, 0.4), scene);
   light.intensity = 0.9;

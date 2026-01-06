@@ -124,7 +124,10 @@ export const createPauseToggleSystem = (input: PlayerInputState, gameState: Game
 });
 
 const applyRotorForces = (heli: PlayerHelicopter): void => {
-  const liftInput = clamp01((heli.input.collective + 1) / 2);
+  // Collective is sampled as an axis in [-1, 1], but it is effectively a throttle-like input.
+  // With keyboard sampling, idle state is 0 (no keys pressed), so map directly to lift [0, 1]
+  // to avoid applying ~50% lift at rest.
+  const liftInput = clamp01(heli.input.collective);
   if (liftInput <= 0) {
     return;
   }
