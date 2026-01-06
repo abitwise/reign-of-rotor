@@ -31,7 +31,7 @@
   - [ ] Add minimal instrumentation (dt, steps per frame)
 
 ### [P1-3] Rapier World Integration + Entity↔Handle Mapping
-- Status: Backlog
+- Status: Done
 - Summary: Integrate Rapier, create world, step, and map ECS entities to Rapier bodies/colliders.
 - Context: Physics underpins flight, collisions, raycasts.
 - Functional behavior (GIVEN/WHEN/THEN):

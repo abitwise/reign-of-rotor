@@ -1,4 +1,5 @@
-import { FixedStepContext, LoopSystem, SYSTEM_PHASE_ORDER, SystemPhase } from './types';
+import { SYSTEM_PHASE_ORDER } from './types';
+import type { FixedStepContext, LoopSystem, SystemPhase } from './types';
 
 export class SystemScheduler {
   private systems: Map<SystemPhase, LoopSystem[]>;
