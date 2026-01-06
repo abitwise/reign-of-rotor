@@ -55,6 +55,101 @@ body {
   pointer-events: none;
 }
 
+.ui-hud-container {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.instructions-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  pointer-events: auto;
+  opacity: 1;
+  transition: opacity 0.3s ease-out;
+}
+
+.instructions-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.instructions-panel {
+  width: min(720px, 100%);
+  background: rgba(12, 17, 22, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.instructions-hero {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.instructions-hero h1 {
+  margin: 0;
+  font-size: 32px;
+  letter-spacing: 0.6px;
+}
+
+.instructions-hero p {
+  margin: 0;
+  color: #c2d1df;
+}
+
+.instructions-controls {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.instructions-controls h3 {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: 0.4px;
+  color: #8bc4ff;
+}
+
+.instructions-close {
+  margin-top: 24px;
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(48, 123, 226, 0.8), rgba(32, 89, 183, 0.9));
+  border: 1px solid rgba(152, 199, 255, 0.4);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.instructions-close:hover {
+  background: linear-gradient(135deg, rgba(48, 123, 226, 0.95), rgba(32, 89, 183, 1));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(48, 123, 226, 0.4);
+}
+
+.instructions-close:active {
+  transform: translateY(0);
+}
+
 .app-shell {
   pointer-events: auto;
   width: min(960px, 100%);
@@ -179,13 +274,19 @@ body {
 }
 
 .flight-hud {
-  margin-top: 18px;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: min(400px, calc(100vw - 32px));
+  pointer-events: auto;
   padding: 14px;
-  background: linear-gradient(180deg, rgba(41, 59, 78, 0.15), rgba(21, 28, 37, 0.2));
-  border: 1px solid rgba(152, 199, 255, 0.18);
+  background: linear-gradient(180deg, rgba(41, 59, 78, 0.85), rgba(21, 28, 37, 0.9));
+  border: 1px solid rgba(152, 199, 255, 0.25);
   border-radius: 12px;
   display: grid;
   gap: 10px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .hud-heading {

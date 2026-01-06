@@ -39,7 +39,7 @@ export class CockpitCameraRig {
   private fallbackTransform: Transform | null;
 
   private readonly cockpitOffset: Vector3;
-  private readonly lookLimits: Required<CockpitCameraRigOptions['lookLimits']>;
+  private readonly lookLimits: { yaw: number; pitchUp: number; pitchDown: number };
   private readonly lookTarget = { yaw: 0, pitch: 0 };
   private readonly lookCurrent = { yaw: 0, pitch: 0 };
   private readonly smoothing: { position: number; rotation: number; look: number };

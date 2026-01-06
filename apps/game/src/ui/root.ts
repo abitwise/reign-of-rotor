@@ -13,38 +13,21 @@ export type FlightReadoutProvider = () => AltimeterState | null;
 
 export const createRootUi = ({ target, config, bindings }: RootUiOptions) => {
   const container = document.createElement('div');
-  container.className = 'app-shell';
+  container.className = 'ui-hud-container';
 
-  const hero = document.createElement('div');
-  hero.className = 'app-hero';
-  hero.innerHTML = `
-    <h1>Reign of Rotor</h1>
-    <p>
-      LHX-inspired browser demo. Keyboard + mouse input now map into the fixed-step sim loop while the
-      cockpit camera keeps mouse-look separate from flight controls. Click the scene to engage
-      pointer lock; if it is denied, hold the mouse to drag-look.
-    </p>
-    <div class="app-cta">
-      <span class="app-tag">Stage: Altimeter + Landing Detection</span>
-      <span class="app-tag">Mode: ${config.mode}</span>
-    </div>
-    <div class="app-status">
-      <strong>Altimeter and landing sensing live</strong>
-      <span>AGL now comes from a physics raycast each tick, with landing and hard-landing detection feeding the HUD readout while keeping mouse-look separate from flight controls.</span>
-    </div>
-  `;
-
-  const controlsPanel = createControlsPanel(bindings);
+  const instructionsPanel = createInstructionsPanel(config, bindings);
   const flightHud = createFlightHud();
 
-  container.appendChild(hero);
-  container.appendChild(controlsPanel);
+  container.appendChild(instructionsPanel.element);
   container.appendChild(flightHud.element);
   target.replaceChildren(container);
 
   const debugOverlay = config.enableDebugOverlay
     ? createDebugOverlay({ host: container, config })
     : null;
+
+  // Show instructions on startup
+  instructionsPanel.show();
 
   let flightReadoutProvider: FlightReadoutProvider | null = null;
   let hudFrameHandle: number | null = null;
@@ -62,6 +45,7 @@ export const createRootUi = ({ target, config, bindings }: RootUiOptions) => {
   return {
     destroy: () => {
       debugOverlay?.destroy();
+      instructionsPanel.destroy();
       if (hudFrameHandle !== null) {
         cancelScheduledFrame(hudFrameHandle);
       }
@@ -77,26 +61,62 @@ export const createRootUi = ({ target, config, bindings }: RootUiOptions) => {
   };
 };
 
-const createControlsPanel = (bindings: PlayerInputBindings): HTMLElement => {
-  const wrapper = document.createElement('section');
-  wrapper.className = 'controls-panel';
+const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBindings) => {
+  const overlay = document.createElement('div');
+  overlay.className = 'instructions-overlay hidden';
 
-  const heading = document.createElement('h3');
-  heading.textContent = 'Controls (Dev)';
+  const panel = document.createElement('div');
+  panel.className = 'instructions-panel';
 
-  const grid = document.createElement('div');
-  grid.className = 'controls-grid';
+  const hero = document.createElement('div');
+  hero.className = 'instructions-hero';
+  hero.innerHTML = `
+    <h1>Reign of Rotor</h1>
+    <p>
+      LHX-inspired browser demo. Keyboard + mouse input control your helicopter.
+      Click the scene to engage pointer lock for mouse look.
+    </p>
+    <div class="app-cta">
+      <span class="app-tag">Stage: Altimeter + Landing Detection</span>
+      <span class="app-tag">Mode: ${config.mode}</span>
+    </div>
+  `;
 
-  grid.append(
+  const controlsSection = document.createElement('div');
+  controlsSection.className = 'instructions-controls';
+  
+  const controlsHeading = document.createElement('h3');
+  controlsHeading.textContent = 'Flight Controls';
+
+  const controlsGrid = document.createElement('div');
+  controlsGrid.className = 'controls-grid';
+
+  controlsGrid.append(
     createAxisRow('Collective', bindings.collective, 'Up', 'Down'),
     createAxisRow('Cyclic Pitch', bindings.cyclicY, 'Forward', 'Back'),
     createAxisRow('Cyclic Roll', bindings.cyclicX, 'Right', 'Left'),
     createAxisRow('Yaw', bindings.yaw, 'Right', 'Left'),
-    createNoteRow('Mouse Look', 'Click to lock pointer; hold mouse and drag if pointer lock is unavailable.')
+    createNoteRow('Mouse Look', 'Click canvas to lock pointer; drag if lock unavailable.')
   );
 
-  wrapper.append(heading, grid);
-  return wrapper;
+  controlsSection.append(controlsHeading, controlsGrid);
+
+  const closeButton = document.createElement('button');
+  closeButton.className = 'instructions-close';
+  closeButton.textContent = 'Start Flying';
+  closeButton.onclick = () => overlay.classList.add('hidden');
+
+  panel.append(hero, controlsSection, closeButton);
+  overlay.appendChild(panel);
+
+  return {
+    element: overlay,
+    show: () => overlay.classList.remove('hidden'),
+    hide: () => overlay.classList.add('hidden'),
+    destroy: () => {
+      closeButton.onclick = null;
+    }
+  };
 };
 
 const createAxisRow = (

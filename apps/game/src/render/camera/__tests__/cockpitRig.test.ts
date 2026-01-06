@@ -24,8 +24,7 @@ const createRig = (
     camera,
     transformProvider: () => options.transform ?? identityTransform,
     targetEntity: options.targetEntity ?? 1,
-    lookLimits: options.lookLimits,
-    pointerLockElement: null
+    lookLimits: options.lookLimits
   });
 
   return {
