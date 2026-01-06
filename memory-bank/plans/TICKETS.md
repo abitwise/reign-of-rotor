@@ -57,7 +57,7 @@
   - [ ] Asset manifest + loader skeleton
 
 ### [P1-5] Render Binding Layer + Cockpit-First Camera Rig
-- Status: Backlog
+- Status: Done
 - Summary: Bind ECS/physics transforms to meshes and implement cockpit-first camera.
 - Context: Camera choice impacts HUD readability and flight feel; cockpit is MVP default.
 - Functional behavior (GIVEN/WHEN/THEN):
