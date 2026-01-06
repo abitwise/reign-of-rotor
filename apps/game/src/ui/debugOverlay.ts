@@ -1,11 +1,17 @@
 import type { AppConfig } from '../boot/config';
+import type { LoopFrameMetrics } from '../core/loop/types';
 
 export type DebugOverlayOptions = {
   host: HTMLElement;
   config: AppConfig;
 };
 
-export const createDebugOverlay = ({ host, config }: DebugOverlayOptions) => {
+export type DebugOverlayController = {
+  destroy: () => void;
+  setLoopMetrics: (metrics: LoopFrameMetrics) => void;
+};
+
+export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): DebugOverlayController => {
   const wrapper = document.createElement('section');
   wrapper.className = 'debug-overlay';
 
@@ -18,10 +24,10 @@ export const createDebugOverlay = ({ host, config }: DebugOverlayOptions) => {
   description.textContent = 'Environment flags for the current build.';
   description.style.margin = '6px 0 0';
 
-  const grid = document.createElement('div');
-  grid.className = 'debug-grid';
+  const configGrid = document.createElement('div');
+  configGrid.className = 'debug-grid';
 
-  const items: Array<[string, string]> = [
+  const configItems: Array<[string, string]> = [
     ['Mode', config.mode],
     ['Dev', String(config.isDev)],
     ['Prod', String(config.isProd)],
@@ -29,26 +35,68 @@ export const createDebugOverlay = ({ host, config }: DebugOverlayOptions) => {
     ['Build Label', config.buildLabel]
   ];
 
-  items.forEach(([label, value]) => {
-    const row = document.createElement('div');
-    row.className = 'debug-label';
-
-    const labelEl = document.createElement('span');
-    labelEl.textContent = label;
-
-    const valueEl = document.createElement('span');
-    valueEl.textContent = value;
-
-    row.append(labelEl, valueEl);
-    grid.appendChild(row);
+  configItems.forEach(([label, value]) => {
+    const row = createLabelRow(label, value);
+    configGrid.appendChild(row.row);
   });
 
-  wrapper.append(heading, description, grid);
+  const timingHeading = document.createElement('h3');
+  timingHeading.textContent = 'Loop Timing';
+  timingHeading.style.margin = '12px 0 4px';
+  timingHeading.style.fontSize = '14px';
+  timingHeading.style.textTransform = 'uppercase';
+  timingHeading.style.letterSpacing = '0.5px';
+
+  const timingGrid = document.createElement('div');
+  timingGrid.className = 'debug-grid';
+
+  const frameDeltaRow = createLabelRow('Frame Δ (raw)', '—');
+  const usedDeltaRow = createLabelRow('Δ used (clamped)', '—');
+  const fixedDeltaRow = createLabelRow('Fixed Δ', '—');
+  const stepsRow = createLabelRow('Steps / frame', '—');
+  const clampedRow = createLabelRow('Clamped time', '—');
+  const accumulatorRow = createLabelRow('Accumulator', '—');
+
+  [frameDeltaRow, usedDeltaRow, fixedDeltaRow, stepsRow, clampedRow, accumulatorRow].forEach(
+    (row) => timingGrid.appendChild(row.row)
+  );
+
+  wrapper.append(heading, description, configGrid, timingHeading, timingGrid);
   host.appendChild(wrapper);
 
   return {
     destroy: () => {
       host.removeChild(wrapper);
+    },
+    setLoopMetrics: (metrics: LoopFrameMetrics) => {
+      frameDeltaRow.setValue(formatMs(metrics.frameDeltaMs));
+      usedDeltaRow.setValue(formatMs(metrics.usedDeltaMs));
+      fixedDeltaRow.setValue(formatMs(metrics.fixedStepMs));
+      stepsRow.setValue(String(metrics.stepsExecuted));
+      clampedRow.setValue(formatMs(metrics.clampedMs));
+      accumulatorRow.setValue(formatMs(metrics.accumulatorMs));
+    }
+  };
+};
+
+const formatMs = (value: number): string => `${value.toFixed(2)} ms`;
+
+const createLabelRow = (label: string, value: string) => {
+  const row = document.createElement('div');
+  row.className = 'debug-label';
+
+  const labelEl = document.createElement('span');
+  labelEl.textContent = label;
+
+  const valueEl = document.createElement('span');
+  valueEl.textContent = value;
+
+  row.append(labelEl, valueEl);
+
+  return {
+    row,
+    setValue: (nextValue: string) => {
+      valueEl.textContent = nextValue;
     }
   };
 };

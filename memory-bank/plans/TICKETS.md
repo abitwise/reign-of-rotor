@@ -17,7 +17,7 @@
   - [ ] Add env/config flags (dev/prod)
 
 ### [P1-2] Fixed Timestep Loop + System Scheduler
-- Status: Backlog
+- Status: Done
 - Summary: Implement the core loop that runs sim at fixed dt and render at refresh rate.
 - Context: Flight feel and fairness depend on stable timing.
 - Functional behavior (GIVEN/WHEN/THEN):

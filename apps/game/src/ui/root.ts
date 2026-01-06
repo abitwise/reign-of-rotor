@@ -31,14 +31,15 @@ export const createRootUi = ({ target, config }: RootUiOptions) => {
   container.appendChild(hero);
   target.replaceChildren(container);
 
-  const destroyDebugOverlay = config.enableDebugOverlay
+  const debugOverlay = config.enableDebugOverlay
     ? createDebugOverlay({ host: container, config })
     : null;
 
   return {
     destroy: () => {
-      destroyDebugOverlay?.destroy();
+      debugOverlay?.destroy();
       target.replaceChildren();
-    }
+    },
+    setLoopMetrics: debugOverlay?.setLoopMetrics
   };
 };
