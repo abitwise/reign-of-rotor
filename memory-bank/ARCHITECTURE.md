@@ -92,4 +92,22 @@ The game is a TypeScript browser application built around a data-driven ECS simu
 - Visual style: low-poly modern indie; prioritize readability and stable FPS.
 - Mouse-look is camera-only in MVP (no “mouse-as-cyclic”) to avoid control contention and reduce rework.
 - Escort missions use waypoint rails (no navmesh/pathfinding in MVP).
+
+## Asset contracts (MVP)
+### Helicopter model node contract
+- Helicopter root node: `Gunship`
+- Rotor nodes:
+  - Main rotor: `Rotor`
+  - Tail rotor: `Back_Rotor`
+- Optional decorative mesh:
+  - `Hellfire_Missile` (visual only; gameplay missiles are spawned entities)
+- Required attachment nodes (empties), parented under `Gunship`:
+  - `@cam_cockpit`
+  - `@muzzle_cannon`
+  - `@cm_release`
+
+Notes:
+- Rotors are animated procedurally at runtime (do not rely on baked glTF animations).
+- Pivots/origins for `Rotor` and `Back_Rotor` must be set to their hub centers.
+
 - Mission completion requires explicit player confirm (prompt) to prevent abrupt cutoffs mid-flight.
