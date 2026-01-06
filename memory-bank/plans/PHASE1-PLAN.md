@@ -1,4 +1,4 @@
-# PHASE 1 MVP Plan
+# PHASE 1 Plan
 
 ## Goals
 - Ship a polished browser-playable demo with:
