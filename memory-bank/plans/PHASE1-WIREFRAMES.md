@@ -1,4 +1,4 @@
-# WIREFRAMES — Reign of Rotor (Browser) (MVP)
+# PHASE 1 WIREFRAMES — Reign of Rotor (Browser) (MVP)
 
 Visual style: low-poly modern indie  
 Default camera: cockpit-first  
