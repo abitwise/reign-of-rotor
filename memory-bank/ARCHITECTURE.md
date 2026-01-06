@@ -2,6 +2,7 @@
 
 ## High-level overview (1–2 paragraphs)
 The game is a TypeScript browser application built around a data-driven ECS simulation (bitecs), a fixed-timestep game loop, and a physics backend (Rapier WASM). Rendering is handled by Babylon.js, projecting simulation state to visuals via a binding layer. The simulation is the source of gameplay truth, while Rapier is authoritative for rigid-body transforms and collision queries. The default experience is cockpit-first: camera and HUD prioritize first-person readability; UI/HUD is implemented as a lightweight HTML overlay.
+- Note: Rapier provides rigid body physics, collisions, and queries; we still implement a helicopter flight controller that applies forces/torques (and assist logic) each fixed tick.
 
 ## Main components (responsibilities)
 - `core/loop`:
@@ -24,6 +25,28 @@ The game is a TypeScript browser application built around a data-driven ECS simu
 - `ui`:
   - HUD + menus + debrief.
   - Reads sim state and events; never writes physics directly.
+ 
+## Directory structure (source of truth)
+- The repository is organized to keep simulation, physics, rendering, and UI separate:
+
+  /apps
+    /game
+      /src
+        /boot              # init, config, feature flags, app wiring
+        /core              # fixed timestep loop, scheduler, events, save/settings
+        /ecs               # component schemas, entity factories, queries
+        /physics           # rapier world, step, raycasts, handle mapping, collision plumbing
+        /sim               # gameplay systems: flight, weapons, AI, missions, damage
+        /render            # babylon scene, mesh bindings, camera rigs, VFX, audio hooks
+        /ui                # HTML HUD, menus, debrief
+        /content           # mission templates, tuning presets, spawn tables
+        /debug             # dev-only overlays, profiling toggles, cheats (guarded)
+        main.ts
+  /packages
+    /shared                # math utils, seeded RNG, shared types/contracts
+    /tools                 # asset pipeline scripts, glTF validation, manifest builder
+  /public
+    /assets                # GLB, textures, sounds, asset manifests (runtime-loaded)
 
 ## External integrations (what/why/how)
 - Babylon.js:
@@ -35,7 +58,9 @@ The game is a TypeScript browser application built around a data-driven ECS simu
 - bitecs:
   - Why: fast data-oriented ECS for clean separation and scalability.
   - How: components store numbers/ids; systems operate on queries; entity factories bind physics + render as needed.
-- Input (KB+Mouse first):
+- Input (KB+Mouse first, desktop-only MVP):
+  - The app targets desktop browsers with keyboard+mouse; touch controls are not implemented in MVP.
+  - If loaded on mobile, show a clear unsupported notice (no partial broken controls).
   - How: DOM keyboard events + pointer lock (optional) for mouse look; mapped to `CPlayerInput`.
   - Note: keep input sampling separate from sim; write inputs once per tick.
 
@@ -43,6 +68,9 @@ The game is a TypeScript browser application built around a data-driven ECS simu
 ### Mission completion contract (MVP)
 - Mission can be marked complete when all primary objectives are met, even while airborne.
 - Landing is optional and may later become a bonus/secondary condition.
+### Fail-state contract (MVP)
+- Fail if helicopter destroyed / critical kill event occurs.
+- If out-of-bounds, show warning + countdown; fail if not corrected.
 
 ### ECS Component families (key fields)
 - Camera intent (recommended add-on): `CCameraRig { mode, yaw, pitch, fov, smoothing }` (cockpit first)
@@ -60,3 +88,6 @@ The game is a TypeScript browser application built around a data-driven ECS simu
 - Use raycasts for bullets and key sensors (altimeter/LOS/targeting).
 - Mission templates are data-driven and seeded for reproducibility.
 - Visual style: low-poly modern indie; prioritize readability and stable FPS.
+- Mouse-look is camera-only in MVP (no “mouse-as-cyclic”) to avoid control contention and reduce rework.
+- Escort missions use waypoint rails (no navmesh/pathfinding in MVP).
+- Mission completion requires explicit player confirm (prompt) to prevent abrupt cutoffs mid-flight.
