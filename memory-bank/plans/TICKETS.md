@@ -87,7 +87,7 @@
   - [ ] Simple in-game “Controls” help panel (dev)
 
 ### [P1-7] Player Helicopter Spawn + Basic Flight Forces (Rapier)
-- Status: Backlog
+- **Status:** Done
 - Summary: Spawn helicopter rigid body and apply lift/torques driven by input.
 - Functional behavior (GIVEN/WHEN/THEN):
   - GIVEN player input, WHEN applying collective, THEN the helicopter gains altitude.

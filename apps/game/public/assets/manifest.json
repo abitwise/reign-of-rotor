@@ -2,6 +2,11 @@
   "version": 1,
   "assets": [
     {
+      "id": "apache-gunship",
+      "path": "/assets/low_poly_apache_gunship.glb",
+      "type": "glb"
+    },
+    {
       "id": "placeholder-triangle",
       "path": "/assets/placeholder.gltf",
       "type": "gltf"
