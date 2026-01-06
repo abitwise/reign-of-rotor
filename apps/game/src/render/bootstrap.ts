@@ -14,6 +14,7 @@ import { RenderAssetLoader } from './assets/assetLoader';
 import { loadAssetManifest } from './assets/manifest';
 import type { Entity } from '../physics/types';
 import { CockpitCameraRig } from './camera/cockpitRig';
+import { MouseLookController } from '../core/input/mouseLookController';
 
 export type RenderContext = {
   engine: Engine;
@@ -89,8 +90,12 @@ export const bootstrapRenderer = async ({
 
   const cameraRig = new CockpitCameraRig({
     camera,
-    transformProvider: transformReader,
-    pointerLockElement: canvas
+    transformProvider: transformReader
+  });
+
+  const mouseLook = new MouseLookController({
+    element: canvas,
+    onLook: (yawDelta, pitchDelta) => cameraRig.applyLookDelta(yawDelta, pitchDelta)
   });
 
   scene.onBeforeRenderObservable.add(() => {
@@ -146,6 +151,7 @@ export const bootstrapRenderer = async ({
     },
     dispose: () => {
       scene.onBeforeRenderObservable.clear();
+      mouseLook.dispose();
       cameraRig.dispose();
       engine.stopRenderLoop();
       maybeWindow?.removeEventListener('resize', resize);

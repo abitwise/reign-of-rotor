@@ -1,12 +1,14 @@
 import type { AppConfig } from '../boot/config';
 import { createDebugOverlay } from './debugOverlay';
+import type { PlayerInputBindings } from '../core/input/playerInput';
 
 export type RootUiOptions = {
   target: HTMLElement;
   config: AppConfig;
+  bindings: PlayerInputBindings;
 };
 
-export const createRootUi = ({ target, config }: RootUiOptions) => {
+export const createRootUi = ({ target, config, bindings }: RootUiOptions) => {
   const container = document.createElement('div');
   container.className = 'app-shell';
 
@@ -15,21 +17,24 @@ export const createRootUi = ({ target, config }: RootUiOptions) => {
   hero.innerHTML = `
     <h1>Reign of Rotor</h1>
     <p>
-      LHX-inspired browser demo. Babylon scene + Rapier world now feed a cockpit-first camera with
-      render bindings driven by sim/physics transforms. Click the scene to engage mouse-look (pointer
-      lock); hit Esc to release.
+      LHX-inspired browser demo. Keyboard + mouse input now map into the fixed-step sim loop while the
+      cockpit camera keeps mouse-look separate from flight controls. Click the scene to engage
+      pointer lock; if it is denied, hold the mouse to drag-look.
     </p>
     <div class="app-cta">
-      <span class="app-tag">Stage: Cockpit Camera Rig</span>
+      <span class="app-tag">Stage: Keyboard + Mouse Input</span>
       <span class="app-tag">Mode: ${config.mode}</span>
     </div>
     <div class="app-status">
-      <strong>Cockpit view ready</strong>
-      <span>Babylon canvas mounts with debug lighting + ground. Mesh bindings follow sim/physics transforms, and cockpit mouse-look uses pointer lock by default.</span>
+      <strong>Input mapping live</strong>
+      <span>Keyboard axes feed the per-tick player input component; cockpit mouse-look uses pointer lock when available and falls back to drag-look.</span>
     </div>
   `;
 
+  const controlsPanel = createControlsPanel(bindings);
+
   container.appendChild(hero);
+  container.appendChild(controlsPanel);
   target.replaceChildren(container);
 
   const debugOverlay = config.enableDebugOverlay
@@ -44,3 +49,90 @@ export const createRootUi = ({ target, config }: RootUiOptions) => {
     setLoopMetrics: debugOverlay?.setLoopMetrics
   };
 };
+
+const createControlsPanel = (bindings: PlayerInputBindings): HTMLElement => {
+  const wrapper = document.createElement('section');
+  wrapper.className = 'controls-panel';
+
+  const heading = document.createElement('h3');
+  heading.textContent = 'Controls (Dev)';
+
+  const grid = document.createElement('div');
+  grid.className = 'controls-grid';
+
+  grid.append(
+    createAxisRow('Collective', bindings.collective, 'Up', 'Down'),
+    createAxisRow('Cyclic Pitch', bindings.cyclicY, 'Forward', 'Back'),
+    createAxisRow('Cyclic Roll', bindings.cyclicX, 'Right', 'Left'),
+    createAxisRow('Yaw', bindings.yaw, 'Right', 'Left'),
+    createNoteRow('Mouse Look', 'Click to lock pointer; hold mouse and drag if pointer lock is unavailable.')
+  );
+
+  wrapper.append(heading, grid);
+  return wrapper;
+};
+
+const createAxisRow = (
+  label: string,
+  binding: { positive: string[]; negative: string[] },
+  positiveLabel: string,
+  negativeLabel: string
+): HTMLElement => {
+  const row = document.createElement('div');
+  row.className = 'control-row';
+
+  const title = document.createElement('div');
+  title.className = 'control-label';
+  title.textContent = label;
+
+  const details = document.createElement('div');
+  details.className = 'control-detail';
+
+  const positive = document.createElement('div');
+  positive.className = 'control-bind';
+  positive.innerHTML = `<span>${positiveLabel}</span><strong>${formatKeyList(binding.positive)}</strong>`;
+
+  const negative = document.createElement('div');
+  negative.className = 'control-bind';
+  negative.innerHTML = `<span>${negativeLabel}</span><strong>${formatKeyList(binding.negative)}</strong>`;
+
+  details.append(positive, negative);
+  row.append(title, details);
+  return row;
+};
+
+const createNoteRow = (label: string, note: string): HTMLElement => {
+  const row = document.createElement('div');
+  row.className = 'control-row';
+
+  const title = document.createElement('div');
+  title.className = 'control-label';
+  title.textContent = label;
+
+  const details = document.createElement('div');
+  details.className = 'control-note';
+  details.textContent = note;
+
+  row.append(title, details);
+  return row;
+};
+
+const KEY_LABELS: Record<string, string> = {
+  KeyW: 'W',
+  KeyA: 'A',
+  KeyS: 'S',
+  KeyD: 'D',
+  KeyQ: 'Q',
+  KeyE: 'E',
+  KeyR: 'R',
+  KeyF: 'F',
+  ArrowUp: 'Arrow ↑',
+  ArrowDown: 'Arrow ↓',
+  ArrowLeft: 'Arrow ←',
+  ArrowRight: 'Arrow →',
+  PageUp: 'Page Up',
+  PageDown: 'Page Down'
+};
+
+const formatKey = (code: string): string => KEY_LABELS[code] ?? code;
+const formatKeyList = (codes: string[]): string => codes.map(formatKey).join(' / ');
