@@ -178,6 +178,87 @@ body {
   font-size: 14px;
 }
 
+.flight-hud {
+  margin-top: 18px;
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(41, 59, 78, 0.15), rgba(21, 28, 37, 0.2));
+  border: 1px solid rgba(152, 199, 255, 0.18);
+  border-radius: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.hud-heading {
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-size: 13px;
+  color: #8bc4ff;
+}
+
+.landing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.landing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  font-size: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.landing-airborne {
+  background: rgba(152, 199, 255, 0.12);
+  color: #b9d8ff;
+  border-color: rgba(152, 199, 255, 0.4);
+}
+
+.landing-safe {
+  background: rgba(118, 206, 163, 0.16);
+  color: #a6e1c5;
+  border-color: rgba(118, 206, 163, 0.4);
+}
+
+.landing-warning {
+  background: rgba(243, 201, 105, 0.12);
+  color: #ffd179;
+  border-color: rgba(243, 201, 105, 0.45);
+}
+
+.landing-danger {
+  background: rgba(255, 159, 160, 0.14);
+  color: #ffc5c7;
+  border-color: rgba(255, 159, 160, 0.45);
+}
+
+.flight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.hud-metric {
+  display: grid;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #c2d1df;
+}
+
+.hud-metric strong {
+  font-size: 20px;
+  color: #e6ecf2;
+}
+
 .debug-overlay {
   margin-top: 16px;
   padding: 12px;

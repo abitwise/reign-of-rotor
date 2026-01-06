@@ -59,6 +59,8 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
         input: input.state
       });
 
+      rootUi.setFlightReadoutProvider?.(() => gameplayContext.player.altimeter);
+
       renderer
         .then((renderContext) => {
           renderContext.bindEntityMesh(gameplayContext.player.entity, 'apache-gunship');

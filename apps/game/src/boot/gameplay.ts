@@ -9,6 +9,7 @@ import {
   spawnPlayerHelicopter,
   type PlayerHelicopter
 } from '../sim/helicopterFlight';
+import { createAltimeterSystem } from '../sim/altimeter';
 
 export type GameplayContext = {
   player: PlayerHelicopter;
@@ -28,6 +29,7 @@ export const bootstrapGameplay = ({
   const player = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
 
   scheduler.addSystem(createHelicopterFlightSystem(player));
+  scheduler.addSystem(createAltimeterSystem(player, physics));
 
   return { player, ground };
 };
