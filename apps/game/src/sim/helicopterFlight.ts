@@ -39,7 +39,7 @@ export const spawnPlayerHelicopter = (
   physics: PhysicsWorldContext,
   flight: CHelicopterFlight,
   input: PlayerInputState,
-  startHeight = 1.5
+  startHeight = 0.8
 ): PlayerHelicopter => {
   const entity = createEntityId();
   const { rapier } = physics;
@@ -55,14 +55,14 @@ export const spawnPlayerHelicopter = (
   createColliderForEntity(physics, {
     entity,
     rigidBody: body,
-    descriptor: rapier.ColliderDesc.cuboid(0.8, 0.4, 2).setDensity(0.55)
+    descriptor: rapier.ColliderDesc.cuboid(1.2, 0.6, 2.5).setDensity(0.7)
   });
 
   return {
     entity,
     body,
     flight,
-    assists: { stability: false, hover: false },
+    assists: { stability: true, hover: false },
     input,
     altimeter: createAltimeterState()
   };
@@ -74,6 +74,21 @@ export const createHelicopterFlightSystem = (heli: PlayerHelicopter): LoopSystem
   step: () => {
     applyRotorForces(heli);
     applyControlTorques(heli);
+    applyStabilityAssist(heli);
+    applyHoverAssist(heli);
+  }
+});
+
+export const createAssistToggleSystem = (heli: PlayerHelicopter): LoopSystem => ({
+  id: `sim.assistToggle.${heli.entity}`,
+  phase: SystemPhase.Simulation,
+  step: () => {
+    if (heli.input.toggleStability) {
+      heli.assists.stability = !heli.assists.stability;
+    }
+    if (heli.input.toggleHover) {
+      heli.assists.hover = !heli.assists.hover;
+    }
   }
 });
 
@@ -137,3 +152,70 @@ const rotateVector = (
     z: iz * qw + iw * -qz + ix * -qy - iy * -qx
   };
 };
+
+const applyStabilityAssist = (heli: PlayerHelicopter): void => {
+  if (!heli.assists.stability) {
+    return;
+  }
+
+  // Only apply stability assist when player is not actively controlling rotation
+  const hasRotationInput =
+    Math.abs(heli.input.cyclicX) > 0.01 ||
+    Math.abs(heli.input.cyclicY) > 0.01 ||
+    Math.abs(heli.input.yaw) > 0.01;
+
+  if (hasRotationInput) {
+    return;
+  }
+
+  const angularVelocity = heli.body.angvel();
+  const dampingFactor = 0.94; // Per-tick damping (0.94 = 94% retained, 6% removed)
+  const counterTorqueScale = 0.4; // Strength of leveling torque
+
+  // Apply angular damping
+  heli.body.setAngvel(
+    {
+      x: angularVelocity.x * dampingFactor,
+      y: angularVelocity.y * dampingFactor,
+      z: angularVelocity.z * dampingFactor
+    },
+    true
+  );
+
+  // Apply counter-torque to level out
+  const counterTorque = {
+    x: -angularVelocity.x * heli.flight.maxPitchTorque * counterTorqueScale,
+    y: -angularVelocity.y * heli.flight.maxYawTorque * counterTorqueScale,
+    z: -angularVelocity.z * heli.flight.maxRollTorque * counterTorqueScale
+  };
+
+  heli.body.addTorque(counterTorque, true);
+};
+
+const applyHoverAssist = (heli: PlayerHelicopter): void => {
+  if (!heli.assists.hover) {
+    return;
+  }
+
+  // Hover assist activates when collective is in "hover range"
+  const collectiveInput = clamp01((heli.input.collective + 1) / 2);
+  const isInHoverRange = collectiveInput >= 0.3 && collectiveInput <= 0.7;
+
+  if (!isInHoverRange) {
+    return;
+  }
+
+  const linearVelocity = heli.body.linvel();
+  const lateralDampingFactor = 0.88; // Stronger damping for lateral drift
+
+  // Dampen lateral (X/Z) velocity to reduce drift
+  heli.body.setLinvel(
+    {
+      x: linearVelocity.x * lateralDampingFactor,
+      y: linearVelocity.y, // Don't dampen vertical velocity
+      z: linearVelocity.z * lateralDampingFactor
+    },
+    true
+  );
+};
+

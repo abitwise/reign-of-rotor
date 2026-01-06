@@ -12,6 +12,7 @@ export enum LandingState {
 export type AltimeterState = {
   altitude: number;
   verticalSpeed: number;
+  horizontalSpeed: number;
   isGrounded: boolean;
   landingState: LandingState;
   impactSeverity: number;
@@ -20,6 +21,7 @@ export type AltimeterState = {
 export const createAltimeterState = (): AltimeterState => ({
   altitude: Infinity,
   verticalSpeed: 0,
+  horizontalSpeed: 0,
   isGrounded: false,
   landingState: LandingState.Airborne,
   impactSeverity: 0
@@ -57,7 +59,9 @@ const updateAltimeter = (heli: PlayerHelicopter, physics: PhysicsWorldContext): 
   );
 
   const altitude = hit?.timeOfImpact ?? Infinity;
-  const verticalSpeed = heli.body.linvel().y;
+  const velocity = heli.body.linvel();
+  const verticalSpeed = velocity.y;
+  const horizontalSpeed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
   const downwardSpeed = Math.max(0, -verticalSpeed);
 
   const wasGrounded = heli.altimeter.isGrounded;
@@ -66,6 +70,7 @@ const updateAltimeter = (heli: PlayerHelicopter, physics: PhysicsWorldContext): 
   if (heli.altimeter.landingState === LandingState.Crashed) {
     heli.altimeter.altitude = altitude;
     heli.altimeter.verticalSpeed = verticalSpeed;
+    heli.altimeter.horizontalSpeed = horizontalSpeed;
     heli.altimeter.isGrounded = isGrounded;
     return;
   }
@@ -80,6 +85,7 @@ const updateAltimeter = (heli: PlayerHelicopter, physics: PhysicsWorldContext): 
 
   heli.altimeter.altitude = altitude;
   heli.altimeter.verticalSpeed = verticalSpeed;
+  heli.altimeter.horizontalSpeed = horizontalSpeed;
   heli.altimeter.isGrounded = isGrounded;
 };
 

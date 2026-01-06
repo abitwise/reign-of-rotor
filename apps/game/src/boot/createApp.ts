@@ -52,7 +52,7 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
     });
 
   const gameplay = physics
-    .then((context) => {
+    .then(async (context) => {
       const gameplayContext = bootstrapGameplay({
         physics: context,
         scheduler,
@@ -60,15 +60,11 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       });
 
       rootUi.setFlightReadoutProvider?.(() => gameplayContext.player.altimeter);
+      rootUi.setAssistsProvider?.(() => gameplayContext.player.assists);
 
-      renderer
-        .then((renderContext) => {
-          renderContext.bindEntityMesh(gameplayContext.player.entity, 'apache-gunship');
-          renderContext.setCameraTarget(gameplayContext.player.entity);
-        })
-        .catch((error) => {
-          console.error('Failed to bind player helicopter mesh', error);
-        });
+      const renderContext = await renderer;
+      renderContext.bindEntityMesh(gameplayContext.player.entity, 'apache-gunship');
+      renderContext.setCameraTarget(gameplayContext.player.entity);
 
       return gameplayContext;
     })
@@ -77,7 +73,12 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       throw error;
     });
 
-  loop.start();
+  // Wait for gameplay to be ready before starting the loop
+  gameplay.then(() => {
+    loop.start();
+  }).catch((error) => {
+    console.error('Failed to start game loop', error);
+  });
 
   return {
     config,

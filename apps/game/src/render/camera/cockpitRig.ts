@@ -107,13 +107,25 @@ export class CockpitCameraRig {
   }
 
   update(deltaSeconds: number): void {
-    const transform = this.readTransform();
+    // Don't update if we don't have a target entity yet
+    if (this.targetEntity === null) {
+      return;
+    }
+
+    const transform = this.transformProvider(this.targetEntity);
     if (!transform) {
       return;
     }
 
     this.basePosition.set(transform.translation.x, transform.translation.y, transform.translation.z);
     this.baseRotation.set(transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w);
+
+    // On first frame, snap to position immediately without smoothing
+    if (!this.initialized) {
+      this.initialized = true;
+      this.currentPosition.copyFrom(this.basePosition);
+      this.currentRotation.copyFrom(this.baseRotation);
+    }
 
     this.lookCurrent.yaw = this.interpolate(
       this.lookCurrent.yaw,
