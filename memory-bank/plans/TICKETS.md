@@ -64,7 +64,7 @@
   - GIVEN an entity with render binding, WHEN its transform updates, THEN the mesh follows.
   - GIVEN cockpit view, WHEN the heli moves/rotates, THEN camera follows with stable smoothing.
 - Technical notes:
-  - Third-person camera is explicitly out-of-scope for MVP (backlog).
+  - Camera mode selection (cockpit vs chase) is handled later (see P1-10).
 - Tasks:
   - [x] Mesh registry + binding system
   - [x] Cockpit camera rig (pose, smoothing, clamp)
@@ -113,7 +113,24 @@
   - [x] Hover assist (lateral velocity damping; optional altitude hold)
   - [x] UI indicators for assist states
 
-### [P1-10] HUD v1 (Cockpit-First, HTML Overlay)
+### [P1-10] Camera Modes v1: Cockpit vs Chase + Visibility Policy
+- Status: Backlog
+- Summary: Allow switching between cockpit (first-person HUD-only; helicopter hidden) and chase (third-person; helicopter visible).
+- Context: Fix camera issues before HUD work starts by formalizing camera movement and visibility requirements.
+- Functional behavior (GIVEN/WHEN/THEN):
+  - GIVEN the game is running, WHEN the player presses the camera toggle keybind, THEN camera mode toggles cockpit ↔ chase immediately.
+  - GIVEN cockpit mode, WHEN rendering, THEN helicopter visuals are hidden AND physics/collision is unchanged.
+  - GIVEN chase mode, WHEN rendering, THEN helicopter visuals are visible AND physics/collision is unchanged.
+- Technical notes:
+  - MVP explicitly has no chase obstruction avoidance (may clip).
+  - Mouse look remains camera-only (not cyclic).
+- Tasks:
+  - [ ] Define camera mode model + toggle keybind
+  - [ ] Implement mode-specific offsets/smoothing/clamps (per plan)
+  - [ ] Toggle helicopter mesh visibility based on mode
+  - [ ] Update instructions overlay to show camera toggle + current mode
+
+### [P1-11] HUD v1 (Cockpit-First, HTML Overlay)
 - Status: Backlog
 - Summary: Implement minimal HUD for flight and combat awareness.
 - Context: Cockpit-first requires readable, minimal clutter HUD.
@@ -124,7 +141,7 @@
   - [ ] Weapon + ammo + lock state
   - [ ] Threat warnings (lock/launch)
 
-### [P1-11] Cannon Weapon (Raycast) + Hit Feedback
+### [P1-12] Cannon Weapon (Raycast) + Hit Feedback
 - Status: Backlog
 - Summary: Raycast cannon, damage, and FX hooks.
 - Tasks:
@@ -132,7 +149,7 @@
   - [ ] Raycast hits + damage apply
   - [ ] Impact FX events
 
-### [P1-12] Missile Weapon: Acquire/Lock/Launch + Guidance
+### [P1-13] Missile Weapon: Acquire/Lock/Launch + Guidance
 - Status: Backlog
 - Summary: Lock-on missiles and guidance behavior.
 - Technical notes:
@@ -144,7 +161,7 @@
   - [ ] Missile spawn + physics
   - [ ] Guidance system + explosion
 
-### [P1-13] Enemy Units v1: Vehicles + Radar Site + SAM
+### [P1-14] Enemy Units v1: Vehicles + Radar Site + SAM
 - Status: Backlog
 - Summary: Core enemy actors for mission templates.
 - Technical notes:
@@ -154,7 +171,7 @@
   - [ ] SAM scan/lock/fire FSM
   - [ ] Basic vehicle target entities (static or simple patrol)
 
-### [P1-14] Countermeasures + Threat Warning Receiver (RWR)
+### [P1-15] Countermeasures + Threat Warning Receiver (RWR)
 - Status: Backlog
 - Summary: Flares/chaff simplified + warnings.
 - Tasks:
@@ -162,7 +179,7 @@
   - [ ] Missile decoy/lost-lock logic
   - [ ] RWR warnings wired to HUD
 
-### [P1-15] Mission Director v1 + 3 Templates (In-Air Completion)
+### [P1-16] Mission Director v1 + 3 Templates (In-Air Completion)
 - Status: Backlog
 - Summary: Generate missions with seeded RNG and objectives; allow mission completion in-air.
 - Functional behavior (GIVEN/WHEN/THEN):
@@ -175,7 +192,7 @@
   - [ ] Objective tracking + completion trigger (UI action or auto)
   - [ ] Add in-air completion prompt state + input action to confirm
 
-### [P1-16] Debrief Screen v1 (Stats + Outcome)
+### [P1-17] Debrief Screen v1 (Stats + Outcome)
 - Status: Backlog
 - Summary: Show results; enable quick replay.
 - Tasks:
@@ -183,7 +200,7 @@
   - [ ] Debrief UI
   - [ ] Replay flow (new seed)
 
-### [P1-17] Difficulty Tuning: “Arcade but Hardcore”
+### [P1-18] Difficulty Tuning: “Arcade but Hardcore”
 - Status: Backlog
 - Summary: Tune damage/threat fairness to the intended midpoint between arcade and sim.
 - Context: Damage should matter and degrade capability, but not be constant instant-fail.
@@ -192,7 +209,7 @@
   - [ ] Tune subsystem degradation curves
   - [ ] Add minimal telemetry (average mission time, deaths, causes)
 
-### [P1-18] Performance Pass + Pooling + Smoke Tests
+### [P1-19] Performance Pass + Pooling + Smoke Tests
 - Status: Backlog
 - Summary: Reduce GC spikes, ensure stable FPS, add basic e2e checks.
 - Tasks:
@@ -200,7 +217,7 @@
   - [ ] Perf overlay (fps, entity counts, steps/frame)
   - [ ] Playwright smoke tests (boot + start mission)
  
-### [P1-19] Out-of-Bounds Rules + Warning UI
+### [P1-20] Out-of-Bounds Rules + Warning UI
 - Status: Backlog
 - Summary: Define mission area bounds and implement warning + fail countdown.
 - Context: Prevents players from wandering indefinitely and supports consistent mission pacing.
@@ -217,9 +234,9 @@
 
 ## Backlog / Future
 
-### [B-1] Third-Person Chase Camera
+### [B-1] Chase Camera Polish: Obstruction Avoidance + Tuning
 - Status: Backlog
-- Summary: Add optional chase camera with smoothing and obstruction avoidance.
+- Summary: Improve chase camera readability with simple obstruction avoidance and tuning.
 
 ### [B-2] Gamepad Support
 - Status: Backlog

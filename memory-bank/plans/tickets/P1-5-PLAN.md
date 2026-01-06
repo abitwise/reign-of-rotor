@@ -19,4 +19,4 @@ Project the simulation/physics transforms onto Babylon meshes and introduce a co
 ## Notes
 - Rendering must remain read-only; transforms come from the sim/physics provider, and render should not mutate gameplay state.
 - Prioritize low-allocation update paths for per-frame camera and binding updates.
-- Third-person camera remains out-of-scope for MVP; keep the rig modular so alternative views can be added later without entangling with sim state.
+- Camera mode selection (cockpit vs chase) is handled by a later ticket; keep the rig modular so view modes can be added without entangling with sim state.

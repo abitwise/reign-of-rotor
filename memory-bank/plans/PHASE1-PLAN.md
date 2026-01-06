@@ -19,23 +19,24 @@
 7. [P1-7] Player Helicopter + Basic Flight Forces
 8. [P1-8] Altimeter + Landing Detection
 9. [P1-9] Assist Toggles (Stability/Hover)
-10. [P1-10] HUD v1 (Cockpit-First)
-11. [P1-11] Cannon Weapon
-12. [P1-12] Missile Weapon + Guidance
-13. [P1-13] Enemy Units v1 (Radar + SAM)
-14. [P1-14] Countermeasures + RWR
-15. [P1-15] Mission Director + Templates (In-Air Completion)
-16. [P1-16] Debrief Screen
-17. [P1-17] Difficulty Tuning (“Arcade but Hardcore”)
-18. [P1-18] Performance + Pooling + Smoke Tests
-19. [P1-19] Out-of-Bounds Rules + Warning UI
+10. [P1-10] Camera Modes v1 (Cockpit vs Chase)
+11. [P1-11] HUD v1 (Cockpit-First)
+12. [P1-12] Cannon Weapon
+13. [P1-13] Missile Weapon + Guidance
+14. [P1-14] Enemy Units v1 (Radar + SAM)
+15. [P1-15] Countermeasures + RWR
+16. [P1-16] Mission Director + Templates (In-Air Completion)
+17. [P1-17] Debrief Screen
+18. [P1-18] Difficulty Tuning (“Arcade but Hardcore”)
+19. [P1-19] Performance + Pooling + Smoke Tests
+20. [P1-20] Out-of-Bounds Rules + Warning UI
 
 ## Rough focus by stage
 - Stage A (Bootstrapping): P1-1 → P1-5
-- Stage B (Controls + feel): P1-6 → P1-10
-- Stage C (Combat): P1-11 → P1-14
-- Stage D (Replayable loop): P1-15 → P1-16
-- Stage E (Ship it): P1-17 → P1-18
+- Stage B (Controls + feel): P1-6 → P1-11
+- Stage C (Combat): P1-12 → P1-15
+- Stage D (Replayable loop): P1-16 → P1-17
+- Stage E (Ship it): P1-18 → P1-19
 
 ## Definition of “MVP Demo Ready”
 - Player can start a mission, complete objectives, and finish the mission while airborne.

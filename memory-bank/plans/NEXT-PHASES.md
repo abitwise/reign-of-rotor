@@ -7,7 +7,7 @@ Assumptions locked in:
 - Browser-first TypeScript game
 - Babylon.js + Rapier + bitecs
 - Low-poly modern indie visuals
-- Cockpit-first camera (third-person optional later)
+- Cockpit-first camera (with optional chase mode)
 - Desktop KB+mouse first; gamepad later
 
 ---
@@ -19,9 +19,8 @@ Assumptions locked in:
 - Add a small amount of enemy and mission variety without expanding architecture complexity.
 
 ### Key deliverables
-- **Third-person chase camera (optional mode)**
+- **Chase camera polish**
   - Obstruction avoidance (basic), smoothing, FOV tuning
-  - Hotkey toggle between cockpit ↔ third-person
 - **Training / onboarding**
   - 3–5 short lessons: takeoff/hover, navigation, cannon, missiles, SAM evasion
   - End each with a simple success condition + quick restart
