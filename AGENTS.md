@@ -19,7 +19,13 @@ A TypeScript/Web game that remakes the classic “LHX: Attack Chopper” feel as
 # Where to look first
 - Business rules / gameplay invariants: `memory-bank/PRODUCT.md`
 - Architecture + key decisions: `memory-bank/ARCHITECTURE.md`
-- Work plan + specs: `memory-bank/plans/TICKETS.md` and `memory-bank/plans/PHASE1-MVP-PLAN.md`
+- Contribution manual: `memory-bank/CONTRIBUTING.md`
+- Long-term memory: `memory-bank/LONG_TERM_MEMORY.md`
+- Work plan, wireframes and specs:
+  - `memory-bank/plans/TICKETS.md`
+  - `memory-bank/plans/PHASE#-PLAN.md`,
+  - `memory-bank/plans/PHASE#-WIREFRAMES.md`
+  - `memory-bank/plans/tickets/*`
 
 # PR checklist (agent)
 - [ ] Read `memory-bank/PRODUCT.md` and the relevant ticket spec.
