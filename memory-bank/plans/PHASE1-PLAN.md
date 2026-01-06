@@ -7,6 +7,7 @@
   - One helicopter, one map, core weapons, core threats (SAM), and 3 mission templates.
   - Mission completion allowed in-air (landing optional).
   - Stable fixed-timestep sim and solid performance.
+  - Desktop-only MVP (keyboard+mouse). Provide a clear unsupported notice on mobile.
 
 ## Priority order
 1. [P1-1] Repo + Build + Dev UX Baseline
@@ -27,6 +28,7 @@
 16. [P1-16] Debrief Screen
 17. [P1-17] Difficulty Tuning (“Arcade but Hardcore”)
 18. [P1-18] Performance + Pooling + Smoke Tests
+19. [P1-19] Out-of-Bounds Rules + Warning UI
 
 ## Rough focus by stage
 - Stage A (Bootstrapping): P1-1 → P1-5
