@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "id": "placeholder-triangle",
+      "path": "/assets/placeholder.gltf",
+      "type": "gltf"
+    }
+  ]
+}

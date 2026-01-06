@@ -15,16 +15,16 @@ export const createRootUi = ({ target, config }: RootUiOptions) => {
   hero.innerHTML = `
     <h1>Reign of Rotor</h1>
     <p>
-      LHX-inspired browser demo. This baseline build wires Vite, lint/test scaffolding, and a
-      placeholder scene so we can iterate on the cockpit-first experience.
+      LHX-inspired browser demo. Babylon scene + Rapier world are bootstrapped with a placeholder
+      camera so we can start wiring entity bindings and assets.
     </p>
     <div class="app-cta">
-      <span class="app-tag">Stage: Bootstrap</span>
+      <span class="app-tag">Stage: Scene Bootstrap</span>
       <span class="app-tag">Mode: ${config.mode}</span>
     </div>
     <div class="app-status">
-      <strong>Build Ready</strong>
-      <span>Dev server + production preview are configured. Debug overlay follows environment flags.</span>
+      <strong>Render layer ready</strong>
+      <span>Babylon canvas mounted with debug-friendly lighting and ground; asset manifest loads from <code>/assets/manifest.json</code>.</span>
     </div>
   `;
 
