@@ -1,7 +1,7 @@
 import type { AppConfig } from '../boot/config';
 import { createDebugOverlay } from './debugOverlay';
 import type { PlayerInputBindings } from '../core/input/playerInput';
-import type { AltimeterState, LandingState } from '../sim/altimeter';
+import { LandingState, type AltimeterState } from '../sim/altimeter';
 
 export type RootUiOptions = {
   target: HTMLElement;
