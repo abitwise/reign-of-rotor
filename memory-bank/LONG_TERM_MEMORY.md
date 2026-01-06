@@ -13,10 +13,14 @@
 - Do not mutate simulation from render code. Use systems/events.
 - Avoid allocations in hot paths (missiles, FX, per-frame vectors).
 - Prefer raycasts for bullets and sensors; reserve full rigid bodies for missiles/vehicles where it adds value.
-- Mission can be completed in-air once primary objectives are satisfied (landing optional).
+- Mission can be completed in-air once primary objectives are satisfied (landing optional)
+  - It requires explicit player confirmation (prompt) to avoid abrupt cutoffs.
 - Damage tuning target: “arcade but hardcore”
   - Subsystem degradation matters
   - Avoid constant instant-death (except extreme impacts)
+- Mouse-look is camera-only in MVP; do not bind mouse movement to cyclic inputs.
+- Cockpit camera must apply smoothing/clamps; raw physics orientation will jitter and can cause nausea.
+- Escort missions are waypoint-rail movement in MVP; no navmesh/pathfinding.
 
 ## Known risks / tradeoffs
 - Cockpit-first camera requires careful motion smoothing to prevent nausea/jitter.
