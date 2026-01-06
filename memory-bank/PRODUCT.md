@@ -9,7 +9,7 @@ The project is optimized for indie scope and fast iteration: low-poly modern vis
 ## Capabilities / Features (MVP)
 - One playable helicopter (LHX prototype-inspired).
 - Default camera: first-person cockpit view (third-person later as backlog).
-- Input priority: keyboard + mouse (gamepad later).
+- Input priority: keyboard + mouse (desktop browser). Mobile is out-of-scope for MVP.
 - Physics-backed flight and collisions via Rapier; 3D rendering via Babylon.js.
 - Combat: cannon (raycast-based) + guided missiles + countermeasures (flares/chaff simplified).
 - Threats: SAM site behavior, radar detection, missile warning (RWR-style).
@@ -48,6 +48,27 @@ The project is optimized for indie scope and fast iteration: low-poly modern vis
   - Damage degrades performance and creates escalating risk.
   - Avoid frequent instant-failure; allow recovery windows (except extreme impacts).
 - Visual style target: low-poly modern indie (clarity > realism).
+- Controls contract (MVP):
+  - Mouse controls camera look (cockpit head look), not cyclic.
+  - Cyclic (pitch/roll) is keyboard (WASD), yaw is Q/E, collective is R/F.
+  - Assists default: Stability ON, Hover OFF (player can toggle both).
+- Targeting / lock rules (MVP):
+  - Missile lock targets the best candidate near the center reticle within cone + range.
+  - Lock requires sustained aim time; breaking cone/range resets lock timer.
+  - Optional LOS check may be enabled for fairness (behind-terrain should break lock).
+  - No target cycling in MVP (backlog); keep interaction simple and consistent.
+- Mission completion:
+  - When primary objectives are met, show an “Objectives complete” prompt.
+  - Player must explicitly confirm “Complete mission now” (no auto-complete).
+  - Landing is optional and may be tracked as a bonus stat/hook.
+- Fail states (MVP):
+  - Helicopter destroyed OR pilot incapacitated (critical hit) => mission failed.
+  - Out-of-bounds => warning timer, then mission failed if not corrected.
+  - Running out of ammo does NOT fail the mission by itself.
+- Damage severity policy (“arcade but hardcore”):
+  - Subsystem damage should degrade capability first (engine/rotor/avionics/weapons/sensors).
+  - Instant death is reserved for extreme impacts or critical missile hits (tuned, not frequent).
+
 
 ## Non-goals (MVP)
 - Multiplayer.
@@ -55,3 +76,4 @@ The project is optimized for indie scope and fast iteration: low-poly modern vis
 - Fully interactive cockpit with clickable switches.
 - Large-scale persistent campaign map (territory control).
 - Third-person camera as default (planned later).
+- Mobile/touch support (desktop only).
