@@ -2,7 +2,7 @@
 
 ## Local setup (expectations)
 - Node.js LTS, pnpm.
-- Modern browser (Chrome/Edge/Firefox). Prefer Chrome for performance profiling.
+- Modern desktop browser (Chrome/Edge/Firefox). Prefer Chrome for performance profiling, only desktop for MVP (keyboard + mouse).
 - Optional: a GPU-enabled environment for stable WebGL performance.
 
 ## Run locally
@@ -35,12 +35,15 @@
 - Keep sim independent from Babylon/UI: communicate via events/state.
 - Add debug toggles (dev-only) rather than permanent cheats in production.
 - Pool frequently spawned entities (missiles, flares, FX) to reduce GC spikes.
+- Keep Escort “ally movement” on waypoint rails for MVP; do not introduce navmesh/pathfinding without a dedicated ticket.
+- When adding targeting logic, keep it reticle-centric and predictable; avoid target cycling until backlog phase.
 
 ### Don’t
 - Don’t make gameplay outcomes depend on render FPS.
 - Don’t mutate ECS state from render/UI without going through a system or event/command.
 - Don’t change ECS component schemas casually—update docs + impacted systems together.
 - Don’t add high-cost per-frame allocations in hot loops (use typed arrays, reuse objects).
+- Don’t bind camera directly to raw physics rotation without smoothing/clamping (cockpit jitter is a known risk).
 
 ## When changing risky areas
 If you touch `core/loop`, `physics`, or ECS schemas:
