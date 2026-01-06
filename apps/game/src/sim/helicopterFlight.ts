@@ -55,7 +55,7 @@ export const spawnPlayerHelicopter = (
   createColliderForEntity(physics, {
     entity,
     rigidBody: body,
-    descriptor: rapier.ColliderDesc.cuboid(1.2, 0.6, 2.5).setDensity(0.7)
+    descriptor: rapier.ColliderDesc.cuboid(1.2, 0.6, 2.5).setDensity(200.0)
   });
 
   return {

@@ -41,20 +41,13 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
     onFrame: (metrics) => rootUi.setLoopMetrics?.(metrics)
   });
 
-  physics
-    .then((context) =>
-      renderer.then((renderContext) =>
-        renderContext.setTransformProvider((entity) => context.getEntityTransform(entity))
-      )
-    )
-    .catch((error) => {
-      console.error('Failed to wire renderer to physics transforms', error);
-    });
+  const gameplay = Promise.all([physics, renderer])
+    .then(async ([physicsContext, renderContext]) => {
+      // Wire up the transform provider now that we have both physics and renderer
+      renderContext.setTransformProvider((entity) => physicsContext.getEntityTransform(entity));
 
-  const gameplay = physics
-    .then(async (context) => {
       const gameplayContext = bootstrapGameplay({
-        physics: context,
+        physics: physicsContext,
         scheduler,
         input: input.state
       });
@@ -62,8 +55,8 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       rootUi.setFlightReadoutProvider?.(() => gameplayContext.player.altimeter);
       rootUi.setAssistsProvider?.(() => gameplayContext.player.assists);
 
-      const renderContext = await renderer;
-      renderContext.bindEntityMesh(gameplayContext.player.entity, 'apache-gunship');
+      // Wait for mesh to be loaded before setting camera target
+      await renderContext.bindEntityMesh(gameplayContext.player.entity, 'apache-gunship');
       renderContext.setCameraTarget(gameplayContext.player.entity);
 
       return gameplayContext;

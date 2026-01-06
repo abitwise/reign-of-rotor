@@ -57,6 +57,15 @@ export class CockpitCameraRig {
 
   private initialized = false;
 
+  /** Debug info for troubleshooting camera tracking issues */
+  getDebugInfo(): { targetEntity: number | null; initialized: boolean; cameraY: number } {
+    return {
+      targetEntity: this.targetEntity,
+      initialized: this.initialized,
+      cameraY: this.camera.position.y
+    };
+  }
+
   constructor({
     camera,
     transformProvider,
@@ -122,7 +131,6 @@ export class CockpitCameraRig {
 
     // On first frame, snap to position immediately without smoothing
     if (!this.initialized) {
-      this.initialized = true;
       this.currentPosition.copyFrom(this.basePosition);
       this.currentRotation.copyFrom(this.baseRotation);
     }
