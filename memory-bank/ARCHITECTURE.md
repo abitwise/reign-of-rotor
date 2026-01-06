@@ -8,6 +8,8 @@ The game is a TypeScript browser application built around a data-driven ECS simu
 - `core/loop`:
   - Owns fixed timestep scheduling (e.g., 60 Hz).
   - Orders systems in deterministic phases.
+  - Clamps extreme frame deltas and caps catch-up work per frame to prevent spirals when tabs resume or frames hitch.
+  - Provides timing instrumentation (frame delta, fixed delta, steps executed, clamped time) for debug overlays and perf traces.
 - `ecs`:
   - Defines component schemas, entity factories, and query helpers.
 - `physics` (Rapier):
