@@ -1,0 +1,14 @@
+{
+  "name": "reign-of-rotor",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@8.15.4",
+  "scripts": {
+    "dev": "pnpm --filter @reign-of-rotor/game dev",
+    "build": "pnpm --filter @reign-of-rotor/game build",
+    "preview": "pnpm --filter @reign-of-rotor/game preview",
+    "lint": "pnpm --filter @reign-of-rotor/game lint",
+    "test": "pnpm --filter @reign-of-rotor/game test",
+    "format": "pnpm --filter @reign-of-rotor/game format"
+  }
+}
