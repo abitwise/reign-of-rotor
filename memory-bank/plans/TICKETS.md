@@ -3,7 +3,7 @@
 ## Phase 1 (Current) — MVP Demo
 
 ### [P1-1] Repo + Build + Dev UX Baseline
-- Status: Backlog
+- **Status:** Done
 - Summary: Create the browser TS project skeleton with dev/prod builds and debug toggles.
 - Context: Establish stable iteration speed and guardrails before gameplay work.
 - Functional behavior (GIVEN/WHEN/THEN):
