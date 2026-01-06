@@ -15,17 +15,48 @@ body {
   margin: 0;
   min-height: 100vh;
   background: radial-gradient(ellipse at top, #1c2732, #0c1116 60%);
+  color: #e6ecf2;
 }
 
 #root {
+  min-height: 100vh;
+}
+
+.app-root {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 40% 20%, rgba(63, 110, 163, 0.2), transparent 45%),
+    linear-gradient(180deg, rgba(12, 17, 22, 0.95), rgba(8, 10, 14, 0.92));
+}
+
+.render-host {
+  position: absolute;
+  inset: 0;
+}
+
+.render-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: radial-gradient(ellipse at center, rgba(120, 170, 255, 0.08), transparent 40%),
+    linear-gradient(180deg, rgba(8, 12, 18, 0.95), rgba(6, 9, 14, 0.95));
+  border: none;
+}
+
+.ui-layer {
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
+  pointer-events: none;
 }
 
 .app-shell {
+  pointer-events: auto;
   width: min(960px, 100%);
   background: rgba(12, 17, 22, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.08);

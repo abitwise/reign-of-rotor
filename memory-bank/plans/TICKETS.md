@@ -43,7 +43,7 @@
   - [ ] Collision event plumbing (minimal)
 
 ### [P1-4] Babylon Scene Bootstrap + Render Binding Layer
-- Status: Backlog
+- Status: Done
 - Summary: Create Babylon scene and bind ECS transforms to meshes.
 - Context: Visual feedback is required to tune flight/combat.
 - Functional behavior (GIVEN/WHEN/THEN):
