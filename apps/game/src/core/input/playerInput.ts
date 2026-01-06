@@ -1,6 +1,6 @@
 import { SystemPhase, type LoopSystem } from '../loop/types';
 import type { SystemScheduler } from '../loop/systemScheduler';
-import type { KeyboardEventTarget, KeyboardInputSampler } from './keyboardInput';
+import { KeyboardInputSampler, type KeyboardEventTarget } from './keyboardInput';
 
 export type InputAxisBinding = {
   positive: string[];
