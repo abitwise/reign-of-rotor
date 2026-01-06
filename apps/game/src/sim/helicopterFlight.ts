@@ -7,6 +7,7 @@ import { createColliderForEntity, createRigidBodyForEntity } from '../physics/fa
 import type { Entity } from '../physics/types';
 import type { PhysicsWorldContext } from '../physics/world';
 import { createAltimeterState, type AltimeterState } from './altimeter';
+import type { GameState } from '../boot/createApp';
 
 export type PlayerHelicopter = {
   entity: Entity;
@@ -68,10 +69,22 @@ export const spawnPlayerHelicopter = (
   };
 };
 
-export const createHelicopterFlightSystem = (heli: PlayerHelicopter): LoopSystem => ({
+export const createHelicopterFlightSystem = (heli: PlayerHelicopter, gameState: GameState): LoopSystem => ({
   id: `sim.helicopterFlight.${heli.entity}`,
   phase: SystemPhase.Simulation,
   step: () => {
+    // Toggle body type based on pause state
+    if (gameState.isPaused) {
+      if (heli.body.bodyType() !== 1) { // 1 = Kinematic
+        heli.body.setBodyType(1, true); // Set to kinematic
+      }
+      return;
+    } else {
+      if (heli.body.bodyType() !== 0) { // 0 = Dynamic
+        heli.body.setBodyType(0, true); // Set to dynamic
+      }
+    }
+    
     applyRotorForces(heli);
     applyControlTorques(heli);
     applyStabilityAssist(heli);
@@ -88,6 +101,16 @@ export const createAssistToggleSystem = (heli: PlayerHelicopter): LoopSystem => 
     }
     if (heli.input.toggleHover) {
       heli.assists.hover = !heli.assists.hover;
+    }
+  }
+});
+
+export const createPauseToggleSystem = (input: PlayerInputState, gameState: GameState): LoopSystem => ({
+  id: 'sim.pauseToggle',
+  phase: SystemPhase.Simulation,
+  step: () => {
+    if (input.togglePause) {
+      gameState.isPaused = !gameState.isPaused;
     }
   }
 });

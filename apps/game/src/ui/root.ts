@@ -3,21 +3,23 @@ import { createDebugOverlay } from './debugOverlay';
 import type { PlayerInputBindings } from '../core/input/playerInput';
 import { LandingState, type AltimeterState } from '../sim/altimeter';
 import type { CHelicopterAssists } from '../ecs/components/helicopter';
+import type { GameState } from '../boot/createApp';
 
 export type RootUiOptions = {
   target: HTMLElement;
   config: AppConfig;
   bindings: PlayerInputBindings;
+  gameState: GameState;
 };
 
 export type FlightReadoutProvider = () => AltimeterState | null;
 export type AssistsProvider = () => CHelicopterAssists | null;
 
-export const createRootUi = ({ target, config, bindings }: RootUiOptions) => {
+export const createRootUi = ({ target, config, bindings, gameState }: RootUiOptions) => {
   const container = document.createElement('div');
   container.className = 'ui-hud-container';
 
-  const instructionsPanel = createInstructionsPanel(config, bindings);
+  const instructionsPanel = createInstructionsPanel(config, bindings, gameState);
   const flightHud = createFlightHud();
   const assistsHud = createAssistsHud();
 
@@ -70,7 +72,7 @@ export const createRootUi = ({ target, config, bindings }: RootUiOptions) => {
   };
 };
 
-const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBindings) => {
+const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBindings, gameState: GameState) => {
   const overlay = document.createElement('div');
   overlay.className = 'instructions-overlay hidden';
 
@@ -107,7 +109,8 @@ const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBinding
     createAxisRow('Yaw', bindings.yaw, 'Right', 'Left'),
     createNoteRow('Mouse Look', 'Click canvas to lock pointer; drag if lock unavailable.'),
     createNoteRow('Stability Assist', 'Press Z to toggle auto-leveling'),
-    createNoteRow('Hover Assist', 'Press X to toggle drift damping')
+    createNoteRow('Hover Assist', 'Press X to toggle drift damping'),
+    createNoteRow('Pause', 'Press Space to pause/unpause flight')
   );
 
   controlsSection.append(controlsHeading, controlsGrid);
@@ -115,15 +118,27 @@ const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBinding
   const closeButton = document.createElement('button');
   closeButton.className = 'instructions-close';
   closeButton.textContent = 'Start Flying';
-  closeButton.onclick = () => overlay.classList.add('hidden');
+  closeButton.onclick = () => {
+    overlay.classList.add('hidden');
+    // Resume flight when closing instructions
+    gameState.isPaused = false;
+  };
 
   panel.append(hero, controlsSection, closeButton);
   overlay.appendChild(panel);
 
   return {
     element: overlay,
-    show: () => overlay.classList.remove('hidden'),
-    hide: () => overlay.classList.add('hidden'),
+    show: () => {
+      overlay.classList.remove('hidden');
+      // Pause flight when showing instructions
+      gameState.isPaused = true;
+    },
+    hide: () => {
+      overlay.classList.add('hidden');
+      // Resume flight when hiding instructions
+      gameState.isPaused = false;
+    },
     destroy: () => {
       closeButton.onclick = null;
     }

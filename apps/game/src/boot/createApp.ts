@@ -9,6 +9,10 @@ import { bootstrapRenderer, type RenderContext } from '../render/bootstrap';
 import { bootstrapPlayerInput, type PlayerInputContext } from '../core/input/playerInput';
 import { bootstrapGameplay, type GameplayContext } from './gameplay';
 
+export type GameState = {
+  isPaused: boolean;
+};
+
 export type GameApp = {
   config: AppConfig;
   scheduler: SystemScheduler;
@@ -17,6 +21,7 @@ export type GameApp = {
   renderer: Promise<RenderContext>;
   gameplay: Promise<GameplayContext>;
   input: PlayerInputContext;
+  gameState: GameState;
   destroy: () => void;
 };
 
@@ -27,7 +32,8 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
     scheduler,
     rootElement.ownerDocument?.defaultView ?? (typeof window === 'undefined' ? null : window)
   );
-  const rootUi = createRootUi({ target: layout.uiHost, config, bindings: input.bindings });
+  const gameState: GameState = { isPaused: false };
+  const rootUi = createRootUi({ target: layout.uiHost, config, bindings: input.bindings, gameState });
   const physics = bootstrapPhysics(scheduler);
   const renderer = bootstrapRenderer({
     host: layout.renderHost,
@@ -49,7 +55,8 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       const gameplayContext = bootstrapGameplay({
         physics: physicsContext,
         scheduler,
-        input: input.state
+        input: input.state,
+        gameState
       });
 
       rootUi.setFlightReadoutProvider?.(() => gameplayContext.player.altimeter);
@@ -81,6 +88,7 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
     gameplay,
     input,
     loop,
+    gameState,
     destroy: () => {
       loop.stop();
       input.destroy();
