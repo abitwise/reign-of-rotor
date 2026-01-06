@@ -36,7 +36,7 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
   physics
     .then((context) =>
       renderer.then((renderContext) =>
-        renderContext.bindings.setTransformProvider((entity) => context.getEntityTransform(entity))
+        renderContext.setTransformProvider((entity) => context.getEntityTransform(entity))
       )
     )
     .catch((error) => {

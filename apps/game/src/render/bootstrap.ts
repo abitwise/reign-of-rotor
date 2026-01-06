@@ -1,10 +1,11 @@
 import {
-  ArcRotateCamera,
   Color4,
   Engine,
   HemisphericLight,
   MeshBuilder,
+  Quaternion,
   Scene,
+  UniversalCamera,
   Vector3
 } from '@babylonjs/core';
 import type { Nullable } from '@babylonjs/core/types';
@@ -12,14 +13,18 @@ import { MeshBindingSystem, type TransformProvider } from './meshBindingSystem';
 import { RenderAssetLoader } from './assets/assetLoader';
 import { loadAssetManifest } from './assets/manifest';
 import type { Entity } from '../physics/types';
+import { CockpitCameraRig } from './camera/cockpitRig';
 
 export type RenderContext = {
   engine: Engine;
   scene: Scene;
   canvas: HTMLCanvasElement;
-  camera: ArcRotateCamera;
+  camera: UniversalCamera;
+  cameraRig: CockpitCameraRig;
   bindings: MeshBindingSystem;
   assets: RenderAssetLoader;
+  setTransformProvider: (provider: TransformProvider) => void;
+  setCameraTarget: (entity: Entity | null) => void;
   bindEntityMesh: (entity: Entity, meshId: string) => Promise<void>;
   dispose: () => void;
 };
@@ -55,19 +60,12 @@ export const bootstrapRenderer = async ({
   const scene = new Scene(engine);
   scene.clearColor = DEFAULT_CLEAR_COLOR;
 
-  const camera = new ArcRotateCamera(
-    'bootstrapCamera',
-    -Math.PI / 2,
-    Math.PI / 2.6,
-    18,
-    new Vector3(0, 3, 0),
-    scene
-  );
-  camera.lowerRadiusLimit = 6;
-  camera.upperRadiusLimit = 160;
-  camera.minZ = 0.1;
-  camera.wheelPrecision = 45;
-  camera.attachControl(canvas, true);
+  const camera = new UniversalCamera('cockpitCamera', new Vector3(0, 1.6, -5), scene);
+  camera.inputs.clear();
+  camera.rotationQuaternion = new Quaternion();
+  camera.minZ = 0.05;
+  camera.maxZ = 5000;
+  camera.fov = 0.94;
 
   const light = new HemisphericLight('skyLight', new Vector3(0.25, 1, 0.4), scene);
   light.intensity = 0.9;
@@ -78,8 +76,10 @@ export const bootstrapRenderer = async ({
     scene
   ).receiveShadows = true;
 
+  const transformReader = transformProvider ?? (() => null);
+
   const bindings = new MeshBindingSystem({
-    transformProvider: transformProvider ?? (() => null),
+    transformProvider: transformReader,
     onMissingTransform: (entity) => {
       if (process.env.NODE_ENV !== 'production') {
         console.debug?.(`Render binding missing transform for entity ${entity}`);
@@ -87,7 +87,16 @@ export const bootstrapRenderer = async ({
     }
   });
 
-  scene.onBeforeRenderObservable.add(() => bindings.updateFromTransforms());
+  const cameraRig = new CockpitCameraRig({
+    camera,
+    transformProvider: transformReader,
+    pointerLockElement: canvas
+  });
+
+  scene.onBeforeRenderObservable.add(() => {
+    bindings.updateFromTransforms();
+    cameraRig.update(engine.getDeltaTime() / 1000);
+  });
 
   const manifest = await loadAssetManifest(manifestUrl);
   const assets = new RenderAssetLoader(scene, manifest);
@@ -123,14 +132,21 @@ export const bootstrapRenderer = async ({
     scene,
     canvas,
     camera,
+    cameraRig,
     bindings,
     assets,
+    setTransformProvider: (provider: TransformProvider) => {
+      bindings.setTransformProvider(provider);
+      cameraRig.setTransformProvider(provider);
+    },
+    setCameraTarget: (entity: Entity | null) => cameraRig.setTargetEntity(entity),
     bindEntityMesh: async (entity: Entity, meshId: string) => {
       const mesh = await assets.instantiateMesh(meshId, `entity-${entity}-${meshId}`);
       bindings.bind(entity, mesh);
     },
     dispose: () => {
       scene.onBeforeRenderObservable.clear();
+      cameraRig.dispose();
       engine.stopRenderLoop();
       maybeWindow?.removeEventListener('resize', resize);
       scene.dispose();

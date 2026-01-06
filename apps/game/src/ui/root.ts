@@ -15,16 +15,17 @@ export const createRootUi = ({ target, config }: RootUiOptions) => {
   hero.innerHTML = `
     <h1>Reign of Rotor</h1>
     <p>
-      LHX-inspired browser demo. Babylon scene + Rapier world are bootstrapped with a placeholder
-      camera so we can start wiring entity bindings and assets.
+      LHX-inspired browser demo. Babylon scene + Rapier world now feed a cockpit-first camera with
+      render bindings driven by sim/physics transforms. Click the scene to engage mouse-look (pointer
+      lock); hit Esc to release.
     </p>
     <div class="app-cta">
-      <span class="app-tag">Stage: Scene Bootstrap</span>
+      <span class="app-tag">Stage: Cockpit Camera Rig</span>
       <span class="app-tag">Mode: ${config.mode}</span>
     </div>
     <div class="app-status">
-      <strong>Render layer ready</strong>
-      <span>Babylon canvas mounted with debug-friendly lighting and ground; asset manifest loads from <code>/assets/manifest.json</code>.</span>
+      <strong>Cockpit view ready</strong>
+      <span>Babylon canvas mounts with debug lighting + ground. Mesh bindings follow sim/physics transforms, and cockpit mouse-look uses pointer lock by default.</span>
     </div>
   `;
 
