@@ -6,6 +6,7 @@ import { createEntityId } from '../ecs/entity';
 import { createColliderForEntity, createRigidBodyForEntity } from '../physics/factories';
 import type { Entity } from '../physics/types';
 import type { PhysicsWorldContext } from '../physics/world';
+import { createAltimeterState, type AltimeterState } from './altimeter';
 
 export type PlayerHelicopter = {
   entity: Entity;
@@ -13,6 +14,7 @@ export type PlayerHelicopter = {
   flight: CHelicopterFlight;
   assists: CHelicopterAssists;
   input: PlayerInputState;
+  altimeter: AltimeterState;
 };
 
 export const createGroundPlane = (physics: PhysicsWorldContext): Entity => {
@@ -61,7 +63,8 @@ export const spawnPlayerHelicopter = (
     body,
     flight,
     assists: { stability: false, hover: false },
-    input
+    input,
+    altimeter: createAltimeterState()
   };
 };
 

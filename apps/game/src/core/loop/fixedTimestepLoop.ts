@@ -52,13 +52,13 @@ export class FixedTimestepLoop {
     this.frameDriver =
       frameDriver ??
       (typeof requestAnimationFrame === 'function'
-        ? requestAnimationFrame
+        ? (callback: FrameRequestCallback) => requestAnimationFrame(callback)
         : (callback: FrameRequestCallback) =>
             Number(setTimeout(() => callback(performance.now()), this.fixedDeltaMs)));
     this.cancelFrame =
       cancelFrame ??
       (typeof cancelAnimationFrame === 'function'
-        ? cancelAnimationFrame
+        ? (handle: number) => cancelAnimationFrame(handle)
         : (handle: number) => clearTimeout(handle));
     this.stepContext = {
       fixedDeltaMs: this.fixedDeltaMs,

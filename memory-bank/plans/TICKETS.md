@@ -98,7 +98,7 @@
   - [x] Baseline damping tuning values
 
 ### [P1-8] Altimeter Raycast + Landing Detection
-- Status: Backlog
+- Status: Done
 - Summary: Add AGL sensing and landed/crash state transitions.
 - Tasks:
   - [ ] Altimeter system (raycast)
