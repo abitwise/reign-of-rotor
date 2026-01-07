@@ -1,7 +1,7 @@
 # Ticket P1-10 — Camera Modes v1: Cockpit vs Chase + Visibility Policy
 
-**Status:** Backlog  
-**Last Updated:** 2026-01-06  
+**Status:** Done  
+**Last Updated:** 2026-01-07  
 **Ticket ID:** P1-10  
 **Phase:** Phase 1 (MVP Demo)  
 

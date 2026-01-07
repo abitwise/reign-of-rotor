@@ -14,6 +14,7 @@ export type RootUiOptions = {
 
 export type FlightReadoutProvider = () => AltimeterState | null;
 export type AssistsProvider = () => CHelicopterAssists | null;
+export type CameraModeProvider = () => string | null;
 
 export const createRootUi = ({ target, config, bindings, gameState }: RootUiOptions) => {
   const container = document.createElement('div');
@@ -37,6 +38,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
 
   let flightReadoutProvider: FlightReadoutProvider | null = null;
   let assistsProvider: AssistsProvider | null = null;
+  let cameraModeProvider: CameraModeProvider | null = null;
   let hudFrameHandle: number | null = null;
 
   const hudLoop = (): void => {
@@ -47,6 +49,9 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
 
     flightHud.update(flightReadoutProvider());
     assistsHud.update(assistsProvider?.() ?? null);
+    if (cameraModeProvider) {
+      instructionsPanel.setCameraMode(cameraModeProvider() ?? 'Cockpit');
+    }
     hudFrameHandle = scheduleFrame(hudLoop);
   };
 
@@ -68,6 +73,12 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     },
     setAssistsProvider: (provider: AssistsProvider) => {
       assistsProvider = provider;
+    },
+    setCameraModeProvider: (provider: CameraModeProvider) => {
+      cameraModeProvider = provider;
+      if (hudFrameHandle === null && flightReadoutProvider) {
+        hudFrameHandle = scheduleFrame(hudLoop);
+      }
     }
   };
 };
@@ -102,11 +113,15 @@ const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBinding
   const controlsGrid = document.createElement('div');
   controlsGrid.className = 'controls-grid';
 
+  const cameraModeValue = document.createElement('strong');
+  cameraModeValue.textContent = 'Cockpit';
+
   controlsGrid.append(
     createAxisRow('Collective', bindings.collective, 'Up', 'Down'),
     createAxisRow('Cyclic Pitch', bindings.cyclicY, 'Forward', 'Back'),
     createAxisRow('Cyclic Roll', bindings.cyclicX, 'Right', 'Left'),
     createAxisRow('Yaw', bindings.yaw, 'Right', 'Left'),
+    createCameraModeRow(cameraModeValue),
     createNoteRow('Mouse Look', 'Click canvas to lock pointer; drag if lock unavailable.'),
     createNoteRow('Stability Assist', 'Press Z to toggle auto-leveling'),
     createNoteRow('Hover Assist', 'Press X to toggle drift damping'),
@@ -138,6 +153,9 @@ const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBinding
       overlay.classList.add('hidden');
       // Resume flight when hiding instructions
       gameState.isPaused = false;
+    },
+    setCameraMode: (modeLabel: string) => {
+      cameraModeValue.textContent = modeLabel;
     },
     destroy: () => {
       closeButton.onclick = null;
@@ -185,6 +203,24 @@ const createNoteRow = (label: string, note: string): HTMLElement => {
   const details = document.createElement('div');
   details.className = 'control-note';
   details.textContent = note;
+
+  row.append(title, details);
+  return row;
+};
+
+const createCameraModeRow = (modeValue: HTMLElement): HTMLElement => {
+  const row = document.createElement('div');
+  row.className = 'control-row';
+
+  const title = document.createElement('div');
+  title.className = 'control-label';
+  title.textContent = 'Camera Mode';
+
+  const details = document.createElement('div');
+  details.className = 'control-note';
+
+  const prefix = document.createTextNode('Press V to toggle. Current: ');
+  details.append(prefix, modeValue);
 
   row.append(title, details);
   return row;

@@ -114,7 +114,7 @@
   - [x] UI indicators for assist states
 
 ### [P1-10] Camera Modes v1: Cockpit vs Chase + Visibility Policy
-- Status: Backlog
+- Status: Done
 - Summary: Allow switching between cockpit (first-person HUD-only; helicopter hidden) and chase (third-person; helicopter visible).
 - Context: Fix camera issues before HUD work starts by formalizing camera movement and visibility requirements.
 - Functional behavior (GIVEN/WHEN/THEN):
@@ -125,10 +125,10 @@
   - MVP explicitly has no chase obstruction avoidance (may clip).
   - Mouse look remains camera-only (not cyclic).
 - Tasks:
-  - [ ] Define camera mode model + toggle keybind
-  - [ ] Implement mode-specific offsets/smoothing/clamps (per plan)
-  - [ ] Toggle helicopter mesh visibility based on mode
-  - [ ] Update instructions overlay to show camera toggle + current mode
+  - [x] Define camera mode model + toggle keybind
+  - [x] Implement mode-specific offsets/smoothing/clamps (per plan)
+  - [x] Toggle helicopter mesh visibility based on mode
+  - [x] Update instructions overlay to show camera toggle + current mode
 
 ### [P1-11] HUD v1 (Cockpit-First, HTML Overlay)
 - Status: Backlog
