@@ -94,6 +94,7 @@ export const createHelicopterFlightSystem = (heli: PlayerHelicopter, gameState: 
     }
     
     applyRotorForces(heli);
+    applyCollectiveDownBrake(heli);
     applyControlTorques(heli);
     applyStabilityAssist(heli);
     applyHoverAssist(heli);
@@ -192,21 +193,11 @@ const applyStabilityAssist = (heli: PlayerHelicopter): void => {
     return;
   }
 
-  // Only apply stability assist when player is not actively controlling rotation
-  const hasRotationInput =
-    Math.abs(heli.input.cyclicX) > 0.01 ||
-    Math.abs(heli.input.cyclicY) > 0.01 ||
-    Math.abs(heli.input.yaw) > 0.01;
-
-  if (hasRotationInput) {
-    return;
-  }
-
   const angularVelocity = heli.body.angvel();
   const dampingFactor = 0.94; // Per-tick damping (0.94 = 94% retained, 6% removed)
-  const counterTorqueScale = 0.4; // Strength of leveling torque
 
-  // Apply angular damping
+  // Always apply some angular damping when stability is enabled.
+  // With binary keyboard inputs, this prevents rapid uncontrolled flips while still allowing manual control.
   heli.body.setAngvel(
     {
       x: angularVelocity.x * dampingFactor,
@@ -216,6 +207,17 @@ const applyStabilityAssist = (heli: PlayerHelicopter): void => {
     true
   );
 
+  // Only apply leveling (counter-torque) when player is not actively controlling rotation.
+  const hasRotationInput =
+    Math.abs(heli.input.cyclicX) > 0.01 ||
+    Math.abs(heli.input.cyclicY) > 0.01 ||
+    Math.abs(heli.input.yaw) > 0.01;
+
+  if (hasRotationInput) {
+    return;
+  }
+  const counterTorqueScale = 0.4; // Strength of leveling torque
+
   // Apply counter-torque to level out
   const counterTorque = {
     x: -angularVelocity.x * heli.flight.maxPitchTorque * counterTorqueScale,
@@ -224,6 +226,33 @@ const applyStabilityAssist = (heli: PlayerHelicopter): void => {
   };
 
   heli.body.addTorque(counterTorque, true);
+};
+
+const applyCollectiveDownBrake = (heli: PlayerHelicopter): void => {
+  // PageDown / collective-down should make it easier to reduce upward velocity.
+  // We do *not* apply a constant downward thrust (unrealistic); instead, we add a small vertical brake
+  // only when the helicopter is moving upward.
+  if (heli.input.collective >= 0) {
+    return;
+  }
+
+  const linearVelocity = heli.body.linvel();
+  if (linearVelocity.y <= 0) {
+    return;
+  }
+
+  const strength = clamp01(-heli.input.collective); // map [-1..0) -> (0..1]
+  const brakeFactor = 1 - 0.18 * strength; // up to 18% per tick extra reduction
+
+  heli.body.setLinvel(
+    {
+      x: linearVelocity.x,
+      y: linearVelocity.y * brakeFactor,
+      z: linearVelocity.z
+    },
+    true
+  );
+  heli.body.wakeUp();
 };
 
 const applyHoverAssist = (heli: PlayerHelicopter): void => {

@@ -56,6 +56,23 @@ describe('helicopter flight system', () => {
     expect(heli.body.linvel().y).toBeLessThan(0.1);
   });
 
+  it('reduces upward velocity when collective is held down', () => {
+    const physics = createPhysicsWorld(rapier, { gravity: { x: 0, y: 0, z: 0 } });
+    const input = createPlayerInputState();
+    input.collective = -1;
+
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    heli.body.setLinvel({ x: 0, y: 5, z: 0 }, true);
+
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
+
+    system.step(stepContext);
+    physics.step(stepContext.fixedDeltaSeconds);
+
+    expect(heli.body.linvel().y).toBeLessThan(5);
+  });
+
   it('applies yaw torque from input', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();
