@@ -7,8 +7,10 @@ export type DebugOverlayOptions = {
 };
 
 export type DebugOverlayController = {
+  element: HTMLElement;
   destroy: () => void;
   setLoopMetrics: (metrics: LoopFrameMetrics) => void;
+  setVisible: (visible: boolean) => void;
 };
 
 export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): DebugOverlayController => {
@@ -65,6 +67,7 @@ export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): Debug
   host.appendChild(wrapper);
 
   return {
+    element: wrapper,
     destroy: () => {
       host.removeChild(wrapper);
     },
@@ -75,6 +78,9 @@ export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): Debug
       stepsRow.setValue(String(metrics.stepsExecuted));
       clampedRow.setValue(formatMs(metrics.clampedMs));
       accumulatorRow.setValue(formatMs(metrics.accumulatorMs));
+    },
+    setVisible: (visible: boolean) => {
+      wrapper.style.display = visible ? '' : 'none';
     }
   };
 };

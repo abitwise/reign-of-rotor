@@ -42,7 +42,7 @@ const COCKPIT_CONFIG: CameraModeConfig = {
 
 const CHASE_CONFIG: CameraModeConfig = {
   mode: 'chase',
-  offset: new Vector3(0, 2.4, -7.5),
+  offset: new Vector3(0, 2.4, -10),
   positionSmoothing: 0.14,
   rotationSmoothing: 0.22,
   snapThreshold: 12,

@@ -40,6 +40,22 @@ describe('helicopter flight system', () => {
     expect(heli.body.linvel().y).toBeGreaterThan(0);
   });
 
+  it('does not accelerate upward like a rocket at full collective', () => {
+    const physics = createPhysicsWorld(rapier);
+    const input = createPlayerInputState();
+    input.collective = 1;
+
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
+
+    system.step(stepContext);
+    physics.step(stepContext.fixedDeltaSeconds);
+
+    expect(heli.body.linvel().y).toBeGreaterThan(0);
+    expect(heli.body.linvel().y).toBeLessThan(0.1);
+  });
+
   it('applies yaw torque from input', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();

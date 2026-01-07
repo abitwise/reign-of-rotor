@@ -2,9 +2,9 @@ import type { HelicopterFlightTuning } from '../ecs/components/helicopter';
 
 export const DEFAULT_HELICOPTER_FLIGHT: HelicopterFlightTuning = {
   density: 200,
-  maxLiftForce: 60000,
-  maxPitchTorque: 24000,
-  maxRollTorque: 24000,
+  maxLiftForce: 32000,
+  maxPitchTorque: 6000,
+  maxRollTorque: 6000,
   maxYawTorque: 12000,
   linearDamping: 0.65,
   angularDamping: 2.2

@@ -361,7 +361,12 @@ body {
 }
 
 .debug-overlay {
-  margin-top: 16px;
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  width: min(360px, calc(100vw - 32px));
+  pointer-events: auto;
   padding: 12px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.04);

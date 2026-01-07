@@ -21,6 +21,7 @@ const createRig = () => {
 
   return {
     rig,
+    camera,
     scene,
     engine
   };
@@ -50,6 +51,19 @@ describe('CameraRig', () => {
 
     rig.setMode('chase');
     expect(mesh.isEnabled()).toBe(true);
+
+    scene.dispose();
+    engine.dispose();
+  });
+
+  it('places the chase camera far enough behind the helicopter', () => {
+    const { rig, camera, scene, engine } = createRig();
+
+    rig.setMode('chase');
+    rig.update(1 / 60);
+
+    expect(camera.position.y).toBeGreaterThan(1);
+    expect(camera.position.z).toBeLessThan(-8);
 
     scene.dispose();
     engine.dispose();
