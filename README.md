@@ -35,6 +35,18 @@ Reign of Rotor is a browser-based helicopter combat demo inspired by the DOS-era
 - Tests: `pnpm test`
 - Format: `pnpm format`
 
+## Controls (MVP)
+
+- **Collective:** `R` / `Page Up` (up), `F` / `Page Down` (down)
+- **Cyclic:** `W/S` or `Arrow Up/Down` (pitch), `A/D` or `Arrow Left/Right` (roll)
+- **Yaw:** `Q` / `E`
+- **Camera mode:** `V` toggles Cockpit ↔ Chase
+- **Assists:** `Z` toggles Stability, `X` toggles Hover
+- **Pause:** `Space`
+- **UI toggles:** `H` help/instructions, `I` flight readout, `O` debug overlay (dev builds)
+
+Mouse controls camera look only (pointer lock preferred; drag-look fallback).
+
 ## Environment flags
 
 The app reads standard Vite flags plus two custom values:

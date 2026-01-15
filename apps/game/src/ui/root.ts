@@ -33,6 +33,42 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     ? createDebugOverlay({ host: container, config })
     : null;
 
+  let isDebugOverlayVisible = true;
+  let isFlightHudVisible = true;
+  const setFlightHudVisible = (visible: boolean): void => {
+    isFlightHudVisible = visible;
+    flightHud.element.style.display = visible ? '' : 'none';
+  };
+
+  const setDebugOverlayVisible = (visible: boolean): void => {
+    isDebugOverlayVisible = visible;
+    debugOverlay?.setVisible(visible);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent): void => {
+    if (!event.code) {
+      return;
+    }
+
+    if (event.code === 'KeyH') {
+      if (instructionsPanel.element.classList.contains('hidden')) {
+        instructionsPanel.show();
+      } else {
+        instructionsPanel.hide();
+      }
+    }
+
+    if (event.code === 'KeyI') {
+      setFlightHudVisible(!isFlightHudVisible);
+    }
+
+    if (event.code === 'KeyO') {
+      setDebugOverlayVisible(!isDebugOverlayVisible);
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyDown);
+
   // Show instructions on startup
   instructionsPanel.show();
 
@@ -57,6 +93,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
 
   return {
     destroy: () => {
+      window.removeEventListener('keydown', handleKeyDown);
       debugOverlay?.destroy();
       instructionsPanel.destroy();
       if (hudFrameHandle !== null) {
@@ -125,7 +162,10 @@ const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBinding
     createNoteRow('Mouse Look', 'Click canvas to lock pointer; drag if lock unavailable.'),
     createNoteRow('Stability Assist', 'Press Z to toggle auto-leveling'),
     createNoteRow('Hover Assist', 'Press X to toggle drift damping'),
-    createNoteRow('Pause', 'Press Space to pause/unpause flight')
+    createNoteRow('Pause', 'Press Space to pause/unpause flight'),
+    createNoteRow('Help', 'Press H to show/hide this panel'),
+    createNoteRow('Flight Readout', 'Press I to show/hide flight readout'),
+    createNoteRow('Debug Overlay', 'Press O to show/hide debug overlay (dev builds)')
   );
 
   controlsSection.append(controlsHeading, controlsGrid);
