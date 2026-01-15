@@ -11,12 +11,13 @@ import {
   UniversalCamera,
   Vector3
 } from '@babylonjs/core';
+import type { AbstractMesh } from '@babylonjs/core';
 import type { Nullable } from '@babylonjs/core/types';
 import { MeshBindingSystem, type TransformProvider } from './meshBindingSystem';
 import { RenderAssetLoader } from './assets/assetLoader';
 import { loadAssetManifest } from './assets/manifest';
 import type { Entity } from '../physics/types';
-import { CockpitCameraRig } from './camera/cockpitRig';
+import { CameraRig } from './camera/cameraRig';
 import { MouseLookController } from '../core/input/mouseLookController';
 
 export type RenderContext = {
@@ -24,11 +25,15 @@ export type RenderContext = {
   scene: Scene;
   canvas: HTMLCanvasElement;
   camera: UniversalCamera;
-  cameraRig: CockpitCameraRig;
+  cameraRig: CameraRig;
   bindings: MeshBindingSystem;
   assets: RenderAssetLoader;
   setTransformProvider: (provider: TransformProvider) => void;
   setCameraTarget: (entity: Entity | null) => void;
+  getCameraMode: () => 'cockpit' | 'chase';
+  getCameraModeLabel: () => string;
+  setCameraMode: (mode: 'cockpit' | 'chase') => void;
+  toggleCameraMode: () => void;
   bindEntityMesh: (entity: Entity, meshId: string) => Promise<void>;
   dispose: () => void;
 };
@@ -156,12 +161,13 @@ export const bootstrapRenderer = async ({
     }
   });
 
-  const cameraRig = new CockpitCameraRig({
+  const cameraRig = new CameraRig({
     camera,
-    transformProvider: transformReader,
-    // Third-person chase view: slightly above and behind the helicopter.
-    cockpitOffset: { x: 0, y: 2.4, z: -7.5 }
+    transformProvider: transformReader
   });
+
+  const entityMeshes = new Map<Entity, AbstractMesh>();
+  let cameraTarget: Entity | null = null;
 
   const mouseLook = new MouseLookController({
     element: canvas,
@@ -204,10 +210,22 @@ export const bootstrapRenderer = async ({
       bindings.setTransformProvider(provider);
       cameraRig.setTransformProvider(provider);
     },
-    setCameraTarget: (entity: Entity | null) => cameraRig.setTargetEntity(entity),
+    setCameraTarget: (entity: Entity | null) => {
+      cameraTarget = entity;
+      cameraRig.setTargetEntity(entity);
+      cameraRig.setTargetMesh(entity !== null ? entityMeshes.get(entity) ?? null : null);
+    },
+    getCameraMode: () => cameraRig.getMode(),
+    getCameraModeLabel: () => (cameraRig.getMode() === 'cockpit' ? 'Cockpit' : 'Chase'),
+    setCameraMode: (mode) => cameraRig.setMode(mode),
+    toggleCameraMode: () => cameraRig.toggleMode(),
     bindEntityMesh: async (entity: Entity, meshId: string) => {
       const mesh = await assets.instantiateMesh(meshId, `entity-${entity}-${meshId}`);
       bindings.bind(entity, mesh);
+      entityMeshes.set(entity, mesh);
+      if (cameraTarget === entity) {
+        cameraRig.setTargetMesh(mesh);
+      }
     },
     dispose: () => {
       scene.onBeforeRenderObservable.clear();

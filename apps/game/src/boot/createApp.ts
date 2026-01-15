@@ -8,6 +8,7 @@ import type { PhysicsWorldContext } from '../physics/world';
 import { bootstrapRenderer, type RenderContext } from '../render/bootstrap';
 import { bootstrapPlayerInput, type PlayerInputContext } from '../core/input/playerInput';
 import { bootstrapGameplay, type GameplayContext } from './gameplay';
+import { createCameraModeToggleSystem } from '../render/camera/cameraModeSystem';
 
 export type GameState = {
   isPaused: boolean;
@@ -51,6 +52,12 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
     .then(async ([physicsContext, renderContext]) => {
       // Wire up the transform provider now that we have both physics and renderer
       renderContext.setTransformProvider((entity) => physicsContext.getEntityTransform(entity));
+      scheduler.addSystem(
+        createCameraModeToggleSystem({
+          input: input.state,
+          onToggle: () => renderContext.toggleCameraMode()
+        })
+      );
 
       const gameplayContext = bootstrapGameplay({
         physics: physicsContext,
@@ -61,6 +68,7 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
 
       rootUi.setFlightReadoutProvider?.(() => gameplayContext.player.altimeter);
       rootUi.setAssistsProvider?.(() => gameplayContext.player.assists);
+      rootUi.setCameraModeProvider?.(() => renderContext.getCameraModeLabel());
 
       // Wait for mesh to be loaded before setting camera target
       await renderContext.bindEntityMesh(gameplayContext.player.entity, 'apache-gunship');
