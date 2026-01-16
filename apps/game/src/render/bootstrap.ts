@@ -1,13 +1,9 @@
 import {
-  Color3,
   Color4,
-  DynamicTexture,
   Engine,
   HemisphericLight,
-  MeshBuilder,
   Quaternion,
   Scene,
-  StandardMaterial,
   UniversalCamera,
   Vector3
 } from '@babylonjs/core';
@@ -19,6 +15,7 @@ import { loadAssetManifest } from './assets/manifest';
 import type { Entity } from '../physics/types';
 import { CameraRig } from './camera/cameraRig';
 import { MouseLookController } from '../core/input/mouseLookController';
+import { TerrainChunkManager } from './terrain/terrainChunkManager';
 
 export type RenderContext = {
   engine: Engine;
@@ -28,8 +25,10 @@ export type RenderContext = {
   cameraRig: CameraRig;
   bindings: MeshBindingSystem;
   assets: RenderAssetLoader;
+  terrain: TerrainChunkManager;
   setTransformProvider: (provider: TransformProvider) => void;
   setCameraTarget: (entity: Entity | null) => void;
+  setTerrainFocus: (entity: Entity | null) => void;
   getCameraMode: () => 'cockpit' | 'chase';
   getCameraModeLabel: () => string;
   setCameraMode: (mode: 'cockpit' | 'chase') => void;
@@ -83,73 +82,6 @@ export const bootstrapRenderer = async ({
   const light = new HemisphericLight('skyLight', new Vector3(0.25, 1, 0.4), scene);
   light.intensity = 0.9;
 
-  const ground = MeshBuilder.CreateGround(
-    'ground',
-    { width: 96, height: 96, subdivisions: 32 },
-    scene
-  );
-  ground.receiveShadows = true;
-  
-  // Create a grid material for visual reference
-  const groundMaterial = new StandardMaterial('groundMaterial', scene);
-  groundMaterial.diffuseColor = new Color3(0.15, 0.18, 0.2);
-  groundMaterial.specularColor = new Color3(0.05, 0.05, 0.05);
-  groundMaterial.emissiveColor = new Color3(0.02, 0.025, 0.03);
-  
-  // Create a procedural grid texture
-  const gridTexture = new DynamicTexture('gridTexture', 512, scene, false);
-  const ctx = gridTexture.getContext();
-  ctx.fillStyle = '#1a2028';
-  ctx.fillRect(0, 0, 512, 512);
-  ctx.strokeStyle = '#2a3540';
-  ctx.lineWidth = 2;
-  
-  // Draw grid lines
-  for (let i = 0; i <= 512; i += 64) {
-    ctx.beginPath();
-    ctx.moveTo(i, 0);
-    ctx.lineTo(i, 512);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, i);
-    ctx.lineTo(512, i);
-    ctx.stroke();
-  }
-  
-  gridTexture.update();
-  groundMaterial.diffuseTexture = gridTexture;
-  groundMaterial.diffuseTexture.uScale = 12;
-  groundMaterial.diffuseTexture.vScale = 12;
-  ground.material = groundMaterial;
-  
-  // Add reference objects (buildings/markers)
-  const markerMaterial = new StandardMaterial('markerMaterial', scene);
-  markerMaterial.diffuseColor = new Color3(0.6, 0.4, 0.2);
-  markerMaterial.emissiveColor = new Color3(0.1, 0.07, 0.04);
-  
-  // Create a few reference cubes at different positions
-  const markerPositions = [
-    { x: 0, z: 20 },
-    { x: 15, z: 15 },
-    { x: -15, z: 15 },
-    { x: 20, z: 0 },
-    { x: -20, z: 0 },
-    { x: 15, z: -15 },
-    { x: -15, z: -15 },
-    { x: 0, z: -20 }
-  ];
-  
-  markerPositions.forEach((pos, i) => {
-    const height = 2 + (i % 3) * 1.5;
-    const marker = MeshBuilder.CreateBox(
-      `marker${i}`,
-      { width: 2, height, depth: 2 },
-      scene
-    );
-    marker.position.set(pos.x, height / 2, pos.z);
-    marker.material = markerMaterial;
-  });
-
   const transformReader = transformProvider ?? (() => null);
 
   const bindings = new MeshBindingSystem({
@@ -165,6 +97,10 @@ export const bootstrapRenderer = async ({
     camera,
     transformProvider: transformReader
   });
+  const terrain = new TerrainChunkManager({
+    scene,
+    transformProvider: transformReader
+  });
 
   const entityMeshes = new Map<Entity, AbstractMesh>();
   let cameraTarget: Entity | null = null;
@@ -177,6 +113,7 @@ export const bootstrapRenderer = async ({
   scene.onBeforeRenderObservable.add(() => {
     bindings.updateFromTransforms();
     cameraRig.update(engine.getDeltaTime() / 1000);
+    terrain.update();
   });
 
   const manifest = await loadAssetManifest(manifestUrl);
@@ -206,14 +143,19 @@ export const bootstrapRenderer = async ({
     cameraRig,
     bindings,
     assets,
+    terrain,
     setTransformProvider: (provider: TransformProvider) => {
       bindings.setTransformProvider(provider);
       cameraRig.setTransformProvider(provider);
+      terrain.setTransformProvider(provider);
     },
     setCameraTarget: (entity: Entity | null) => {
       cameraTarget = entity;
       cameraRig.setTargetEntity(entity);
       cameraRig.setTargetMesh(entity !== null ? entityMeshes.get(entity) ?? null : null);
+    },
+    setTerrainFocus: (entity: Entity | null) => {
+      terrain.setFocusEntity(entity);
     },
     getCameraMode: () => cameraRig.getMode(),
     getCameraModeLabel: () => (cameraRig.getMode() === 'cockpit' ? 'Cockpit' : 'Chase'),
@@ -231,6 +173,7 @@ export const bootstrapRenderer = async ({
       scene.onBeforeRenderObservable.clear();
       mouseLook.dispose();
       cameraRig.dispose();
+      terrain.dispose();
       engine.stopRenderLoop();
       maybeWindow?.removeEventListener('resize', resize);
       scene.dispose();

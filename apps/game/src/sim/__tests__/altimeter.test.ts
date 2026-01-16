@@ -3,9 +3,10 @@ import { createPlayerInputState } from '../../core/input/playerInput';
 import type { FixedStepContext } from '../../core/loop/types';
 import { loadRapier } from '../../physics/rapierInstance';
 import { createPhysicsWorld } from '../../physics/world';
-import { createGroundPlane, spawnPlayerHelicopter } from '../helicopterFlight';
+import { spawnPlayerHelicopter } from '../helicopterFlight';
 import { createAltimeterSystem, LandingState } from '../altimeter';
 import { DEFAULT_HELICOPTER_FLIGHT } from '../../content/helicopters';
+import { createTerrainColliderManager } from '../terrain/terrainColliders';
 
 const stepContext: FixedStepContext = {
   fixedDeltaMs: 16,
@@ -23,7 +24,8 @@ describe('altimeter system', () => {
 
   it('reports altitude based on a downward raycast', () => {
     const physics = createPhysicsWorld(rapier);
-    createGroundPlane(physics);
+    const terrain = createTerrainColliderManager(physics);
+    terrain.update({ x: 0, z: 0 });
 
     const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, createPlayerInputState());
 
@@ -40,7 +42,8 @@ describe('altimeter system', () => {
 
   it('marks the helicopter as landed on gentle contact', () => {
     const physics = createPhysicsWorld(rapier);
-    createGroundPlane(physics);
+    const terrain = createTerrainColliderManager(physics);
+    terrain.update({ x: 0, z: 0 });
 
     const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, createPlayerInputState());
 
@@ -59,7 +62,8 @@ describe('altimeter system', () => {
 
   it('flags a hard landing when the impact speed is high', () => {
     const physics = createPhysicsWorld(rapier);
-    createGroundPlane(physics);
+    const terrain = createTerrainColliderManager(physics);
+    terrain.update({ x: 0, z: 0 });
 
     const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, createPlayerInputState());
 

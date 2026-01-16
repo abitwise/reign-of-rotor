@@ -18,36 +18,22 @@ export type PlayerHelicopter = {
   altimeter: AltimeterState;
 };
 
-export const createGroundPlane = (physics: PhysicsWorldContext): Entity => {
-  const entity = createEntityId();
-  const { rapier } = physics;
-
-  const body = createRigidBodyForEntity(physics, {
-    entity,
-    descriptor: rapier.RigidBodyDesc.fixed().setTranslation(0, -2, 0)
-  });
-
-  createColliderForEntity(physics, {
-    entity,
-    rigidBody: body,
-    descriptor: rapier.ColliderDesc.cuboid(48, 2, 48).setFriction(1.1)
-  });
-
-  return entity;
-};
-
 export const spawnPlayerHelicopter = (
   physics: PhysicsWorldContext,
   flight: CHelicopterFlight,
   input: PlayerInputState,
-  startHeight = 0.8
+  options: { startHeight?: number; startPosition?: { x: number; y?: number; z: number } } = {}
 ): PlayerHelicopter => {
   const entity = createEntityId();
   const { rapier } = physics;
+  const startHeight = options.startHeight ?? 0.8;
+  const startPosition = options.startPosition ?? { x: 0, y: startHeight, z: 0 };
 
   const body = createRigidBodyForEntity(physics, {
     entity,
-    descriptor: rapier.RigidBodyDesc.dynamic().setTranslation(0, startHeight, 0).setCcdEnabled(true)
+    descriptor: rapier.RigidBodyDesc.dynamic()
+      .setTranslation(startPosition.x, startPosition.y ?? startHeight, startPosition.z)
+      .setCcdEnabled(true)
   });
 
   body.setLinearDamping(flight.linearDamping);
@@ -281,4 +267,3 @@ const applyHoverAssist = (heli: PlayerHelicopter): void => {
     true
   );
 };
-

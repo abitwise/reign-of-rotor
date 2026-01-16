@@ -73,6 +73,7 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       // Wait for mesh to be loaded before setting camera target
       await renderContext.bindEntityMesh(gameplayContext.player.entity, 'apache-gunship');
       renderContext.setCameraTarget(gameplayContext.player.entity);
+      renderContext.setTerrainFocus(gameplayContext.player.entity);
 
       return gameplayContext;
     })
