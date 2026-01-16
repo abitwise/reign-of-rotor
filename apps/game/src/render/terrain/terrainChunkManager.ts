@@ -55,8 +55,11 @@ const createTerrainMaterial = (scene: Scene): StandardMaterial => {
   return material;
 };
 
-const getLodIndex = (distance: number): number => {
+export const getLodIndex = (distance: number): number => {
   const lodRings = WORLD_CONFIG.render.lodRings;
+  if (!lodRings || lodRings.length === 0) {
+    throw new Error('getLodIndex: WORLD_CONFIG.render.lodRings must contain at least one LOD ring');
+  }
   for (let i = 0; i < lodRings.length; i += 1) {
     if (distance <= lodRings[i].radius) {
       return i;

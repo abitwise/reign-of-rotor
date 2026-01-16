@@ -113,6 +113,9 @@ export const pickSpawnPoint = (
   world: WorldConfig,
   randomSource: () => number = Math.random
 ): { x: number; z: number } => {
+  if (!world.spawnZones || world.spawnZones.length === 0) {
+    throw new Error('pickSpawnPoint: world.spawnZones must contain at least one spawn zone');
+  }
   const zone = world.spawnZones[Math.floor(randomSource() * world.spawnZones.length)];
   const angle = randomSource() * Math.PI * 2;
   const radius = Math.sqrt(randomSource()) * zone.radius;
