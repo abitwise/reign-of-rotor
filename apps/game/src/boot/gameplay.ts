@@ -14,6 +14,8 @@ import {
 import { createAltimeterSystem } from '../sim/altimeter';
 import { createTerrainColliderManager } from '../sim/terrain/terrainColliders';
 import { createTerrainStreamingSystem } from '../sim/terrain/terrainStreamingSystem';
+import { createPropColliderManager } from '../sim/terrain/propColliders';
+import { createPropColliderStreamingSystem } from '../sim/terrain/propColliderStreamingSystem';
 
 export type GameplayContext = {
   player: PlayerHelicopter;
@@ -36,12 +38,15 @@ export const bootstrapGameplay = ({
   });
   const terrain = createTerrainColliderManager(physics);
   terrain.update(spawnPoint);
+  const propColliders = createPropColliderManager(physics);
+  propColliders.update(spawnPoint);
 
   scheduler.addSystem(createAssistToggleSystem(player));
   scheduler.addSystem(createPauseToggleSystem(input, gameState));
   scheduler.addSystem(createHelicopterFlightSystem(player, gameState));
   scheduler.addSystem(createAltimeterSystem(player, physics));
   scheduler.addSystem(createTerrainStreamingSystem(player, terrain));
+  scheduler.addSystem(createPropColliderStreamingSystem(player, propColliders));
 
   return { player };
 };

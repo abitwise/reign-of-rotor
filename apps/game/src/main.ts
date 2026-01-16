@@ -7,4 +7,8 @@ if (!rootElement) {
   throw new Error('Root container #root is missing in index.html');
 }
 
-(window as any).gameApp = createApp(rootElement);
+type WindowWithGameApp = Window & {
+  gameApp?: ReturnType<typeof createApp>;
+};
+
+(window as WindowWithGameApp).gameApp = createApp(rootElement);

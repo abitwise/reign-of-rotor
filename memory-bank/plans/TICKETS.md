@@ -76,7 +76,7 @@
   - [ ] Update mission spawn logic to use distributed spawn zones
 
 ### [P1-4C] Procedural Environment Dressing v1 (Trees + Building Types)
-- Status: Backlog
+- Status: Done
 - Summary: Add low-poly trees and multiple building types with performant placement (instancing/impostors) across the enlarged map.
 - Context: A 100x100 world looks empty without dressing; we need variety without blowing draw calls.
 - Functional behavior (GIVEN/WHEN/THEN):

@@ -16,6 +16,7 @@ import type { Entity } from '../physics/types';
 import { CameraRig } from './camera/cameraRig';
 import { MouseLookController } from '../core/input/mouseLookController';
 import { TerrainChunkManager } from './terrain/terrainChunkManager';
+import { PropDressingManager } from './props/propDressingManager';
 
 export type RenderContext = {
   engine: Engine;
@@ -26,9 +27,11 @@ export type RenderContext = {
   bindings: MeshBindingSystem;
   assets: RenderAssetLoader;
   terrain: TerrainChunkManager;
+  props: PropDressingManager;
   setTransformProvider: (provider: TransformProvider) => void;
   setCameraTarget: (entity: Entity | null) => void;
   setTerrainFocus: (entity: Entity | null) => void;
+  setPropDressingFocus: (entity: Entity | null) => void;
   getCameraMode: () => 'cockpit' | 'chase';
   getCameraModeLabel: () => string;
   setCameraMode: (mode: 'cockpit' | 'chase') => void;
@@ -101,6 +104,10 @@ export const bootstrapRenderer = async ({
     scene,
     transformProvider: transformReader
   });
+  const props = new PropDressingManager({
+    scene,
+    transformProvider: transformReader
+  });
 
   const entityMeshes = new Map<Entity, AbstractMesh>();
   let cameraTarget: Entity | null = null;
@@ -114,6 +121,7 @@ export const bootstrapRenderer = async ({
     bindings.updateFromTransforms();
     cameraRig.update(engine.getDeltaTime() / 1000);
     terrain.update();
+    props.update();
   });
 
   const manifest = await loadAssetManifest(manifestUrl);
@@ -144,10 +152,12 @@ export const bootstrapRenderer = async ({
     bindings,
     assets,
     terrain,
+    props,
     setTransformProvider: (provider: TransformProvider) => {
       bindings.setTransformProvider(provider);
       cameraRig.setTransformProvider(provider);
       terrain.setTransformProvider(provider);
+      props.setTransformProvider(provider);
     },
     setCameraTarget: (entity: Entity | null) => {
       cameraTarget = entity;
@@ -156,6 +166,9 @@ export const bootstrapRenderer = async ({
     },
     setTerrainFocus: (entity: Entity | null) => {
       terrain.setFocusEntity(entity);
+    },
+    setPropDressingFocus: (entity: Entity | null) => {
+      props.setFocusEntity(entity);
     },
     getCameraMode: () => cameraRig.getMode(),
     getCameraModeLabel: () => (cameraRig.getMode() === 'cockpit' ? 'Cockpit' : 'Chase'),
@@ -174,6 +187,7 @@ export const bootstrapRenderer = async ({
       mouseLook.dispose();
       cameraRig.dispose();
       terrain.dispose();
+      props.dispose();
       engine.stopRenderLoop();
       maybeWindow?.removeEventListener('resize', resize);
       scene.dispose();
