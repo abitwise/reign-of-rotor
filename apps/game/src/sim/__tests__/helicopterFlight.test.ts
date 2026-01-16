@@ -26,7 +26,7 @@ describe('helicopter flight system', () => {
   });
 
   it('applies upward force based on collective input', () => {
-    const physics = createPhysicsWorld(rapier);
+    const physics = createPhysicsWorld(rapier, { gravity: { x: 0, y: 0, z: 0 } });
     const input = createPlayerInputState();
     input.collective = 1;
 
@@ -41,7 +41,7 @@ describe('helicopter flight system', () => {
   });
 
   it('does not accelerate upward like a rocket at full collective', () => {
-    const physics = createPhysicsWorld(rapier);
+    const physics = createPhysicsWorld(rapier, { gravity: { x: 0, y: 0, z: 0 } });
     const input = createPlayerInputState();
     input.collective = 1;
 

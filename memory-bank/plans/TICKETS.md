@@ -57,7 +57,7 @@
   - [x] Asset manifest + loader skeleton
 
 ### [P1-4B] World Scale Upgrade: 100x100 Map (Chunked Terrain + Streaming)
-- Status: Backlog
+- Status: Done
 - Summary: Increase world from 1x1 to 100x100 (same unit system) using chunking/streaming so performance remains stable.
 - Context: Bigger world improves immersion, navigation, and mission variety, but requires LOD/chunking to avoid perf and precision problems.
 - Functional behavior (GIVEN/WHEN/THEN):
