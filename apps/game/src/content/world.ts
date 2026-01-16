@@ -91,9 +91,10 @@ export const getTileIndexForPosition = (
   position: { x: number; z: number }
 ): { tileX: number; tileZ: number } => {
   const clamped = clampToWorldBounds(bounds, position);
+  const { tilesX, tilesZ } = getWorldTileCount(bounds, tileSize);
   return {
-    tileX: Math.floor((clamped.x - bounds.minX) / tileSize),
-    tileZ: Math.floor((clamped.z - bounds.minZ) / tileSize)
+    tileX: Math.min(Math.floor((clamped.x - bounds.minX) / tileSize), tilesX - 1),
+    tileZ: Math.min(Math.floor((clamped.z - bounds.minZ) / tileSize), tilesZ - 1)
   };
 };
 
@@ -113,6 +114,9 @@ export const pickSpawnPoint = (
   world: WorldConfig,
   randomSource: () => number = Math.random
 ): { x: number; z: number } => {
+  if (!world.spawnZones || world.spawnZones.length === 0) {
+    throw new Error('pickSpawnPoint: world.spawnZones must contain at least one spawn zone');
+  }
   const zone = world.spawnZones[Math.floor(randomSource() * world.spawnZones.length)];
   const angle = randomSource() * Math.PI * 2;
   const radius = Math.sqrt(randomSource()) * zone.radius;
