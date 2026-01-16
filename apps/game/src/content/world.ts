@@ -91,9 +91,10 @@ export const getTileIndexForPosition = (
   position: { x: number; z: number }
 ): { tileX: number; tileZ: number } => {
   const clamped = clampToWorldBounds(bounds, position);
+  const { tilesX, tilesZ } = getWorldTileCount(bounds, tileSize);
   return {
-    tileX: Math.floor((clamped.x - bounds.minX) / tileSize),
-    tileZ: Math.floor((clamped.z - bounds.minZ) / tileSize)
+    tileX: Math.min(Math.floor((clamped.x - bounds.minX) / tileSize), tilesX - 1),
+    tileZ: Math.min(Math.floor((clamped.z - bounds.minZ) / tileSize), tilesZ - 1)
   };
 };
 

@@ -52,7 +52,7 @@ describe('world tile math helpers', () => {
 
     it('clamps positions outside world bounds', () => {
       const result = getTileIndexForPosition(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, { x: 1000, z: -1000 });
-      expect(result.tileX).toBe(10); // clamped to maxX (50), which is tile 10
+      expect(result.tileX).toBe(9); // clamped to maxX (50), which maps to the last tile (9)
       expect(result.tileZ).toBe(0); // clamped to minZ (-50), which is tile 0
     });
 
@@ -60,6 +60,12 @@ describe('world tile math helpers', () => {
       const result = getTileIndexForPosition(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, { x: -25, z: 15 });
       expect(result.tileX).toBe(2); // (-25 - (-50)) / 10 = 2.5 -> floor to 2
       expect(result.tileZ).toBe(6); // (15 - (-50)) / 10 = 6.5 -> floor to 6
+    });
+
+    it('handles position exactly at maxX/maxZ boundary', () => {
+      const result = getTileIndexForPosition(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, { x: 50, z: 50 });
+      expect(result.tileX).toBe(9); // At boundary, should clamp to last valid tile
+      expect(result.tileZ).toBe(9);
     });
   });
 
