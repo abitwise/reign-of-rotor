@@ -15,7 +15,12 @@ These documents contain the authoritative definition of scope, requirements, and
 WORKFLOW RULES
 ================================================================
 
-## 1. Before implementing a ticket or phase
+## 1. First make an implementation plan
+- Read the ticket contents from TICKETS.md
+- Think it through how to implement the ticket by reading the documentation in memory bank and code.
+- The solution needs to be smart and logical and use the best software design practices. Avoid anti-patterns.
+- Finalize the implementation plan and save it to `./memory-bank/plans/tickets/<ticket-id>-PLAN.md`
+## 2. Before implementing a ticket or phase
 - Read:
   - The selected ticket file: `./memory-bank/plans/tickets/<ticket-id>-PLAN.md`
   - Relevant architecture and product docs and wireframes
@@ -26,7 +31,7 @@ WORKFLOW RULES
   - Base your new feature branch on the integration branch  
   - **Do NOT switch to main unless explicitly told**
 
-## 2. While implementing
+## 3. While implementing
 - Apply the instructions from:
   - Ticket PLAN file  
   - TICKETS.md  
@@ -41,7 +46,7 @@ WORKFLOW RULES
   - Aligns with architectural decisions  
   - Covered by appropriate tests
 
-## 3. After completing each task inside the ticket
+## 4. After completing each task inside the ticket
 - Provide the updated code  
 - Provide the updated tests  
 - Produce a commit message in the format:
@@ -50,7 +55,7 @@ WORKFLOW RULES
 <ticket-id>: <short description of change>
 ```
 
-## 4. After completing the ticket
+## 5. After completing the ticket
 - Update `TICKETS.md`:
   - Mark the ticket as:  
     `**Status:** Done`
@@ -59,7 +64,7 @@ WORKFLOW RULES
   - Update “Last Updated” date  
   - Add any important notes or deviations discovered
 
-## 5. At the end of the phase or ticket
+## 6. At the end of the phase or ticket
 - Present:
   - Summary of what was implemented  
   - All changed files  
