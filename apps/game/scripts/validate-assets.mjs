@@ -85,11 +85,13 @@ const report = async () => {
     if (typeof id !== 'string') {
       console.error('Asset entry is missing required field "id".');
       hasErrors = true;
+      return;
     }
 
     if (typeof assetPath !== 'string') {
-      console.error('Asset entry is missing required field "path".');
+      console.error(`Asset "${id}" is missing required field "path".`);
       hasErrors = true;
+      return;
     }
 
     if (!allowedTypes.has(type)) {
@@ -153,13 +155,12 @@ const report = async () => {
       }
     }
 
-    if (
-      category &&
-      allowedCategories.has(category) &&
-      !budgets[category] &&
-      !budgets.default
-    ) {
-      console.warn(`Asset "${id ?? 'unknown'}" has no budget profile for category "${category}".`);
+    const hasBudgetForCategory = category && budgets[category];
+    const hasDefaultBudget = budgets.default;
+    const isKnownCategory = category && allowedCategories.has(category);
+
+    if (isKnownCategory && !hasBudgetForCategory && !hasDefaultBudget) {
+      console.warn(`Asset "${id}" has no budget profile for category "${category}".`);
       hasWarnings = true;
     }
   });
