@@ -204,7 +204,10 @@ const parseManifest = (raw: unknown): AssetManifest => {
       const minLevels = candidate.minLevels;
       const requiresInstancing = candidate.requiresInstancing;
 
-      if (!isFiniteNumber(minLevels) || minLevels <= 0 || !Number.isInteger(minLevels) || typeof requiresInstancing !== 'boolean') {
+      const isValidMinLevels = isFiniteNumber(minLevels) && minLevels > 0 && Number.isInteger(minLevels);
+      const isValidRequiresInstancing = typeof requiresInstancing === 'boolean';
+
+      if (!isValidMinLevels || !isValidRequiresInstancing) {
         return;
       }
 

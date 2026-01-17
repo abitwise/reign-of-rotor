@@ -117,7 +117,10 @@ const report = async () => {
       }
 
       const { level, path: lodPath, type: lodType } = lod;
-      if (!(isFiniteNumber(level) && level >= 0 && Number.isInteger(level)) || typeof lodPath !== 'string') {
+      const isValidLevel = isFiniteNumber(level) && level >= 0 && Number.isInteger(level);
+      const isValidPath = typeof lodPath === 'string';
+
+      if (!isValidLevel || !isValidPath) {
         console.error(`Asset "${id ?? 'unknown'}" has invalid lod metadata.`);
         hasErrors = true;
       }
