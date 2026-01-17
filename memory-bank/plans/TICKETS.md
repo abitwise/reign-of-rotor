@@ -94,7 +94,7 @@
   - [ ] Add content config for densities and biome presets
 
 ### [P1-4D] Asset + LOD Contract for Large Worlds (Manifests + Budget Limits)
-- Status: Backlog
+- Status: Done
 - Summary: Establish asset budgets and LOD/instancing rules to keep the 100x100 world feasible in a browser.
 - Context: Without explicit budgets, content additions will slowly kill performance.
 - Functional behavior (GIVEN/WHEN/THEN):

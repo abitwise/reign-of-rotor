@@ -1,15 +1,63 @@
 {
   "version": 1,
+  "budgets": {
+    "default": {
+      "maxTriangles": 1500,
+      "maxMaterials": 2,
+      "maxTextureSize": 1024
+    },
+    "tree": {
+      "maxTriangles": 800,
+      "maxMaterials": 1,
+      "maxTextureSize": 512
+    },
+    "building": {
+      "maxTriangles": 3000,
+      "maxMaterials": 2,
+      "maxTextureSize": 1024
+    },
+    "vehicle": {
+      "maxTriangles": 12000,
+      "maxMaterials": 4,
+      "maxTextureSize": 2048
+    }
+  },
+  "lodRequirements": {
+    "tree": {
+      "minLevels": 2,
+      "requiresInstancing": true
+    },
+    "building": {
+      "minLevels": 2,
+      "requiresInstancing": false
+    }
+  },
   "assets": [
     {
       "id": "apache-gunship",
       "path": "/assets/low_poly_apache_gunship.glb",
-      "type": "glb"
+      "type": "glb",
+      "category": "vehicle",
+      "lods": [
+        {
+          "level": 0,
+          "path": "/assets/low_poly_apache_gunship.glb",
+          "type": "glb"
+        }
+      ]
     },
     {
       "id": "placeholder-triangle",
       "path": "/assets/placeholder.gltf",
-      "type": "gltf"
+      "type": "gltf",
+      "category": "prop",
+      "lods": [
+        {
+          "level": 0,
+          "path": "/assets/placeholder.gltf",
+          "type": "gltf"
+        }
+      ]
     }
   ]
 }

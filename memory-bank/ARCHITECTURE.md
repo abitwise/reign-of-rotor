@@ -111,3 +111,9 @@ Notes:
 - Rotors are animated procedurally at runtime (do not rely on baked glTF animations).
 - Pivots/origins for `Rotor` and `Back_Rotor` must be set to their hub centers.
 
+### Asset manifest contract (large-world content)
+- Manifest entries define a base asset plus optional LOD variants.
+- Required fields per asset: `id`, `path`, `type`, `category`, `lods` (LOD0 minimum).
+- LOD entries use `{ level, path, type }`, with `level: 0` required.
+- `budgets` define per-category limits (triangles, materials, texture size) for validation.
+- `lodRequirements` declare minimum LOD counts and instancing expectations for key categories (trees/buildings).
