@@ -273,7 +273,7 @@ body {
   font-size: 14px;
 }
 
-.flight-hud {
+.avionics-hud {
   position: fixed;
   top: 16px;
   left: 16px;
@@ -340,7 +340,7 @@ body {
   visibility: hidden;
 }
 
-.threat-banner {
+.alert-banner {
   top: 24px;
   background: rgba(255, 154, 112, 0.2);
   color: #ffd2bd;
@@ -397,9 +397,9 @@ body {
   border-color: rgba(255, 159, 160, 0.45);
 }
 
-.flight-grid {
+.avionics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 10px;
 }
 

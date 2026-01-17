@@ -265,7 +265,7 @@
   - [ ] Threat warnings (lock/launch)
 
 ### [P1-11B] Avionics HUD v2 (Instruments + Alerts + Navigation Lite)
-- Status: Backlog
+- Status: Done
 - Summary: Expand cockpit-first HUD with core flight instruments, power/RPM cues, navigation bearing/distance, and prioritized alerts.
 - Context: Avionics is the “why did I crash?” layer; it also supports hardcore-leaning gameplay without full sim complexity.
 - Functional behavior (GIVEN/WHEN/THEN):
