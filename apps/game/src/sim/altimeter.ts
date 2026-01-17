@@ -1,6 +1,7 @@
 import { SystemPhase, type LoopSystem } from '../core/loop/types';
 import type { PhysicsWorldContext } from '../physics/world';
 import type { PlayerHelicopter } from './helicopterFlight';
+import { rotateVector } from '../physics/math';
 
 export enum LandingState {
   Airborne = 'airborne',
@@ -115,28 +116,6 @@ const computeHeadingDegrees = (rotation: { x: number; y: number; z: number; w: n
   const headingRadians = Math.atan2(forward.x, forward.z);
   const headingDegrees = (headingRadians * 180) / Math.PI;
   return (headingDegrees + 360) % 360;
-};
-
-const rotateVector = (
-  vector: { x: number; y: number; z: number },
-  rotation: { x: number; y: number; z: number; w: number }
-): { x: number; y: number; z: number } => {
-  const { x, y, z } = vector;
-  const qx = rotation.x;
-  const qy = rotation.y;
-  const qz = rotation.z;
-  const qw = rotation.w;
-
-  const ix = qw * x + qy * z - qz * y;
-  const iy = qw * y + qz * x - qx * z;
-  const iz = qw * z + qx * y - qy * x;
-  const iw = -qx * x - qy * y - qz * z;
-
-  return {
-    x: ix * qw + iw * -qx + iy * -qz - iz * -qy,
-    y: iy * qw + iw * -qy + iz * -qx - ix * -qz,
-    z: iz * qw + iw * -qz + ix * -qy - iy * -qx
-  };
 };
 
 const resolveLandingStateFromImpact = (impactSpeed: number): LandingState => {

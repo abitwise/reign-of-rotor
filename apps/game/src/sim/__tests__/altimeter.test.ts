@@ -88,4 +88,93 @@ describe('altimeter system', () => {
     expect(heli.altimeter.landingState).toBe(LandingState.HardLanding);
     expect(heli.altimeter.impactSeverity).toBeGreaterThanOrEqual(6);
   });
+
+  describe('heading computation', () => {
+    it('reports heading of 0° when facing north (forward +Z)', () => {
+      const physics = createPhysicsWorld(rapier);
+      const terrain = createTerrainColliderManager(physics);
+      terrain.update({ x: 0, z: 0 });
+
+      const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, createPlayerInputState(), createControlState(), {
+        yawRateTuning
+      });
+
+      physics.step(stepContext.fixedDeltaSeconds);
+      heli.body.setTranslation({ x: 0, y: 10, z: 0 }, true);
+      // Identity quaternion: no rotation, facing +Z (north)
+      heli.body.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true);
+      physics.world.propagateModifiedBodyPositionsToColliders();
+
+      const system = createAltimeterSystem(heli, physics);
+      system.step(stepContext);
+
+      expect(heli.altimeter.heading).toBeCloseTo(0, 1);
+    });
+
+    it('reports heading of 90° when facing east (forward +X)', () => {
+      const physics = createPhysicsWorld(rapier);
+      const terrain = createTerrainColliderManager(physics);
+      terrain.update({ x: 0, z: 0 });
+
+      const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, createPlayerInputState(), createControlState(), {
+        yawRateTuning
+      });
+
+      physics.step(stepContext.fixedDeltaSeconds);
+      heli.body.setTranslation({ x: 0, y: 10, z: 0 }, true);
+      // Rotation 90° around Y-axis: facing +X (east)
+      // quaternion for 90° Y rotation: w=cos(45°)=0.7071, y=sin(45°)=0.7071
+      heli.body.setRotation({ x: 0, y: 0.7071068, z: 0, w: 0.7071068 }, true);
+      physics.world.propagateModifiedBodyPositionsToColliders();
+
+      const system = createAltimeterSystem(heli, physics);
+      system.step(stepContext);
+
+      expect(heli.altimeter.heading).toBeCloseTo(90, 1);
+    });
+
+    it('reports heading of 180° when facing south (forward -Z)', () => {
+      const physics = createPhysicsWorld(rapier);
+      const terrain = createTerrainColliderManager(physics);
+      terrain.update({ x: 0, z: 0 });
+
+      const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, createPlayerInputState(), createControlState(), {
+        yawRateTuning
+      });
+
+      physics.step(stepContext.fixedDeltaSeconds);
+      heli.body.setTranslation({ x: 0, y: 10, z: 0 }, true);
+      // Rotation 180° around Y-axis: facing -Z (south)
+      // quaternion for 180° Y rotation: w=cos(90°)=0, y=sin(90°)=1
+      heli.body.setRotation({ x: 0, y: 1, z: 0, w: 0 }, true);
+      physics.world.propagateModifiedBodyPositionsToColliders();
+
+      const system = createAltimeterSystem(heli, physics);
+      system.step(stepContext);
+
+      expect(heli.altimeter.heading).toBeCloseTo(180, 1);
+    });
+
+    it('reports heading of 270° when facing west (forward -X)', () => {
+      const physics = createPhysicsWorld(rapier);
+      const terrain = createTerrainColliderManager(physics);
+      terrain.update({ x: 0, z: 0 });
+
+      const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, createPlayerInputState(), createControlState(), {
+        yawRateTuning
+      });
+
+      physics.step(stepContext.fixedDeltaSeconds);
+      heli.body.setTranslation({ x: 0, y: 10, z: 0 }, true);
+      // Rotation 270° around Y-axis: facing -X (west)
+      // quaternion for 270° Y rotation: w=cos(135°)=-0.7071, y=sin(135°)=0.7071
+      heli.body.setRotation({ x: 0, y: -0.7071068, z: 0, w: 0.7071068 }, true);
+      physics.world.propagateModifiedBodyPositionsToColliders();
+
+      const system = createAltimeterSystem(heli, physics);
+      system.step(stepContext);
+
+      expect(heli.altimeter.heading).toBeCloseTo(270, 1);
+    });
+  });
 });
