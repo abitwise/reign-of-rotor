@@ -16,6 +16,12 @@ export const CONTROL_TUNING_PRESETS: Record<ControlPresetId, ControlTuning> = {
     collective: { expo: 1.2, smoothingTau: 0.18, slewRate: 1.6 },
     cyclicX: { expo: 1.6, smoothingTau: 0.12, slewRate: 4.5 },
     cyclicY: { expo: 1.6, smoothingTau: 0.12, slewRate: 4.5 },
+    // Note: For the "normal" preset we intentionally use a slightly higher yaw input
+    // smoothingTau (0.22 vs 0.16 in "hardcore"). This extra filtering happens in the
+    // input stage to soften small stick/pedal jitters and reduce abrupt step inputs,
+    // making yaw turns easier to control for casual players. The yaw-rate controller
+    // still provides dynamic damping; this smoothing only shapes the commanded input
+    // signal and is not a substitute for the rate controller's damping behavior.
     yaw: { expo: 1.8, smoothingTau: 0.22, slewRate: 3.5 },
     yawRate: { maxRateRad: 1.4, damping: 0.65 }
   },
