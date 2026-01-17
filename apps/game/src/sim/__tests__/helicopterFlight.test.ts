@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createPlayerInputState } from '../../core/input/playerInput';
+import { createControlState } from '../../core/input/controlState';
 import type { FixedStepContext } from '../../core/loop/types';
 import { DEFAULT_HELICOPTER_FLIGHT } from '../../content/helicopters';
 import { loadRapier } from '../../physics/rapierInstance';
@@ -28,9 +29,10 @@ describe('helicopter flight system', () => {
   it('applies upward force based on collective input', () => {
     const physics = createPhysicsWorld(rapier, { gravity: { x: 0, y: 0, z: 0 } });
     const input = createPlayerInputState();
-    input.collective = 1;
+    const controlState = createControlState();
+    controlState.collective.filtered = 1;
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
     const gameState: GameState = { isPaused: false };
     const system = createHelicopterFlightSystem(heli, gameState);
 
@@ -43,9 +45,10 @@ describe('helicopter flight system', () => {
   it('does not accelerate upward like a rocket at full collective', () => {
     const physics = createPhysicsWorld(rapier, { gravity: { x: 0, y: 0, z: 0 } });
     const input = createPlayerInputState();
-    input.collective = 1;
+    const controlState = createControlState();
+    controlState.collective.filtered = 1;
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
     const gameState: GameState = { isPaused: false };
     const system = createHelicopterFlightSystem(heli, gameState);
 
@@ -60,8 +63,9 @@ describe('helicopter flight system', () => {
     const physics = createPhysicsWorld(rapier, { gravity: { x: 0, y: 0, z: 0 } });
     const input = createPlayerInputState();
     input.collective = -1;
+    const controlState = createControlState();
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
     heli.body.setLinvel({ x: 0, y: 5, z: 0 }, true);
 
     const gameState: GameState = { isPaused: false };
@@ -76,9 +80,10 @@ describe('helicopter flight system', () => {
   it('applies yaw torque from input', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();
-    input.yaw = 1;
+    const controlState = createControlState();
+    controlState.yaw.filtered = 1;
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
     const gameState: GameState = { isPaused: false };
     const system = createHelicopterFlightSystem(heli, gameState);
 
@@ -106,12 +111,9 @@ describe('stability assist system', () => {
   it('dampens angular velocity when stability assist is enabled and no input', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();
-    input.collective = 0;
-    input.cyclicX = 0;
-    input.cyclicY = 0;
-    input.yaw = 0;
+    const controlState = createControlState();
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
     heli.assists.stability = true;
 
     // Manually set angular velocity
@@ -138,9 +140,10 @@ describe('stability assist system', () => {
   it('does not apply stability assist when player is actively controlling', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();
-    input.cyclicX = 0.5; // Active control input
+    const controlState = createControlState();
+    controlState.cyclicX.filtered = 0.5; // Active control input
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
     heli.assists.stability = true;
 
     // Set initial angular velocity
@@ -161,8 +164,9 @@ describe('stability assist system', () => {
   it('does not apply stability assist when disabled', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();
+    const controlState = createControlState();
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
     heli.assists.stability = false;
 
     // Set initial angular velocity
@@ -206,9 +210,10 @@ describe('hover assist system', () => {
   it('dampens lateral velocity when hover assist is enabled and collective in range', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();
-    input.collective = 0; // Normalized [0.3-0.7] maps to input [-1,1] around 0
+    const controlState = createControlState();
+    controlState.collective.filtered = 0.5;
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
     heli.assists.hover = true;
 
     // Set lateral velocity
@@ -233,9 +238,10 @@ describe('hover assist system', () => {
   it('does not apply hover assist when collective is out of range', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();
-    input.collective = 1; // Full collective, outside hover range
+    const controlState = createControlState();
+    controlState.collective.filtered = 1;
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
     heli.assists.hover = true;
 
     // Set lateral velocity
@@ -257,9 +263,10 @@ describe('hover assist system', () => {
   it('does not apply hover assist when disabled', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();
-    input.collective = 0; // In hover range
+    const controlState = createControlState();
+    controlState.collective.filtered = 0.5;
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
     heli.assists.hover = false;
 
     // Set lateral velocity
@@ -300,8 +307,9 @@ describe('assist toggle system', () => {
   it('toggles stability assist when Z key is pressed', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();
+    const controlState = createControlState();
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
     const toggleSystem = createAssistToggleSystem(heli);
 
     // Initial state: stability ON by default
@@ -323,8 +331,9 @@ describe('assist toggle system', () => {
   it('toggles hover assist when X key is pressed', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();
+    const controlState = createControlState();
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
     const toggleSystem = createAssistToggleSystem(heli);
 
     // Initial state: hover OFF by default

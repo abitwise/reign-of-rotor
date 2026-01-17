@@ -140,7 +140,7 @@
   - [x] Simple in-game “Controls” help panel (dev)
 
 ### [P1-6A] Control State Normalization + Input Processing (Curves/Smoothing/Rate Limits)
-- Status: Backlog
+- Status: Done
 - Summary: Introduce a normalized helicopter control state and a robust input processing layer with expo curves, smoothing, and slew limits.
 - Context: K/M is inherently digital/relative; without filtering the helicopter feels twitchy and inconsistent. This also sets up future device parity without changing sim code.
 - Functional behavior (GIVEN/WHEN/THEN):
