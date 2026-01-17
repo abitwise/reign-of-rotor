@@ -19,7 +19,22 @@ export type PlayerHelicopter = {
   input: PlayerInputState;
   control: ControlState;
   altimeter: AltimeterState;
+  power: HelicopterPowerState;
 };
+
+export type HelicopterPowerState = {
+  rotorRpm: number;
+  powerRequired: number;
+  powerAvailable: number;
+  powerMargin: number;
+};
+
+const createPowerState = (flight: CHelicopterFlight): HelicopterPowerState => ({
+  rotorRpm: flight.nominalRotorRpm,
+  powerRequired: 0,
+  powerAvailable: flight.powerAvailable,
+  powerMargin: flight.powerAvailable
+});
 
 export const spawnPlayerHelicopter = (
   physics: PhysicsWorldContext,
@@ -62,14 +77,15 @@ export const spawnPlayerHelicopter = (
     assists: { stability: true, hover: false },
     input,
     control,
-    altimeter: createAltimeterState()
+    altimeter: createAltimeterState(),
+    power: createPowerState(flight)
   };
 };
 
 export const createHelicopterFlightSystem = (heli: PlayerHelicopter, gameState: GameState): LoopSystem => ({
   id: `sim.helicopterFlight.${heli.entity}`,
   phase: SystemPhase.Simulation,
-  step: () => {
+  step: (context) => {
     // Toggle body type based on pause state
     if (gameState.isPaused) {
       if (heli.body.bodyType() !== 1) { // 1 = Kinematic
@@ -89,7 +105,8 @@ export const createHelicopterFlightSystem = (heli: PlayerHelicopter, gameState: 
         }
       }
     }
-    
+
+    updatePowerModel(heli, context.fixedDeltaSeconds);
     applyRotorForces(heli);
     applyCollectiveDownBrake(heli);
     applyControlTorques(heli);
@@ -129,7 +146,8 @@ const applyRotorForces = (heli: PlayerHelicopter): void => {
     return;
   }
 
-  const magnitude = heli.flight.maxLiftForce * liftInput;
+  const rotorRpmScale = clamp(heli.power.rotorRpm / heli.flight.nominalRotorRpm, 0, 1.1);
+  const magnitude = heli.flight.maxLiftForce * liftInput * rotorRpmScale;
   const rotation = heli.body.rotation();
   const forceDirection = rotateVector({ x: 0, y: 1, z: 0 }, rotation);
 
@@ -146,11 +164,15 @@ const applyRotorForces = (heli: PlayerHelicopter): void => {
 };
 
 const applyControlTorques = (heli: PlayerHelicopter): void => {
-  const pitchTorque = -heli.control.cyclicY.filtered * heli.flight.maxPitchTorque;
+  const authorityScale = computeAuthorityScale(heli);
+  const rotorRpmScale = clamp(heli.power.rotorRpm / heli.flight.nominalRotorRpm, 0, 1.1);
+  const torqueScale = authorityScale * rotorRpmScale;
+  const pitchTorque = -heli.control.cyclicY.filtered * heli.flight.maxPitchTorque * torqueScale;
   const yawTorque =
     computeYawRateCommand(heli.control.yaw.filtered, heli.body.angvel().y, heli.yawRateTuning) *
-    heli.flight.maxYawTorque;
-  const rollTorque = -heli.control.cyclicX.filtered * heli.flight.maxRollTorque;
+    heli.flight.maxYawTorque *
+    torqueScale;
+  const rollTorque = -heli.control.cyclicX.filtered * heli.flight.maxRollTorque * torqueScale;
 
   heli.body.addTorque(
     {
@@ -164,6 +186,11 @@ const applyControlTorques = (heli: PlayerHelicopter): void => {
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+
+const computeAuthorityScale = (heli: PlayerHelicopter): number => {
+  const authorityBlend = clamp(heli.power.powerMargin / heli.flight.powerMarginForFullAuthority, 0, 1);
+  return heli.flight.minAuthorityScale + (1 - heli.flight.minAuthorityScale) * authorityBlend;
+};
 
 export const computeYawRateCommand = (
   desiredYawRateNormalized: number,
@@ -235,6 +262,46 @@ const applyStabilityAssist = (heli: PlayerHelicopter): void => {
   };
 
   heli.body.addTorque(counterTorque, true);
+};
+
+const updatePowerModel = (heli: PlayerHelicopter, dt: number): void => {
+  const collectiveInput = clamp01(heli.control.collective.filtered);
+  const cyclicLoad = Math.hypot(heli.control.cyclicX.filtered, heli.control.cyclicY.filtered);
+  const yawLoad = Math.abs(heli.control.yaw.filtered) * 0.6;
+  const maneuverLoad = clamp01(cyclicLoad + yawLoad);
+  const linearVelocity = heli.body.linvel();
+  const speed = Math.sqrt(
+    linearVelocity.x * linearVelocity.x +
+      linearVelocity.y * linearVelocity.y +
+      linearVelocity.z * linearVelocity.z
+  );
+  const speedRelief =
+    clamp01(speed / heli.flight.powerSpeedReference) * heli.flight.powerSpeedRelief;
+
+  const powerRequired = clamp(
+    collectiveInput * heli.flight.powerCollectiveScale +
+      maneuverLoad * heli.flight.powerManeuverScale -
+      speedRelief,
+    0,
+    heli.flight.powerMaxRequired
+  );
+  const powerAvailable = heli.flight.powerAvailable;
+  const powerMargin = powerAvailable - powerRequired;
+  const rpmTarget = clamp(
+    heli.flight.nominalRotorRpm + powerMargin * heli.flight.rpmMarginToTarget,
+    heli.flight.minRotorRpm,
+    heli.flight.maxRotorRpm
+  );
+  const response = 1 - Math.exp(-heli.flight.rpmResponse * dt);
+
+  heli.power.rotorRpm = clamp(
+    heli.power.rotorRpm + (rpmTarget - heli.power.rotorRpm) * response,
+    heli.flight.minRotorRpm,
+    heli.flight.maxRotorRpm
+  );
+  heli.power.powerRequired = powerRequired;
+  heli.power.powerAvailable = powerAvailable;
+  heli.power.powerMargin = powerMargin;
 };
 
 const applyCollectiveDownBrake = (heli: PlayerHelicopter): void => {

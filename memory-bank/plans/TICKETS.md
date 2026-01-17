@@ -203,7 +203,7 @@
   - [ ] Add HUD/Debug readout for trim
 
 ### [P1-7B] Engine/Rotor RPM + Power Margin Model (Sim-lite Performance Limits)
-- Status: Backlog
+- Status: Done
 - Summary: Add simplified rotor RPM + power available/required model to produce believable limits (RPM droop, reduced yaw authority under load).
 - Context: “Yank everything at once” should have consequences; power margin drives meaningful decisions and makes avionics alerts real.
 - Functional behavior (GIVEN/WHEN/THEN):

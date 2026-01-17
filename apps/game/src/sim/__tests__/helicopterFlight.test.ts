@@ -103,6 +103,40 @@ describe('helicopter flight system', () => {
     expect(heli.body.angvel().y).toBeGreaterThan(0);
   });
 
+  it('droops rotor RPM under heavy load and recovers when load drops', () => {
+    const physics = createPhysicsWorld(rapier, { gravity: { x: 0, y: 0, z: 0 } });
+    const input = createPlayerInputState();
+    const controlState = createControlState();
+    controlState.collective.filtered = 1;
+    controlState.cyclicX.filtered = 1;
+    controlState.cyclicY.filtered = 1;
+    controlState.yaw.filtered = 1;
+
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
+
+    for (let i = 0; i < 30; i++) {
+      system.step(stepContext);
+    }
+
+    const droopedRpm = heli.power.rotorRpm;
+    expect(droopedRpm).toBeLessThan(heli.flight.nominalRotorRpm);
+
+    controlState.collective.filtered = 0;
+    controlState.cyclicX.filtered = 0;
+    controlState.cyclicY.filtered = 0;
+    controlState.yaw.filtered = 0;
+
+    for (let i = 0; i < 30; i++) {
+      system.step(stepContext);
+    }
+
+    expect(heli.power.rotorRpm).toBeGreaterThan(droopedRpm);
+  });
+
   it('damps yaw rate toward the target', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();
