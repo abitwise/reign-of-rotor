@@ -146,6 +146,11 @@ const applyRotorForces = (heli: PlayerHelicopter): void => {
     return;
   }
 
+  // Guard against invalid nominal rotor RPM (zero or negative) to avoid division errors.
+  if (heli.flight.nominalRotorRpm <= 0) {
+    return;
+  }
+
   const rotorRpmScale = clamp(heli.power.rotorRpm / heli.flight.nominalRotorRpm, 0, 1.1);
   const magnitude = heli.flight.maxLiftForce * liftInput * rotorRpmScale;
   const rotation = heli.body.rotation();
@@ -164,6 +169,11 @@ const applyRotorForces = (heli: PlayerHelicopter): void => {
 };
 
 const applyControlTorques = (heli: PlayerHelicopter): void => {
+  // Guard against invalid nominal rotor RPM (zero or negative) to avoid division errors.
+  if (heli.flight.nominalRotorRpm <= 0) {
+    return;
+  }
+
   const authorityScale = computeAuthorityScale(heli);
   const rotorRpmScale = clamp(heli.power.rotorRpm / heli.flight.nominalRotorRpm, 0, 1.1);
   const torqueScale = authorityScale * rotorRpmScale;
@@ -188,7 +198,12 @@ const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
 const computeAuthorityScale = (heli: PlayerHelicopter): number => {
-  const authorityBlend = clamp(heli.power.powerMargin / heli.flight.powerMarginForFullAuthority, 0, 1);
+  const powerMarginForFullAuthority = heli.flight.powerMarginForFullAuthority;
+  if (powerMarginForFullAuthority <= 0) {
+    // Fallback to full authority for invalid values (zero or negative) to avoid division errors.
+    return 1;
+  }
+  const authorityBlend = clamp(heli.power.powerMargin / powerMarginForFullAuthority, 0, 1);
   return heli.flight.minAuthorityScale + (1 - heli.flight.minAuthorityScale) * authorityBlend;
 };
 
@@ -275,8 +290,11 @@ const updatePowerModel = (heli: PlayerHelicopter, dt: number): void => {
       linearVelocity.y * linearVelocity.y +
       linearVelocity.z * linearVelocity.z
   );
-  const speedRelief =
-    clamp01(speed / heli.flight.powerSpeedReference) * heli.flight.powerSpeedRelief;
+  let speedRelief = 0;
+  if (heli.flight.powerSpeedReference > 0) {
+    speedRelief =
+      clamp01(speed / heli.flight.powerSpeedReference) * heli.flight.powerSpeedRelief;
+  }
 
   const powerRequired = clamp(
     collectiveInput * heli.flight.powerCollectiveScale +
