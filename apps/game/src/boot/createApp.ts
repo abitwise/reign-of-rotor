@@ -75,6 +75,7 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
         scheduler,
         input: input.state,
         controlState,
+        controlTuning: CONTROL_TUNING_PRESETS.normal,
         gameState
       });
 

@@ -18,6 +18,7 @@ const stepContext: FixedStepContext = {
 
 describe('altimeter system', () => {
   let rapier: Awaited<ReturnType<typeof loadRapier>>;
+  const yawRateTuning = { maxRateRad: 1.6, damping: 0.8 };
 
   beforeAll(async () => {
     rapier = await loadRapier();
@@ -28,12 +29,9 @@ describe('altimeter system', () => {
     const terrain = createTerrainColliderManager(physics);
     terrain.update({ x: 0, z: 0 });
 
-    const heli = spawnPlayerHelicopter(
-      physics,
-      DEFAULT_HELICOPTER_FLIGHT,
-      createPlayerInputState(),
-      createControlState()
-    );
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, createPlayerInputState(), createControlState(), {
+      yawRateTuning
+    });
 
     physics.step(stepContext.fixedDeltaSeconds);
     heli.body.setTranslation({ x: 0, y: 10, z: 0 }, true);
@@ -51,12 +49,9 @@ describe('altimeter system', () => {
     const terrain = createTerrainColliderManager(physics);
     terrain.update({ x: 0, z: 0 });
 
-    const heli = spawnPlayerHelicopter(
-      physics,
-      DEFAULT_HELICOPTER_FLIGHT,
-      createPlayerInputState(),
-      createControlState()
-    );
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, createPlayerInputState(), createControlState(), {
+      yawRateTuning
+    });
 
     physics.step(stepContext.fixedDeltaSeconds);
     heli.body.setTranslation({ x: 0, y: 0.35, z: 0 }, true);
@@ -76,12 +71,9 @@ describe('altimeter system', () => {
     const terrain = createTerrainColliderManager(physics);
     terrain.update({ x: 0, z: 0 });
 
-    const heli = spawnPlayerHelicopter(
-      physics,
-      DEFAULT_HELICOPTER_FLIGHT,
-      createPlayerInputState(),
-      createControlState()
-    );
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, createPlayerInputState(), createControlState(), {
+      yawRateTuning
+    });
 
     physics.step(stepContext.fixedDeltaSeconds);
     heli.body.setTranslation({ x: 0, y: 0.25, z: 0 }, true);

@@ -1,6 +1,6 @@
 import type { GameState } from './createApp';
 import type { PlayerInputState } from '../core/input/playerInput';
-import type { ControlState } from '../core/input/controlState';
+import type { ControlState, ControlTuning } from '../core/input/controlState';
 import type { SystemScheduler } from '../core/loop/systemScheduler';
 import { DEFAULT_HELICOPTER_FLIGHT } from '../content/helicopters';
 import { WORLD_CONFIG, pickSpawnPoint } from '../content/world';
@@ -27,17 +27,20 @@ export const bootstrapGameplay = ({
   scheduler,
   input,
   controlState,
+  controlTuning,
   gameState
 }: {
   physics: PhysicsWorldContext;
   scheduler: SystemScheduler;
   input: PlayerInputState;
   controlState: ControlState;
+  controlTuning: ControlTuning;
   gameState: GameState;
 }): GameplayContext => {
   const spawnPoint = pickSpawnPoint(WORLD_CONFIG);
   const player = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
-    startPosition: { x: spawnPoint.x, y: 0.8, z: spawnPoint.z }
+    startPosition: { x: spawnPoint.x, y: 0.8, z: spawnPoint.z },
+    yawRateTuning: controlTuning.yawRate
   });
   const terrain = createTerrainColliderManager(physics);
   terrain.update(spawnPoint);

@@ -6,6 +6,18 @@ export type ControlAxisState = {
   filtered: number;
 };
 
+export type YawRateControllerTuning = {
+  /**
+   * Maximum yaw rate in radians per second.
+   */
+  maxRateRad: number;
+  /**
+   * Controller gain used to convert yaw-rate error into a normalized command.
+   * Higher values respond faster but can feel twitchy with keyboard input.
+   */
+  damping: number;
+};
+
 export type ControlTrimState = {
   cyclicX: number;
   cyclicY: number;
@@ -48,6 +60,7 @@ export type ControlTuning = {
   cyclicX: ControlAxisTuning;
   cyclicY: ControlAxisTuning;
   yaw: ControlAxisTuning;
+  yawRate: YawRateControllerTuning;
 };
 
 export const createControlState = (): ControlState => ({
@@ -121,6 +134,7 @@ export const updateControlState = (
   updateAxis(state.collective, input.collective, tuning.collective, dtSeconds, -1, 1);
   updateAxis(state.cyclicX, input.cyclicX, tuning.cyclicX, dtSeconds, -1, 1, state.trim.cyclicX);
   updateAxis(state.cyclicY, input.cyclicY, tuning.cyclicY, dtSeconds, -1, 1, state.trim.cyclicY);
+  // Yaw input represents a desired yaw-rate target (normalized -1..1).
   updateAxis(state.yaw, input.yaw, tuning.yaw, dtSeconds, -1, 1, state.trim.yaw);
 };
 

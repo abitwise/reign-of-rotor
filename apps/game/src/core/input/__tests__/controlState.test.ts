@@ -7,6 +7,7 @@ const makeTuning = (overrides: Partial<ControlTuning> = {}): ControlTuning => ({
   cyclicX: { expo: 1, smoothingTau: 0, slewRate: 0 },
   cyclicY: { expo: 1, smoothingTau: 0, slewRate: 0 },
   yaw: { expo: 1, smoothingTau: 0, slewRate: 0 },
+  yawRate: { maxRateRad: 1, damping: 1 },
   ...overrides
 });
 
