@@ -7,5 +7,18 @@ export const DEFAULT_HELICOPTER_FLIGHT: HelicopterFlightTuning = {
   maxRollTorque: 16,
   maxYawTorque: 16,
   linearDamping: 0.2,
-  angularDamping: 1.4
+  angularDamping: 1.4,
+  nominalRotorRpm: 1,
+  minRotorRpm: 0.6,
+  maxRotorRpm: 1.05,
+  rpmResponse: 2.4,
+  rpmMarginToTarget: 0.35,
+  powerAvailable: 1,
+  powerCollectiveScale: 0.85,
+  powerManeuverScale: 0.45,
+  powerSpeedRelief: 0.2,
+  powerSpeedReference: 30,
+  powerMaxRequired: 1.35,
+  minAuthorityScale: 0.55,
+  powerMarginForFullAuthority: 0.15
 };
