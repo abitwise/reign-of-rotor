@@ -45,6 +45,7 @@ export class PropDressingManager {
   private readonly tiles = new Map<string, PropTile>();
   private focusEntity: Entity | null = null;
   private lastCenterKey: string | null = null;
+  private hasLoggedBiomes = false;
 
   constructor({ scene, transformProvider }: PropDressingManagerOptions) {
     this.scene = scene;
@@ -160,14 +161,15 @@ export class PropDressingManager {
       mesh.freezeWorldMatrix();
       this.buildingMeshes.set(archetype.id, mesh);
     });
-
-    if (process.env.NODE_ENV !== 'production') {
-      const biomeSummary = BIOME_PRESETS.map((preset) => preset.id).join(', ');
-      console.debug?.(`Prop dressing biomes ready: ${biomeSummary}`);
-    }
   }
 
   private refreshVisibleTiles(centerTileX: number, centerTileZ: number): void {
+    if (!this.hasLoggedBiomes && process.env.NODE_ENV !== 'production') {
+      const biomeSummary = BIOME_PRESETS.map((preset) => preset.id).join(', ');
+      console.debug?.(`Prop dressing biomes ready: ${biomeSummary}`);
+      this.hasLoggedBiomes = true;
+    }
+
     const { tilesX, tilesZ } = getWorldTileCount(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize);
     const desiredKeys = new Set<string>();
 
@@ -224,6 +226,7 @@ export class PropDressingManager {
 
       const instance = base.createInstance(`building-${key}-${buildings.length}`);
       instance.position = new Vector3(placement.position.x, archetype.height * 0.5, placement.position.z);
+      // Note: building physics colliders are axis-aligned AABBs and intentionally ignore this visual rotation (MVP limitation).
       instance.rotation = new Vector3(0, placement.rotation, 0);
       instance.isPickable = false;
       buildings.push(instance);
