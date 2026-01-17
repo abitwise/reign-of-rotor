@@ -2,6 +2,7 @@ import type { AppConfig } from '../boot/config';
 import { createDebugOverlay } from './debugOverlay';
 import { FORCE_TRIM_KEY, RESET_TRIM_KEY, type PlayerInputBindings } from '../core/input/playerInput';
 import type { ControlTrimState } from '../core/input/controlState';
+import { isTrimActive } from '../core/input/trimUtils';
 import { LandingState, type AltimeterState } from '../sim/altimeter';
 import type { CHelicopterAssists } from '../ecs/components/helicopter';
 import type { GameState } from '../boot/createApp';
@@ -376,18 +377,6 @@ const createAssistRow = (label: string, toggleKey: string) => {
       indicator.className = `assist-indicator ${enabled ? 'assist-on' : 'assist-off'}`;
     }
   };
-};
-
-const isTrimActive = (trimState: ControlTrimState | null): boolean => {
-  if (!trimState) {
-    return false;
-  }
-  const threshold = 0.01;
-  return (
-    Math.abs(trimState.cyclicX) > threshold ||
-    Math.abs(trimState.cyclicY) > threshold ||
-    Math.abs(trimState.yaw) > threshold
-  );
 };
 
 const createHudMetric = (label: string) => {
