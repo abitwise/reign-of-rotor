@@ -70,11 +70,11 @@ const normalizeBudgetProfile = (value: unknown): AssetBudgetProfile | null => {
   const maxMaterials = candidate.maxMaterials;
   const maxTextureSize = candidate.maxTextureSize;
 
-  if (
-    !isFiniteNumber(maxTriangles) || maxTriangles <= 0 ||
-    !isFiniteNumber(maxMaterials) || maxMaterials <= 0 ||
-    !isFiniteNumber(maxTextureSize) || maxTextureSize <= 0
-  ) {
+  const isValidMaxTriangles = isFiniteNumber(maxTriangles) && maxTriangles > 0;
+  const isValidMaxMaterials = isFiniteNumber(maxMaterials) && maxMaterials > 0;
+  const isValidMaxTextureSize = isFiniteNumber(maxTextureSize) && maxTextureSize > 0;
+
+  if (!isValidMaxTriangles || !isValidMaxMaterials || !isValidMaxTextureSize) {
     return null;
   }
 
