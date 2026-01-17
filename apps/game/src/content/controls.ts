@@ -2,6 +2,15 @@ import type { ControlTuning } from '../core/input/controlState';
 
 export type ControlPresetId = 'normal' | 'hardcore';
 
+/**
+ * Control tuning presets that define the feel of helicopter controls.
+ *
+ * - **normal**: More forgiving controls with higher smoothing/expo for casual play.
+ *   Provides gentler response curves and more stability at the cost of some responsiveness.
+ *
+ * - **hardcore**: Snappier, more responsive controls with lower smoothing for experienced players.
+ *   Offers more direct control and faster reactions but requires more skill to fly smoothly.
+ */
 export const CONTROL_TUNING_PRESETS: Record<ControlPresetId, ControlTuning> = {
   normal: {
     collective: { expo: 1.2, smoothingTau: 0.18, slewRate: 1.6 },

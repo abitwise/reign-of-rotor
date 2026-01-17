@@ -250,7 +250,7 @@ const applyHoverAssist = (heli: PlayerHelicopter): void => {
   }
 
   // Hover assist activates when collective is in "hover range"
-  const collectiveInput = clamp01(heli.control.collective.filtered);
+  const collectiveInput = heli.control.collective.filtered;
   const isInHoverRange = collectiveInput >= 0.3 && collectiveInput <= 0.7;
 
   if (!isInHoverRange) {

@@ -64,6 +64,9 @@ describe('helicopter flight system', () => {
     const input = createPlayerInputState();
     input.collective = -1;
     const controlState = createControlState();
+    // Set both raw and filtered to match the input for this test
+    controlState.collective.raw = -1;
+    controlState.collective.filtered = -1;
 
     const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
     heli.body.setLinvel({ x: 0, y: 5, z: 0 }, true);
