@@ -16,12 +16,14 @@ export const CONTROL_TUNING_PRESETS: Record<ControlPresetId, ControlTuning> = {
     collective: { expo: 1.2, smoothingTau: 0.18, slewRate: 1.6 },
     cyclicX: { expo: 1.6, smoothingTau: 0.12, slewRate: 4.5 },
     cyclicY: { expo: 1.6, smoothingTau: 0.12, slewRate: 4.5 },
-    yaw: { expo: 1.8, smoothingTau: 0.16, slewRate: 3.5 }
+    yaw: { expo: 1.8, smoothingTau: 0.22, slewRate: 3.5 },
+    yawRate: { maxRateRad: 1.4, damping: 0.65 }
   },
   hardcore: {
     collective: { expo: 1.35, smoothingTau: 0.1, slewRate: 2.2 },
     cyclicX: { expo: 1.25, smoothingTau: 0.08, slewRate: 6 },
     cyclicY: { expo: 1.25, smoothingTau: 0.08, slewRate: 6 },
-    yaw: { expo: 1.4, smoothingTau: 0.12, slewRate: 4.8 }
+    yaw: { expo: 1.4, smoothingTau: 0.16, slewRate: 4.8 },
+    yawRate: { maxRateRad: 1.8, damping: 0.75 }
   }
 };

@@ -14,6 +14,7 @@ import {
 
 describe('helicopter flight system', () => {
   let rapier: Awaited<ReturnType<typeof loadRapier>>;
+  const yawRateTuning = { maxRateRad: 1.6, damping: 0.8 };
 
   const stepContext: FixedStepContext = {
     fixedDeltaMs: 16,
@@ -32,7 +33,9 @@ describe('helicopter flight system', () => {
     const controlState = createControlState();
     controlState.collective.filtered = 1;
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
     const gameState: GameState = { isPaused: false };
     const system = createHelicopterFlightSystem(heli, gameState);
 
@@ -48,7 +51,9 @@ describe('helicopter flight system', () => {
     const controlState = createControlState();
     controlState.collective.filtered = 1;
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
     const gameState: GameState = { isPaused: false };
     const system = createHelicopterFlightSystem(heli, gameState);
 
@@ -68,7 +73,9 @@ describe('helicopter flight system', () => {
     controlState.collective.raw = -1;
     controlState.collective.filtered = -1;
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
     heli.body.setLinvel({ x: 0, y: 5, z: 0 }, true);
 
     const gameState: GameState = { isPaused: false };
@@ -86,7 +93,7 @@ describe('helicopter flight system', () => {
     const controlState = createControlState();
     controlState.yaw.filtered = 1;
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, { yawRateTuning });
     const gameState: GameState = { isPaused: false };
     const system = createHelicopterFlightSystem(heli, gameState);
 
@@ -95,10 +102,29 @@ describe('helicopter flight system', () => {
 
     expect(heli.body.angvel().y).toBeGreaterThan(0);
   });
+
+  it('damps yaw rate toward the target', () => {
+    const physics = createPhysicsWorld(rapier);
+    const input = createPlayerInputState();
+    const controlState = createControlState();
+    controlState.yaw.filtered = 0;
+
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, { yawRateTuning });
+    heli.body.setAngvel({ x: 0, y: 2, z: 0 }, true);
+
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
+
+    system.step(stepContext);
+    physics.step(stepContext.fixedDeltaSeconds);
+
+    expect(Math.abs(heli.body.angvel().y)).toBeLessThan(2);
+  });
 });
 
 describe('stability assist system', () => {
   let rapier: Awaited<ReturnType<typeof loadRapier>>;
+  const yawRateTuning = { maxRateRad: 1.6, damping: 0.8 };
 
   const stepContext: FixedStepContext = {
     fixedDeltaMs: 16,
@@ -116,7 +142,9 @@ describe('stability assist system', () => {
     const input = createPlayerInputState();
     const controlState = createControlState();
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
     heli.assists.stability = true;
 
     // Manually set angular velocity
@@ -146,7 +174,9 @@ describe('stability assist system', () => {
     const controlState = createControlState();
     controlState.cyclicX.filtered = 0.5; // Active control input
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
     heli.assists.stability = true;
 
     // Set initial angular velocity
@@ -169,7 +199,9 @@ describe('stability assist system', () => {
     const input = createPlayerInputState();
     const controlState = createControlState();
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
     heli.assists.stability = false;
 
     // Set initial angular velocity
@@ -198,6 +230,7 @@ describe('stability assist system', () => {
 
 describe('hover assist system', () => {
   let rapier: Awaited<ReturnType<typeof loadRapier>>;
+  const yawRateTuning = { maxRateRad: 1.6, damping: 0.8 };
 
   const stepContext: FixedStepContext = {
     fixedDeltaMs: 16,
@@ -216,7 +249,9 @@ describe('hover assist system', () => {
     const controlState = createControlState();
     controlState.collective.filtered = 0.5;
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
     heli.assists.hover = true;
 
     // Set lateral velocity
@@ -244,7 +279,9 @@ describe('hover assist system', () => {
     const controlState = createControlState();
     controlState.collective.filtered = 1;
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
     heli.assists.hover = true;
 
     // Set lateral velocity
@@ -269,7 +306,9 @@ describe('hover assist system', () => {
     const controlState = createControlState();
     controlState.collective.filtered = 0.5;
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
     heli.assists.hover = false;
 
     // Set lateral velocity
@@ -295,6 +334,7 @@ describe('hover assist system', () => {
 
 describe('assist toggle system', () => {
   let rapier: Awaited<ReturnType<typeof loadRapier>>;
+  const yawRateTuning = { maxRateRad: 1.6, damping: 0.8 };
 
   const stepContext: FixedStepContext = {
     fixedDeltaMs: 16,
@@ -312,7 +352,9 @@ describe('assist toggle system', () => {
     const input = createPlayerInputState();
     const controlState = createControlState();
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
     const toggleSystem = createAssistToggleSystem(heli);
 
     // Initial state: stability ON by default
@@ -336,7 +378,9 @@ describe('assist toggle system', () => {
     const input = createPlayerInputState();
     const controlState = createControlState();
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState);
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
     const toggleSystem = createAssistToggleSystem(heli);
 
     // Initial state: hover OFF by default

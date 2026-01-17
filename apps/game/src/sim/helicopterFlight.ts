@@ -1,6 +1,6 @@
 import type RAPIER from '@dimforge/rapier3d-compat';
 import type { PlayerInputState } from '../core/input/playerInput';
-import type { ControlState } from '../core/input/controlState';
+import type { ControlState, YawRateControllerTuning } from '../core/input/controlState';
 import { SystemPhase, type LoopSystem } from '../core/loop/types';
 import type { CHelicopterAssists, CHelicopterFlight } from '../ecs/components/helicopter';
 import { createEntityId } from '../ecs/entity';
@@ -14,6 +14,7 @@ export type PlayerHelicopter = {
   entity: Entity;
   body: RAPIER.RigidBody;
   flight: CHelicopterFlight;
+  yawRateTuning: YawRateControllerTuning;
   assists: CHelicopterAssists;
   input: PlayerInputState;
   control: ControlState;
@@ -25,7 +26,11 @@ export const spawnPlayerHelicopter = (
   flight: CHelicopterFlight,
   input: PlayerInputState,
   control: ControlState,
-  options: { startHeight?: number; startPosition?: { x: number; y?: number; z: number } } = {}
+  options: {
+    startHeight?: number;
+    startPosition?: { x: number; y?: number; z: number };
+    yawRateTuning: YawRateControllerTuning;
+  }
 ): PlayerHelicopter => {
   const entity = createEntityId();
   const { rapier } = physics;
@@ -52,6 +57,7 @@ export const spawnPlayerHelicopter = (
     entity,
     body,
     flight,
+    yawRateTuning: options.yawRateTuning,
     assists: { stability: true, hover: false },
     input,
     control,
@@ -140,7 +146,9 @@ const applyRotorForces = (heli: PlayerHelicopter): void => {
 
 const applyControlTorques = (heli: PlayerHelicopter): void => {
   const pitchTorque = -heli.control.cyclicY.filtered * heli.flight.maxPitchTorque;
-  const yawTorque = heli.control.yaw.filtered * heli.flight.maxYawTorque;
+  const yawTorque =
+    computeYawRateCommand(heli.control.yaw.filtered, heli.body.angvel().y, heli.yawRateTuning) *
+    heli.flight.maxYawTorque;
   const rollTorque = -heli.control.cyclicX.filtered * heli.flight.maxRollTorque;
 
   heli.body.addTorque(
@@ -154,6 +162,17 @@ const applyControlTorques = (heli: PlayerHelicopter): void => {
 };
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
+const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+
+export const computeYawRateCommand = (
+  desiredYawRateNormalized: number,
+  currentYawRate: number,
+  tuning: YawRateControllerTuning
+): number => {
+  const desiredYawRate = clamp(desiredYawRateNormalized, -1, 1) * tuning.maxRateRad;
+  const rateError = desiredYawRate - currentYawRate;
+  return clamp(rateError * tuning.damping, -1, 1);
+};
 
 const rotateVector = (
   vector: { x: number; y: number; z: number },

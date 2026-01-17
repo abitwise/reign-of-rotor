@@ -159,7 +159,7 @@
   - [ ] Add config presets (Normal/Hardcore-ish)
 
 ### [P1-6B] Keyboard Yaw-Rate Controller (K/M Usability)
-- Status: Backlog
+- Status: Done
 - Summary: Make yaw controllable on keys by mapping Q/E to desired yaw rate with strong smoothing and limits.
 - Context: Direct pedal deflection on digital keys causes over-rotation and frustration; yaw-rate control is standard for KB setups.
 - Functional behavior (GIVEN/WHEN/THEN):
