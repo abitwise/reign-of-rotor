@@ -124,6 +124,43 @@ describe('control state processing', () => {
     expect(state.trim.yaw).toBeCloseTo(state.yaw.filtered, 4);
   });
 
+  it('captures absolute filtered position when force trim is pressed with existing trim', () => {
+    const tuning = makeTuning({
+      cyclicX: { expo: 1, smoothingTau: 0, slewRate: 0 },
+      cyclicY: { expo: 1, smoothingTau: 0, slewRate: 0 },
+      yaw: { expo: 1, smoothingTau: 0, slewRate: 0 }
+    });
+    const state = createControlState();
+    const input = createPlayerInputState();
+
+    // Set initial trim
+    state.trim.cyclicX = 0.2;
+    state.trim.cyclicY = -0.15;
+    state.trim.yaw = 0.1;
+
+    // Apply input and update to get filtered values
+    input.cyclicX = 0.4;
+    input.cyclicY = 0.3;
+    input.yaw = -0.2;
+    updateControlState(state, input, tuning, 1 / 60);
+
+    // Store the filtered values before force trim
+    const filteredBeforeTrim = {
+      cyclicX: state.cyclicX.filtered,
+      cyclicY: state.cyclicY.filtered,
+      yaw: state.yaw.filtered
+    };
+
+    // Force trim should capture the absolute filtered position (not a delta)
+    input.forceTrim = true;
+    updateControlState(state, input, tuning, 1 / 60);
+
+    // New trim should be the filtered position from before the trim was applied
+    expect(state.trim.cyclicX).toBeCloseTo(filteredBeforeTrim.cyclicX, 4);
+    expect(state.trim.cyclicY).toBeCloseTo(filteredBeforeTrim.cyclicY, 4);
+    expect(state.trim.yaw).toBeCloseTo(filteredBeforeTrim.yaw, 4);
+  });
+
   it('clears trim offsets when reset trim is pressed', () => {
     const tuning = makeTuning({
       cyclicX: { expo: 1, smoothingTau: 0, slewRate: 0 }

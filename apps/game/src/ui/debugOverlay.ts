@@ -1,6 +1,7 @@
 import type { AppConfig } from '../boot/config';
 import type { LoopFrameMetrics } from '../core/loop/types';
 import type { ControlTrimState } from '../core/input/controlState';
+import { isTrimActive } from '../core/input/trimUtils';
 
 export type DebugOverlayOptions = {
   host: HTMLElement;
@@ -138,13 +139,4 @@ const createLabelRow = (label: string, value: string) => {
       valueEl.textContent = nextValue;
     }
   };
-};
-
-const isTrimActive = (trimState: ControlTrimState): boolean => {
-  const threshold = 0.01;
-  return (
-    Math.abs(trimState.cyclicX) > threshold ||
-    Math.abs(trimState.cyclicY) > threshold ||
-    Math.abs(trimState.yaw) > threshold
-  );
 };
