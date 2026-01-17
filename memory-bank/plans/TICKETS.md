@@ -186,7 +186,7 @@
   - [x] Baseline damping tuning values
 
 ### [P1-7A] Trim System v1 (Force Trim + Stored Neutral Offsets)
-- Status: Backlog
+- Status: Done
 - Summary: Add a simple trim model so players can “set neutral” and reduce constant correction.
 - Context: Helicopters require continuous micro-corrections; trim makes KB flying practical and enables higher difficulty without frustration.
 - Functional behavior (GIVEN/WHEN/THEN):

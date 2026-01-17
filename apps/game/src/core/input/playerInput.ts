@@ -21,6 +21,8 @@ export type PlayerInputState = {
   cyclicX: number;
   cyclicY: number;
   yaw: number;
+  forceTrim: boolean;       // One-frame pulse
+  resetTrim: boolean;       // One-frame pulse
   toggleStability: boolean; // One-frame pulse
   toggleHover: boolean;      // One-frame pulse
   togglePause: boolean;      // One-frame pulse
@@ -48,6 +50,9 @@ export const DEFAULT_PLAYER_INPUT_BINDINGS: PlayerInputBindings = {
     negative: ['KeyQ']
   }
 };
+
+export const FORCE_TRIM_KEY = 'KeyT';
+export const RESET_TRIM_KEY = 'KeyY';
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
@@ -78,6 +83,8 @@ export const createPlayerInputState = (): PlayerInputState => ({
   cyclicX: 0,
   cyclicY: 0,
   yaw: 0,
+  forceTrim: false,
+  resetTrim: false,
   toggleStability: false,
   toggleHover: false,
   togglePause: false,
@@ -95,6 +102,8 @@ export const samplePlayerInput = (
   state.yaw = resolveAxis(bindings.yaw, sampler);
 
   // Toggle keys (edge-triggered)
+  state.forceTrim = sampler.wasJustPressed(FORCE_TRIM_KEY);
+  state.resetTrim = sampler.wasJustPressed(RESET_TRIM_KEY);
   state.toggleStability = sampler.wasJustPressed('KeyZ');
   state.toggleHover = sampler.wasJustPressed('KeyX');
   state.togglePause = sampler.wasJustPressed('Space');

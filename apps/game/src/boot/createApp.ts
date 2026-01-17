@@ -46,6 +46,7 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
   );
   const gameState: GameState = { isPaused: false };
   const rootUi = createRootUi({ target: layout.uiHost, config, bindings: input.bindings, gameState });
+  rootUi.setTrimStateProvider?.(() => controlState.trim);
   const physics = bootstrapPhysics(scheduler);
   const renderer = bootstrapRenderer({
     host: layout.renderHost,

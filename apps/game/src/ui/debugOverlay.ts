@@ -1,5 +1,7 @@
 import type { AppConfig } from '../boot/config';
 import type { LoopFrameMetrics } from '../core/loop/types';
+import type { ControlTrimState } from '../core/input/controlState';
+import { isTrimActive } from '../core/input/trimUtils';
 
 export type DebugOverlayOptions = {
   host: HTMLElement;
@@ -10,6 +12,7 @@ export type DebugOverlayController = {
   element: HTMLElement;
   destroy: () => void;
   setLoopMetrics: (metrics: LoopFrameMetrics) => void;
+  setTrimState: (trimState: ControlTrimState | null) => void;
   setVisible: (visible: boolean) => void;
 };
 
@@ -63,7 +66,24 @@ export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): Debug
     (row) => timingGrid.appendChild(row.row)
   );
 
-  wrapper.append(heading, description, configGrid, timingHeading, timingGrid);
+  const trimHeading = document.createElement('h3');
+  trimHeading.textContent = 'Control Trim';
+  trimHeading.style.margin = '12px 0 4px';
+  trimHeading.style.fontSize = '14px';
+  trimHeading.style.textTransform = 'uppercase';
+  trimHeading.style.letterSpacing = '0.5px';
+
+  const trimGrid = document.createElement('div');
+  trimGrid.className = 'debug-grid';
+
+  const trimXRow = createLabelRow('Trim Roll', '—');
+  const trimYRow = createLabelRow('Trim Pitch', '—');
+  const trimYawRow = createLabelRow('Trim Yaw', '—');
+  const trimActiveRow = createLabelRow('Trim Active', '—');
+
+  [trimXRow, trimYRow, trimYawRow, trimActiveRow].forEach((row) => trimGrid.appendChild(row.row));
+
+  wrapper.append(heading, description, configGrid, timingHeading, timingGrid, trimHeading, trimGrid);
   host.appendChild(wrapper);
 
   return {
@@ -79,6 +99,19 @@ export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): Debug
       clampedRow.setValue(formatMs(metrics.clampedMs));
       accumulatorRow.setValue(formatMs(metrics.accumulatorMs));
     },
+    setTrimState: (trimState: ControlTrimState | null) => {
+      if (!trimState) {
+        trimXRow.setValue('—');
+        trimYRow.setValue('—');
+        trimYawRow.setValue('—');
+        trimActiveRow.setValue('—');
+        return;
+      }
+      trimXRow.setValue(formatTrimValue(trimState.cyclicX));
+      trimYRow.setValue(formatTrimValue(trimState.cyclicY));
+      trimYawRow.setValue(formatTrimValue(trimState.yaw));
+      trimActiveRow.setValue(isTrimActive(trimState) ? 'Yes' : 'No');
+    },
     setVisible: (visible: boolean) => {
       wrapper.style.display = visible ? '' : 'none';
     }
@@ -86,6 +119,7 @@ export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): Debug
 };
 
 const formatMs = (value: number): string => `${value.toFixed(2)} ms`;
+const formatTrimValue = (value: number): string => value.toFixed(2);
 
 const createLabelRow = (label: string, value: string) => {
   const row = document.createElement('div');

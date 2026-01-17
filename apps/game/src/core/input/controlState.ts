@@ -130,12 +130,24 @@ export const updateControlState = (
   tuning: ControlTuning,
   dtSeconds: number
 ): void => {
+  if (input.resetTrim) {
+    state.trim.cyclicX = 0;
+    state.trim.cyclicY = 0;
+    state.trim.yaw = 0;
+  }
+
   // Collective supports bidirectional input: [0, 1] for lift, negative for braking
   updateAxis(state.collective, input.collective, tuning.collective, dtSeconds, -1, 1);
   updateAxis(state.cyclicX, input.cyclicX, tuning.cyclicX, dtSeconds, -1, 1, state.trim.cyclicX);
   updateAxis(state.cyclicY, input.cyclicY, tuning.cyclicY, dtSeconds, -1, 1, state.trim.cyclicY);
   // Yaw input represents a desired yaw-rate target (normalized -1..1).
   updateAxis(state.yaw, input.yaw, tuning.yaw, dtSeconds, -1, 1, state.trim.yaw);
+
+  if (input.forceTrim && !input.resetTrim) {
+    state.trim.cyclicX = clamp(state.cyclicX.filtered, -1, 1);
+    state.trim.cyclicY = clamp(state.cyclicY.filtered, -1, 1);
+    state.trim.yaw = clamp(state.yaw.filtered, -1, 1);
+  }
 };
 
 export type ControlStateSystemOptions = {
