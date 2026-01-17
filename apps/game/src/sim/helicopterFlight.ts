@@ -1,5 +1,6 @@
 import type RAPIER from '@dimforge/rapier3d-compat';
 import type { PlayerInputState } from '../core/input/playerInput';
+import type { ControlState } from '../core/input/controlState';
 import { SystemPhase, type LoopSystem } from '../core/loop/types';
 import type { CHelicopterAssists, CHelicopterFlight } from '../ecs/components/helicopter';
 import { createEntityId } from '../ecs/entity';
@@ -15,6 +16,7 @@ export type PlayerHelicopter = {
   flight: CHelicopterFlight;
   assists: CHelicopterAssists;
   input: PlayerInputState;
+  control: ControlState;
   altimeter: AltimeterState;
 };
 
@@ -22,6 +24,7 @@ export const spawnPlayerHelicopter = (
   physics: PhysicsWorldContext,
   flight: CHelicopterFlight,
   input: PlayerInputState,
+  control: ControlState,
   options: { startHeight?: number; startPosition?: { x: number; y?: number; z: number } } = {}
 ): PlayerHelicopter => {
   const entity = createEntityId();
@@ -51,6 +54,7 @@ export const spawnPlayerHelicopter = (
     flight,
     assists: { stability: true, hover: false },
     input,
+    control,
     altimeter: createAltimeterState()
   };
 };
@@ -111,10 +115,9 @@ export const createPauseToggleSystem = (input: PlayerInputState, gameState: Game
 });
 
 const applyRotorForces = (heli: PlayerHelicopter): void => {
-  // Collective is sampled as an axis in [-1, 1], but it is effectively a throttle-like input.
-  // With keyboard sampling, idle state is 0 (no keys pressed), so map directly to lift [0, 1]
-  // to avoid applying ~50% lift at rest.
-  const liftInput = clamp01(heli.input.collective);
+  // Collective is normalized to [0, 1] via the control processing layer.
+  // With keyboard sampling, idle state is 0 (no keys pressed) to avoid applying lift at rest.
+  const liftInput = clamp01(heli.control.collective.filtered);
   if (liftInput <= 0) {
     return;
   }
@@ -136,9 +139,9 @@ const applyRotorForces = (heli: PlayerHelicopter): void => {
 };
 
 const applyControlTorques = (heli: PlayerHelicopter): void => {
-  const pitchTorque = -heli.input.cyclicY * heli.flight.maxPitchTorque;
-  const yawTorque = heli.input.yaw * heli.flight.maxYawTorque;
-  const rollTorque = -heli.input.cyclicX * heli.flight.maxRollTorque;
+  const pitchTorque = -heli.control.cyclicY.filtered * heli.flight.maxPitchTorque;
+  const yawTorque = heli.control.yaw.filtered * heli.flight.maxYawTorque;
+  const rollTorque = -heli.control.cyclicX.filtered * heli.flight.maxRollTorque;
 
   heli.body.addTorque(
     {
@@ -195,9 +198,9 @@ const applyStabilityAssist = (heli: PlayerHelicopter): void => {
 
   // Only apply leveling (counter-torque) when player is not actively controlling rotation.
   const hasRotationInput =
-    Math.abs(heli.input.cyclicX) > 0.01 ||
-    Math.abs(heli.input.cyclicY) > 0.01 ||
-    Math.abs(heli.input.yaw) > 0.01;
+    Math.abs(heli.control.cyclicX.filtered) > 0.01 ||
+    Math.abs(heli.control.cyclicY.filtered) > 0.01 ||
+    Math.abs(heli.control.yaw.filtered) > 0.01;
 
   if (hasRotationInput) {
     return;
@@ -247,7 +250,7 @@ const applyHoverAssist = (heli: PlayerHelicopter): void => {
   }
 
   // Hover assist activates when collective is in "hover range"
-  const collectiveInput = clamp01((heli.input.collective + 1) / 2);
+  const collectiveInput = heli.control.collective.filtered;
   const isInHoverRange = collectiveInput >= 0.3 && collectiveInput <= 0.7;
 
   if (!isInHoverRange) {

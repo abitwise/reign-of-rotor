@@ -7,8 +7,10 @@ import { createAppLayout } from './layout';
 import type { PhysicsWorldContext } from '../physics/world';
 import { bootstrapRenderer, type RenderContext } from '../render/bootstrap';
 import { bootstrapPlayerInput, type PlayerInputContext } from '../core/input/playerInput';
+import { createControlState, createControlStateSystem } from '../core/input/controlState';
 import { bootstrapGameplay, type GameplayContext } from './gameplay';
 import { createCameraModeToggleSystem } from '../render/camera/cameraModeSystem';
+import { CONTROL_TUNING_PRESETS } from '../content/controls';
 
 export type GameState = {
   isPaused: boolean;
@@ -22,6 +24,7 @@ export type GameApp = {
   renderer: Promise<RenderContext>;
   gameplay: Promise<GameplayContext>;
   input: PlayerInputContext;
+  controlState: ReturnType<typeof createControlState>;
   gameState: GameState;
   destroy: () => void;
 };
@@ -32,6 +35,14 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
   const input = bootstrapPlayerInput(
     scheduler,
     rootElement.ownerDocument?.defaultView ?? (typeof window === 'undefined' ? null : window)
+  );
+  const controlState = createControlState();
+  scheduler.addSystem(
+    createControlStateSystem({
+      input: input.state,
+      state: controlState,
+      tuning: CONTROL_TUNING_PRESETS.normal
+    })
   );
   const gameState: GameState = { isPaused: false };
   const rootUi = createRootUi({ target: layout.uiHost, config, bindings: input.bindings, gameState });
@@ -63,6 +74,7 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
         physics: physicsContext,
         scheduler,
         input: input.state,
+        controlState,
         gameState
       });
 
@@ -97,6 +109,7 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
     renderer,
     gameplay,
     input,
+    controlState,
     loop,
     gameState,
     destroy: () => {

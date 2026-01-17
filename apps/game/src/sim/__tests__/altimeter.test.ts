@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createPlayerInputState } from '../../core/input/playerInput';
+import { createControlState } from '../../core/input/controlState';
 import type { FixedStepContext } from '../../core/loop/types';
 import { loadRapier } from '../../physics/rapierInstance';
 import { createPhysicsWorld } from '../../physics/world';
@@ -27,7 +28,12 @@ describe('altimeter system', () => {
     const terrain = createTerrainColliderManager(physics);
     terrain.update({ x: 0, z: 0 });
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, createPlayerInputState());
+    const heli = spawnPlayerHelicopter(
+      physics,
+      DEFAULT_HELICOPTER_FLIGHT,
+      createPlayerInputState(),
+      createControlState()
+    );
 
     physics.step(stepContext.fixedDeltaSeconds);
     heli.body.setTranslation({ x: 0, y: 10, z: 0 }, true);
@@ -45,7 +51,12 @@ describe('altimeter system', () => {
     const terrain = createTerrainColliderManager(physics);
     terrain.update({ x: 0, z: 0 });
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, createPlayerInputState());
+    const heli = spawnPlayerHelicopter(
+      physics,
+      DEFAULT_HELICOPTER_FLIGHT,
+      createPlayerInputState(),
+      createControlState()
+    );
 
     physics.step(stepContext.fixedDeltaSeconds);
     heli.body.setTranslation({ x: 0, y: 0.35, z: 0 }, true);
@@ -65,7 +76,12 @@ describe('altimeter system', () => {
     const terrain = createTerrainColliderManager(physics);
     terrain.update({ x: 0, z: 0 });
 
-    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, createPlayerInputState());
+    const heli = spawnPlayerHelicopter(
+      physics,
+      DEFAULT_HELICOPTER_FLIGHT,
+      createPlayerInputState(),
+      createControlState()
+    );
 
     physics.step(stepContext.fixedDeltaSeconds);
     heli.body.setTranslation({ x: 0, y: 0.25, z: 0 }, true);
