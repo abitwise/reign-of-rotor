@@ -102,6 +102,47 @@ describe('control state processing', () => {
     expect(state.cyclicX.filtered).toBeCloseTo(0.5, 4);
   });
 
+  it('captures trim offsets when force trim is pressed', () => {
+    const tuning = makeTuning({
+      cyclicX: { expo: 1, smoothingTau: 0, slewRate: 0 },
+      cyclicY: { expo: 1, smoothingTau: 0, slewRate: 0 },
+      yaw: { expo: 1, smoothingTau: 0, slewRate: 0 }
+    });
+    const state = createControlState();
+    const input = createPlayerInputState();
+
+    input.cyclicX = 0.6;
+    input.cyclicY = -0.4;
+    input.yaw = 0.3;
+    updateControlState(state, input, tuning, 1 / 60);
+
+    input.forceTrim = true;
+    updateControlState(state, input, tuning, 1 / 60);
+
+    expect(state.trim.cyclicX).toBeCloseTo(state.cyclicX.filtered, 4);
+    expect(state.trim.cyclicY).toBeCloseTo(state.cyclicY.filtered, 4);
+    expect(state.trim.yaw).toBeCloseTo(state.yaw.filtered, 4);
+  });
+
+  it('clears trim offsets when reset trim is pressed', () => {
+    const tuning = makeTuning({
+      cyclicX: { expo: 1, smoothingTau: 0, slewRate: 0 }
+    });
+    const state = createControlState();
+    const input = createPlayerInputState();
+
+    state.trim.cyclicX = 0.25;
+    state.trim.cyclicY = -0.1;
+    state.trim.yaw = 0.2;
+    input.resetTrim = true;
+
+    updateControlState(state, input, tuning, 1 / 60);
+
+    expect(state.trim.cyclicX).toBeCloseTo(0, 4);
+    expect(state.trim.cyclicY).toBeCloseTo(0, 4);
+    expect(state.trim.yaw).toBeCloseTo(0, 4);
+  });
+
   it('clamps trim-adjusted values to axis range', () => {
     const tuning = makeTuning({
       yaw: { expo: 1, smoothingTau: 0, slewRate: 0 }

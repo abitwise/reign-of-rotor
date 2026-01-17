@@ -1,6 +1,7 @@
 import type { AppConfig } from '../boot/config';
 import { createDebugOverlay } from './debugOverlay';
-import type { PlayerInputBindings } from '../core/input/playerInput';
+import { FORCE_TRIM_KEY, RESET_TRIM_KEY, type PlayerInputBindings } from '../core/input/playerInput';
+import type { ControlTrimState } from '../core/input/controlState';
 import { LandingState, type AltimeterState } from '../sim/altimeter';
 import type { CHelicopterAssists } from '../ecs/components/helicopter';
 import type { GameState } from '../boot/createApp';
@@ -15,6 +16,7 @@ export type RootUiOptions = {
 export type FlightReadoutProvider = () => AltimeterState | null;
 export type AssistsProvider = () => CHelicopterAssists | null;
 export type CameraModeProvider = () => string | null;
+export type TrimStateProvider = () => ControlTrimState | null;
 
 export const createRootUi = ({ target, config, bindings, gameState }: RootUiOptions) => {
   const container = document.createElement('div');
@@ -75,6 +77,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   let flightReadoutProvider: FlightReadoutProvider | null = null;
   let assistsProvider: AssistsProvider | null = null;
   let cameraModeProvider: CameraModeProvider | null = null;
+  let trimStateProvider: TrimStateProvider | null = null;
   let hudFrameHandle: number | null = null;
 
   const hudLoop = (): void => {
@@ -83,11 +86,13 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
       return;
     }
 
+    const trimState = trimStateProvider?.() ?? null;
     flightHud.update(flightReadoutProvider());
-    assistsHud.update(assistsProvider?.() ?? null);
+    assistsHud.update(assistsProvider?.() ?? null, trimState);
     if (cameraModeProvider) {
       instructionsPanel.setCameraMode(cameraModeProvider() ?? 'Cockpit');
     }
+    debugOverlay?.setTrimState?.(trimState);
     hudFrameHandle = scheduleFrame(hudLoop);
   };
 
@@ -113,6 +118,12 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     },
     setCameraModeProvider: (provider: CameraModeProvider) => {
       cameraModeProvider = provider;
+      if (hudFrameHandle === null && flightReadoutProvider) {
+        hudFrameHandle = scheduleFrame(hudLoop);
+      }
+    },
+    setTrimStateProvider: (provider: TrimStateProvider) => {
+      trimStateProvider = provider;
       if (hudFrameHandle === null && flightReadoutProvider) {
         hudFrameHandle = scheduleFrame(hudLoop);
       }
@@ -162,6 +173,8 @@ const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBinding
     createNoteRow('Mouse Look', 'Click canvas to lock pointer; drag if lock unavailable.'),
     createNoteRow('Stability Assist', 'Press Z to toggle auto-leveling'),
     createNoteRow('Hover Assist', 'Press X to toggle drift damping'),
+    createNoteRow('Force Trim', `Press ${formatKey(FORCE_TRIM_KEY)} to set new neutral trim`),
+    createNoteRow('Reset Trim', `Press ${formatKey(RESET_TRIM_KEY)} to clear trim offsets`),
     createNoteRow('Pause', 'Press Space to pause/unpause flight'),
     createNoteRow('Help', 'Press H to show/hide this panel'),
     createNoteRow('Flight Readout', 'Press I to show/hide flight readout'),
@@ -306,7 +319,7 @@ const createFlightHud = (): FlightHudController => {
 
 type AssistsHudController = {
   element: HTMLElement;
-  update: (assists: CHelicopterAssists | null) => void;
+  update: (assists: CHelicopterAssists | null, trimState: ControlTrimState | null) => void;
 };
 
 const createAssistsHud = (): AssistsHudController => {
@@ -322,16 +335,18 @@ const createAssistsHud = (): AssistsHudController => {
 
   const stabilityRow = createAssistRow('Stability', 'Z');
   const hoverRow = createAssistRow('Hover', 'X');
+  const trimRow = createAssistRow('Trim', `${formatKey(FORCE_TRIM_KEY)} / ${formatKey(RESET_TRIM_KEY)}`);
 
-  grid.append(stabilityRow.element, hoverRow.element);
+  grid.append(stabilityRow.element, hoverRow.element, trimRow.element);
   wrapper.append(heading, grid);
 
-  const update = (assists: CHelicopterAssists | null): void => {
+  const update = (assists: CHelicopterAssists | null, trimState: ControlTrimState | null): void => {
     stabilityRow.setState(assists?.stability ?? false);
     hoverRow.setState(assists?.hover ?? false);
+    trimRow.setState(isTrimActive(trimState));
   };
 
-  update(null);
+  update(null, null);
 
   return { element: wrapper, update };
 };
@@ -361,6 +376,18 @@ const createAssistRow = (label: string, toggleKey: string) => {
       indicator.className = `assist-indicator ${enabled ? 'assist-on' : 'assist-off'}`;
     }
   };
+};
+
+const isTrimActive = (trimState: ControlTrimState | null): boolean => {
+  if (!trimState) {
+    return false;
+  }
+  const threshold = 0.01;
+  return (
+    Math.abs(trimState.cyclicX) > threshold ||
+    Math.abs(trimState.cyclicY) > threshold ||
+    Math.abs(trimState.yaw) > threshold
+  );
 };
 
 const createHudMetric = (label: string) => {
@@ -501,7 +528,9 @@ const KEY_LABELS: Record<string, string> = {
   ArrowLeft: 'Arrow ←',
   ArrowRight: 'Arrow →',
   PageUp: 'Page Up',
-  PageDown: 'Page Down'
+  PageDown: 'Page Down',
+  KeyT: 'T',
+  KeyY: 'Y'
 };
 
 const formatKey = (code: string): string => KEY_LABELS[code] ?? code;
