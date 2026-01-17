@@ -11,6 +11,8 @@ import { createControlState, createControlStateSystem } from '../core/input/cont
 import { bootstrapGameplay, type GameplayContext } from './gameplay';
 import { createCameraModeToggleSystem } from '../render/camera/cameraModeSystem';
 import { CONTROL_TUNING_PRESETS } from '../content/controls';
+import { NAVIGATION_CONFIG } from '../content/avionics';
+import { buildAvionicsReadout, buildNavigationReadout } from '../ui/hudReadouts';
 
 export type GameState = {
   isPaused: boolean;
@@ -80,9 +82,12 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
         gameState
       });
 
-      rootUi.setFlightReadoutProvider?.(() => gameplayContext.player.altimeter);
+      rootUi.setAvionicsReadoutProvider?.(() => buildAvionicsReadout(gameplayContext.player));
       rootUi.setAssistsProvider?.(() => gameplayContext.player.assists);
       rootUi.setCameraModeProvider?.(() => renderContext.getCameraModeLabel());
+      rootUi.setNavigationReadoutProvider?.(() =>
+        buildNavigationReadout(gameplayContext.player, NAVIGATION_CONFIG.defaultTarget)
+      );
 
       // Wait for mesh to be loaded before setting camera target
       await renderContext.bindEntityMesh(gameplayContext.player.entity, 'apache-gunship');

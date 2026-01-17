@@ -3,9 +3,17 @@ import { createDebugOverlay } from './debugOverlay';
 import { FORCE_TRIM_KEY, RESET_TRIM_KEY, type PlayerInputBindings } from '../core/input/playerInput';
 import type { ControlTrimState } from '../core/input/controlState';
 import { isTrimActive } from '../core/input/trimUtils';
-import { LandingState, type AltimeterState } from '../sim/altimeter';
+import { LandingState } from '../sim/altimeter';
 import type { CHelicopterAssists } from '../ecs/components/helicopter';
 import type { GameState } from '../boot/createApp';
+import {
+  type AvionicsReadout,
+  type NavigationReadout,
+  type ThreatReadout,
+  buildAvionicsAlerts,
+  selectPriorityAlert,
+  toThreatAlertCandidate
+} from './hudReadouts';
 
 export type RootUiOptions = {
   target: HTMLElement;
@@ -14,7 +22,7 @@ export type RootUiOptions = {
   gameState: GameState;
 };
 
-export type FlightReadoutProvider = () => AltimeterState | null;
+export type AvionicsReadoutProvider = () => AvionicsReadout | null;
 export type AssistsProvider = () => CHelicopterAssists | null;
 export type CameraModeProvider = () => string | null;
 export type TrimStateProvider = () => ControlTrimState | null;
@@ -23,9 +31,6 @@ export type CombatReadout = {
   ammo: number | null;
   lockState: string | null;
 };
-export type ThreatReadout = {
-  warning: string | null;
-};
 export type OutOfBoundsReadout = {
   active: boolean;
   secondsRemaining: number | null;
@@ -33,23 +38,24 @@ export type OutOfBoundsReadout = {
 export type CombatReadoutProvider = () => CombatReadout | null;
 export type ThreatReadoutProvider = () => ThreatReadout | null;
 export type OutOfBoundsProvider = () => OutOfBoundsReadout | null;
+export type NavigationReadoutProvider = () => NavigationReadout | null;
 
 export const createRootUi = ({ target, config, bindings, gameState }: RootUiOptions) => {
   const container = document.createElement('div');
   container.className = 'ui-hud-container';
 
   const instructionsPanel = createInstructionsPanel(config, bindings, gameState);
-  const flightHud = createFlightHud();
+  const avionicsHud = createAvionicsHud();
   const assistsHud = createAssistsHud();
   const combatHud = createCombatHud();
-  const threatBanner = createWarningBanner('threat-banner');
+  const alertBanner = createWarningBanner('alert-banner');
   const boundsBanner = createWarningBanner('bounds-banner');
 
   container.appendChild(instructionsPanel.element);
-  container.appendChild(flightHud.element);
+  container.appendChild(avionicsHud.element);
   container.appendChild(assistsHud.element);
   container.appendChild(combatHud.element);
-  container.appendChild(threatBanner.element);
+  container.appendChild(alertBanner.element);
   container.appendChild(boundsBanner.element);
   target.replaceChildren(container);
 
@@ -61,7 +67,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   let isFlightHudVisible = true;
   const setFlightHudVisible = (visible: boolean): void => {
     isFlightHudVisible = visible;
-    flightHud.element.style.display = visible ? '' : 'none';
+    avionicsHud.element.style.display = visible ? '' : 'none';
   };
 
   const setDebugOverlayVisible = (visible: boolean): void => {
@@ -96,26 +102,33 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   // Show instructions on startup
   instructionsPanel.show();
 
-  let flightReadoutProvider: FlightReadoutProvider | null = null;
+  let avionicsReadoutProvider: AvionicsReadoutProvider | null = null;
   let assistsProvider: AssistsProvider | null = null;
   let cameraModeProvider: CameraModeProvider | null = null;
   let trimStateProvider: TrimStateProvider | null = null;
   let combatProvider: CombatReadoutProvider | null = null;
   let threatProvider: ThreatReadoutProvider | null = null;
   let outOfBoundsProvider: OutOfBoundsProvider | null = null;
+  let navigationProvider: NavigationReadoutProvider | null = null;
   let hudFrameHandle: number | null = null;
 
   const hudLoop = (): void => {
-    if (!flightReadoutProvider) {
+    if (!avionicsReadoutProvider) {
       hudFrameHandle = null;
       return;
     }
 
     const trimState = trimStateProvider?.() ?? null;
-    flightHud.update(flightReadoutProvider());
+    const avionicsReadout = avionicsReadoutProvider();
+    avionicsHud.update(avionicsReadout, navigationProvider?.() ?? null);
     assistsHud.update(assistsProvider?.() ?? null, trimState);
     combatHud.update(combatProvider?.() ?? null);
-    threatBanner.setWarning(threatProvider?.()?.warning ?? null);
+    const avionicsAlerts = avionicsReadout ? buildAvionicsAlerts(avionicsReadout) : [];
+    const threatAlert = toThreatAlertCandidate(threatProvider?.() ?? null);
+    const alert = selectPriorityAlert(
+      threatAlert ? [...avionicsAlerts, threatAlert] : avionicsAlerts
+    );
+    alertBanner.setWarning(alert?.label ?? null);
     boundsBanner.setWarning(formatOutOfBoundsWarning(outOfBoundsProvider?.() ?? null));
     if (cameraModeProvider) {
       instructionsPanel.setCameraMode(cameraModeProvider() ?? 'Cockpit');
@@ -135,8 +148,8 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
       target.replaceChildren();
     },
     setLoopMetrics: debugOverlay?.setLoopMetrics,
-    setFlightReadoutProvider: (provider: FlightReadoutProvider) => {
-      flightReadoutProvider = provider;
+    setAvionicsReadoutProvider: (provider: AvionicsReadoutProvider) => {
+      avionicsReadoutProvider = provider;
       if (hudFrameHandle === null) {
         hudFrameHandle = scheduleFrame(hudLoop);
       }
@@ -146,31 +159,37 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     },
     setCameraModeProvider: (provider: CameraModeProvider) => {
       cameraModeProvider = provider;
-      if (hudFrameHandle === null && flightReadoutProvider) {
+      if (hudFrameHandle === null && avionicsReadoutProvider) {
         hudFrameHandle = scheduleFrame(hudLoop);
       }
     },
     setTrimStateProvider: (provider: TrimStateProvider) => {
       trimStateProvider = provider;
-      if (hudFrameHandle === null && flightReadoutProvider) {
+      if (hudFrameHandle === null && avionicsReadoutProvider) {
         hudFrameHandle = scheduleFrame(hudLoop);
       }
     },
     setCombatReadoutProvider: (provider: CombatReadoutProvider) => {
       combatProvider = provider;
-      if (hudFrameHandle === null && flightReadoutProvider) {
+      if (hudFrameHandle === null && avionicsReadoutProvider) {
         hudFrameHandle = scheduleFrame(hudLoop);
       }
     },
     setThreatReadoutProvider: (provider: ThreatReadoutProvider) => {
       threatProvider = provider;
-      if (hudFrameHandle === null && flightReadoutProvider) {
+      if (hudFrameHandle === null && avionicsReadoutProvider) {
         hudFrameHandle = scheduleFrame(hudLoop);
       }
     },
     setOutOfBoundsProvider: (provider: OutOfBoundsProvider) => {
       outOfBoundsProvider = provider;
-      if (hudFrameHandle === null && flightReadoutProvider) {
+      if (hudFrameHandle === null && avionicsReadoutProvider) {
+        hudFrameHandle = scheduleFrame(hudLoop);
+      }
+    },
+    setNavigationReadoutProvider: (provider: NavigationReadoutProvider) => {
+      navigationProvider = provider;
+      if (hudFrameHandle === null && avionicsReadoutProvider) {
         hudFrameHandle = scheduleFrame(hudLoop);
       }
     }
@@ -223,7 +242,7 @@ const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBinding
     createNoteRow('Reset Trim', `Press ${formatKey(RESET_TRIM_KEY)} to clear trim offsets`),
     createNoteRow('Pause', 'Press Space to pause/unpause flight'),
     createNoteRow('Help', 'Press H to show/hide this panel'),
-    createNoteRow('Flight Readout', 'Press I to show/hide flight readout'),
+    createNoteRow('Avionics HUD', 'Press I to show/hide avionics HUD'),
     createNoteRow('Debug Overlay', 'Press O to show/hide debug overlay (dev builds)')
   );
 
@@ -325,48 +344,60 @@ const createCameraModeRow = (modeValue: HTMLElement): HTMLElement => {
   return row;
 };
 
-type FlightHudController = {
+type AvionicsHudController = {
   element: HTMLElement;
-  update: (readout: AltimeterState | null) => void;
+  update: (readout: AvionicsReadout | null, navReadout: NavigationReadout | null) => void;
 };
 
-const createFlightHud = (): FlightHudController => {
+const createAvionicsHud = (): AvionicsHudController => {
   const wrapper = document.createElement('section');
-  wrapper.className = 'flight-hud';
+  wrapper.className = 'avionics-hud';
 
   const heading = document.createElement('div');
   heading.className = 'hud-heading';
-  heading.textContent = 'Flight readout';
+  heading.textContent = 'Avionics';
 
   const landingState = createLandingStateBadge();
   const grid = document.createElement('div');
-  grid.className = 'flight-grid';
+  grid.className = 'avionics-grid';
 
-  const speedMetric = createHudMetric('Airspeed');
-  const altitudeMetric = createHudMetric('Altitude AGL');
-  const verticalMetric = createHudMetric('Vertical speed');
+  const speedMetric = createHudMetric('IAS');
+  const altitudeMetric = createHudMetric('AGL');
+  const verticalMetric = createHudMetric('VSI');
   const headingMetric = createHudMetric('Heading');
-  const impactMetric = createHudMetric('Impact severity');
+  const attitudeMetric = createHudMetric('Attitude');
+  const rpmMetric = createHudMetric('Rotor RPM');
+  const powerMetric = createHudMetric('Power');
+  const marginMetric = createHudMetric('Power Margin');
+  const navMetric = createHudMetric('Nav');
 
   grid.append(
     speedMetric.element,
     altitudeMetric.element,
     verticalMetric.element,
     headingMetric.element,
-    impactMetric.element
+    attitudeMetric.element,
+    rpmMetric.element,
+    powerMetric.element,
+    marginMetric.element,
+    navMetric.element
   );
   wrapper.append(heading, landingState.row, grid);
 
-  const update = (readout: AltimeterState | null): void => {
+  const update = (readout: AvionicsReadout | null, navReadout: NavigationReadout | null): void => {
     speedMetric.setValue(formatHorizontalSpeed(readout?.horizontalSpeed));
     altitudeMetric.setValue(formatAltitude(readout?.altitude));
     verticalMetric.setValue(formatVerticalSpeed(readout?.verticalSpeed));
     headingMetric.setValue(formatHeading(readout?.heading));
-    impactMetric.setValue(formatImpact(readout?.impactSeverity));
+    attitudeMetric.setValue(formatAttitude(readout?.pitch, readout?.roll));
+    rpmMetric.setValue(formatRotorRpm(readout?.rotorRpm, readout?.nominalRotorRpm));
+    powerMetric.setValue(formatPowerLoad(readout?.powerRequired, readout?.powerAvailable));
+    marginMetric.setValue(formatPowerMargin(readout?.powerMargin));
+    navMetric.setValue(formatNavigation(navReadout));
     landingState.setState(readout?.landingState ?? LandingState.Airborne, readout?.isGrounded ?? false);
   };
 
-  update(null);
+  update(null, null);
 
   return { element: wrapper, update };
 };
@@ -590,20 +621,68 @@ const formatVerticalSpeed = (verticalSpeed: number | undefined): string => {
   return `${sign}${clamped.toFixed(2)} m/s`;
 };
 
-const formatImpact = (impactSeverity: number | undefined): string => {
-  if (!impactSeverity || !Number.isFinite(impactSeverity)) {
-    return '—';
-  }
-
-  return `${impactSeverity.toFixed(1)} m/s`;
-};
-
 const formatHeading = (heading: number | undefined): string => {
   if (heading === undefined || !Number.isFinite(heading)) {
     return '—';
   }
 
   return `${heading.toFixed(0)}°`;
+};
+
+const formatAttitude = (pitch: number | undefined, roll: number | undefined): string => {
+  if (pitch === undefined || roll === undefined || !Number.isFinite(pitch) || !Number.isFinite(roll)) {
+    return '—';
+  }
+
+  return `P ${pitch.toFixed(0)}° / R ${roll.toFixed(0)}°`;
+};
+
+const formatRotorRpm = (rotorRpm: number | undefined, nominalRotorRpm: number | undefined): string => {
+  if (
+    rotorRpm === undefined ||
+    nominalRotorRpm === undefined ||
+    !Number.isFinite(rotorRpm) ||
+    !Number.isFinite(nominalRotorRpm) ||
+    nominalRotorRpm <= 0
+  ) {
+    return '—';
+  }
+
+  const ratio = (rotorRpm / nominalRotorRpm) * 100;
+  return `${ratio.toFixed(0)}%`;
+};
+
+const formatPowerLoad = (powerRequired: number | undefined, powerAvailable: number | undefined): string => {
+  if (
+    powerRequired === undefined ||
+    powerAvailable === undefined ||
+    !Number.isFinite(powerRequired) ||
+    !Number.isFinite(powerAvailable) ||
+    powerAvailable <= 0
+  ) {
+    return '—';
+  }
+
+  const load = (powerRequired / powerAvailable) * 100;
+  return `${load.toFixed(0)}%`;
+};
+
+const formatPowerMargin = (powerMargin: number | undefined): string => {
+  if (powerMargin === undefined || !Number.isFinite(powerMargin)) {
+    return '—';
+  }
+
+  const sign = powerMargin > 0 ? '+' : '';
+  return `${sign}${powerMargin.toFixed(2)}`;
+};
+
+const formatNavigation = (readout: NavigationReadout | null): string => {
+  if (!readout) {
+    return '—';
+  }
+
+  const distanceKm = readout.distance / 1000;
+  return `${readout.label} • ${readout.bearing.toFixed(0)}° / ${distanceKm.toFixed(1)} km`;
 };
 
 const formatAmmo = (ammo: number | null | undefined): string => {
