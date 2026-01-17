@@ -8,6 +8,12 @@ describe('loadAssetManifest', () => {
   it('parses valid manifest entries', async () => {
     const manifestBody = {
       version: 1,
+      budgets: {
+        default: { maxTriangles: 1200, maxMaterials: 2, maxTextureSize: 1024 }
+      },
+      lodRequirements: {
+        tree: { minLevels: 2, requiresInstancing: true }
+      },
       assets: [{ id: 'test-mesh', path: '/assets/test.gltf', type: 'gltf' }]
     };
 
@@ -18,7 +24,22 @@ describe('loadAssetManifest', () => {
     expect(manifest.assets[0]).toEqual({
       id: 'test-mesh',
       path: '/assets/test.gltf',
-      type: 'gltf'
+      type: 'gltf',
+      category: 'prop',
+      lods: [
+        {
+          level: 0,
+          path: '/assets/test.gltf',
+          type: 'gltf'
+        }
+      ],
+      budget: undefined
+    });
+    expect(manifest.budgets).toEqual({
+      default: { maxTriangles: 1200, maxMaterials: 2, maxTextureSize: 1024 }
+    });
+    expect(manifest.lodRequirements).toEqual({
+      tree: { minLevels: 2, requiresInstancing: true }
     });
   });
 
@@ -36,7 +57,16 @@ describe('loadAssetManifest', () => {
   it('skips invalid manifest entries', async () => {
     const manifestBody = {
       version: 2,
-      assets: [{ id: 12, path: null }, { id: 'valid', path: '/assets/ok.glb', type: 'glb' }]
+      assets: [
+        { id: 12, path: null },
+        {
+          id: 'valid',
+          path: '/assets/ok.glb',
+          type: 'glb',
+          category: 'building',
+          lods: [{ level: 0, path: '/assets/ok.glb', type: 'glb' }]
+        }
+      ]
     };
 
     const fetcher = vi.fn(async () => createResponse(manifestBody));
@@ -46,7 +76,16 @@ describe('loadAssetManifest', () => {
       {
         id: 'valid',
         path: '/assets/ok.glb',
-        type: 'glb'
+        type: 'glb',
+        category: 'building',
+        lods: [
+          {
+            level: 0,
+            path: '/assets/ok.glb',
+            type: 'glb'
+          }
+        ],
+        budget: undefined
       }
     ]);
     expect(manifest.version).toBe(2);
