@@ -1,6 +1,7 @@
 import { SystemPhase, type LoopSystem } from '../core/loop/types';
 import type { PhysicsWorldContext } from '../physics/world';
 import type { PlayerHelicopter } from './helicopterFlight';
+import { rotateVector } from '../physics/math';
 
 export enum LandingState {
   Airborne = 'airborne',
@@ -13,6 +14,7 @@ export type AltimeterState = {
   altitude: number;
   verticalSpeed: number;
   horizontalSpeed: number;
+  heading: number;
   isGrounded: boolean;
   landingState: LandingState;
   impactSeverity: number;
@@ -22,6 +24,7 @@ export const createAltimeterState = (): AltimeterState => ({
   altitude: Infinity,
   verticalSpeed: 0,
   horizontalSpeed: 0,
+  heading: 0,
   isGrounded: false,
   landingState: LandingState.Airborne,
   impactSeverity: 0
@@ -88,6 +91,7 @@ const updateAltimeter = (heli: PlayerHelicopter, physics: PhysicsWorldContext): 
     heli.altimeter.altitude = altitude;
     heli.altimeter.verticalSpeed = verticalSpeed;
     heli.altimeter.horizontalSpeed = horizontalSpeed;
+    heli.altimeter.heading = computeHeadingDegrees(heli.body.rotation());
     heli.altimeter.isGrounded = isGrounded;
     return;
   }
@@ -103,7 +107,15 @@ const updateAltimeter = (heli: PlayerHelicopter, physics: PhysicsWorldContext): 
   heli.altimeter.altitude = altitude;
   heli.altimeter.verticalSpeed = verticalSpeed;
   heli.altimeter.horizontalSpeed = horizontalSpeed;
+  heli.altimeter.heading = computeHeadingDegrees(heli.body.rotation());
   heli.altimeter.isGrounded = isGrounded;
+};
+
+const computeHeadingDegrees = (rotation: { x: number; y: number; z: number; w: number }): number => {
+  const forward = rotateVector({ x: 0, y: 0, z: 1 }, rotation);
+  const headingRadians = Math.atan2(forward.x, forward.z);
+  const headingDegrees = (headingRadians * 180) / Math.PI;
+  return (headingDegrees + 360) % 360;
 };
 
 const resolveLandingStateFromImpact = (impactSpeed: number): LandingState => {

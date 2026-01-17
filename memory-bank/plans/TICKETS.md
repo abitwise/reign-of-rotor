@@ -254,7 +254,7 @@
   - [x] Update instructions overlay to show camera toggle + current mode
 
 ### [P1-11] HUD v1 (Cockpit-First, HTML Overlay)
-- Status: Backlog
+- Status: Done
 - Summary: Implement minimal HUD for flight and combat awareness.
 - Context: Cockpit-first requires readable, minimal clutter HUD.
 - Technical notes:
