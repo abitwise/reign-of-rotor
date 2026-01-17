@@ -168,7 +168,10 @@ const computeAttitudeDegrees = (rotation: { x: number; y: number; z: number; w: 
   };
 };
 
-const isVrsEnvelope = (readout: AvionicsReadout, thresholds: typeof AVIONICS_ALERT_THRESHOLDS): boolean => {
+export const isVrsEnvelope = (
+  readout: AvionicsReadout,
+  thresholds: typeof AVIONICS_ALERT_THRESHOLDS
+): boolean => {
   if (!Number.isFinite(readout.verticalSpeed) || !Number.isFinite(readout.horizontalSpeed)) {
     return false;
   }

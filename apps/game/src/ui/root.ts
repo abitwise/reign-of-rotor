@@ -1,7 +1,7 @@
 import type { AppConfig } from '../boot/config';
 import { createDebugOverlay } from './debugOverlay';
 import { FORCE_TRIM_KEY, RESET_TRIM_KEY, type PlayerInputBindings } from '../core/input/playerInput';
-import type { ControlTrimState } from '../core/input/controlState';
+import type { ControlState, ControlTrimState } from '../core/input/controlState';
 import { isTrimActive } from '../core/input/trimUtils';
 import { LandingState } from '../sim/altimeter';
 import type { CHelicopterAssists } from '../ecs/components/helicopter';
@@ -26,6 +26,7 @@ export type AvionicsReadoutProvider = () => AvionicsReadout | null;
 export type AssistsProvider = () => CHelicopterAssists | null;
 export type CameraModeProvider = () => string | null;
 export type TrimStateProvider = () => ControlTrimState | null;
+export type ControlStateProvider = () => ControlState | null;
 export type CombatReadout = {
   weaponName: string | null;
   ammo: number | null;
@@ -106,6 +107,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   let assistsProvider: AssistsProvider | null = null;
   let cameraModeProvider: CameraModeProvider | null = null;
   let trimStateProvider: TrimStateProvider | null = null;
+  let controlStateProvider: ControlStateProvider | null = null;
   let combatProvider: CombatReadoutProvider | null = null;
   let threatProvider: ThreatReadoutProvider | null = null;
   let outOfBoundsProvider: OutOfBoundsProvider | null = null;
@@ -119,6 +121,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     }
 
     const trimState = trimStateProvider?.() ?? null;
+    const controlState = controlStateProvider?.() ?? null;
     const avionicsReadout = avionicsReadoutProvider();
     avionicsHud.update(avionicsReadout, navigationProvider?.() ?? null);
     assistsHud.update(assistsProvider?.() ?? null, trimState);
@@ -134,6 +137,8 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
       instructionsPanel.setCameraMode(cameraModeProvider() ?? 'Cockpit');
     }
     debugOverlay?.setTrimState?.(trimState);
+    debugOverlay?.setControlState?.(controlState);
+    debugOverlay?.setAvionicsReadout?.(avionicsReadout);
     hudFrameHandle = scheduleFrame(hudLoop);
   };
 
@@ -165,6 +170,12 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     },
     setTrimStateProvider: (provider: TrimStateProvider) => {
       trimStateProvider = provider;
+      if (hudFrameHandle === null && avionicsReadoutProvider) {
+        hudFrameHandle = scheduleFrame(hudLoop);
+      }
+    },
+    setControlStateProvider: (provider: ControlStateProvider) => {
+      controlStateProvider = provider;
       if (hudFrameHandle === null && avionicsReadoutProvider) {
         hudFrameHandle = scheduleFrame(hudLoop);
       }
