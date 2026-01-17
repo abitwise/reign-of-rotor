@@ -167,8 +167,7 @@ describe('altimeter system', () => {
       physics.step(stepContext.fixedDeltaSeconds);
       heli.body.setTranslation({ x: 0, y: 10, z: 0 }, true);
       // Rotation 270° around Y-axis: facing -X (west)
-      // Quaternion uses half-angle: w=cos(270°/2)=cos(135°)=-0.7071, y=sin(270°/2)=sin(135°)=0.7071
-      // Equivalent to -90° rotation: w=cos(-45°)=0.7071, y=sin(-45°)=-0.7071
+      // Using equivalent -90° rotation with half-angle: w=cos(-45°)=0.7071, y=sin(-45°)=-0.7071
       heli.body.setRotation({ x: 0, y: -0.7071068, z: 0, w: 0.7071068 }, true);
       physics.world.propagateModifiedBodyPositionsToColliders();
 
