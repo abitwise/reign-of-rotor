@@ -48,6 +48,12 @@ const report = async () => {
     if (!isFiniteNumber(maxTriangles) || !isFiniteNumber(maxMaterials) || !isFiniteNumber(maxTextureSize)) {
       console.error(`Budget "${key}" is missing numeric limits.`);
       hasErrors = true;
+      return;
+    }
+
+    if (maxTriangles <= 0 || maxMaterials <= 0 || maxTextureSize <= 0) {
+      console.error(`Budget "${key}" must have positive limits.`);
+      hasErrors = true;
     }
   });
 
@@ -60,7 +66,7 @@ const report = async () => {
     }
 
     const { minLevels, requiresInstancing } = value;
-    if (!isFiniteNumber(minLevels) || typeof requiresInstancing !== 'boolean') {
+    if (!isFiniteNumber(minLevels) || minLevels <= 0 || !Number.isInteger(minLevels) || typeof requiresInstancing !== 'boolean') {
       console.error(`lodRequirements "${key}" must include minLevels and requiresInstancing.`);
       hasErrors = true;
     }
@@ -76,8 +82,13 @@ const report = async () => {
 
     const { id, path: assetPath, type, category, lods } = asset;
 
-    if (typeof id !== 'string' || typeof assetPath !== 'string') {
-      console.error('Asset entry is missing id/path.');
+    if (typeof id !== 'string') {
+      console.error('Asset entry is missing required field "id".');
+      hasErrors = true;
+    }
+
+    if (typeof assetPath !== 'string') {
+      console.error('Asset entry is missing required field "path".');
       hasErrors = true;
     }
 
@@ -106,7 +117,7 @@ const report = async () => {
       }
 
       const { level, path: lodPath, type: lodType } = lod;
-      if (!isFiniteNumber(level) || typeof lodPath !== 'string') {
+      if (!(isFiniteNumber(level) && level >= 0 && Number.isInteger(level)) || typeof lodPath !== 'string') {
         console.error(`Asset "${id ?? 'unknown'}" has invalid lod metadata.`);
         hasErrors = true;
       }
@@ -139,7 +150,12 @@ const report = async () => {
       }
     }
 
-    if (category && !budgets[category]) {
+    if (
+      category &&
+      allowedCategories.has(category) &&
+      !budgets[category] &&
+      !budgets.default
+    ) {
       console.warn(`Asset "${id ?? 'unknown'}" has no budget profile for category "${category}".`);
       hasWarnings = true;
     }
