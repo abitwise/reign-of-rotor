@@ -74,6 +74,7 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       await renderContext.bindEntityMesh(gameplayContext.player.entity, 'apache-gunship');
       renderContext.setCameraTarget(gameplayContext.player.entity);
       renderContext.setTerrainFocus(gameplayContext.player.entity);
+      renderContext.setPropDressingFocus(gameplayContext.player.entity);
 
       return gameplayContext;
     })
