@@ -42,6 +42,8 @@ describe('altimeter system', () => {
 
     expect(heli.altimeter.altitude).toBeGreaterThan(9.5);
     expect(heli.altimeter.altitude).toBeLessThan(10.5);
+    expect(heli.altimeter.heading).toBeGreaterThanOrEqual(0);
+    expect(heli.altimeter.heading).toBeLessThan(360);
   });
 
   it('marks the helicopter as landed on gentle contact', () => {

@@ -18,6 +18,21 @@ export type FlightReadoutProvider = () => AltimeterState | null;
 export type AssistsProvider = () => CHelicopterAssists | null;
 export type CameraModeProvider = () => string | null;
 export type TrimStateProvider = () => ControlTrimState | null;
+export type CombatReadout = {
+  weaponName: string | null;
+  ammo: number | null;
+  lockState: string | null;
+};
+export type ThreatReadout = {
+  warning: string | null;
+};
+export type OutOfBoundsReadout = {
+  active: boolean;
+  secondsRemaining: number | null;
+};
+export type CombatReadoutProvider = () => CombatReadout | null;
+export type ThreatReadoutProvider = () => ThreatReadout | null;
+export type OutOfBoundsProvider = () => OutOfBoundsReadout | null;
 
 export const createRootUi = ({ target, config, bindings, gameState }: RootUiOptions) => {
   const container = document.createElement('div');
@@ -26,10 +41,16 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   const instructionsPanel = createInstructionsPanel(config, bindings, gameState);
   const flightHud = createFlightHud();
   const assistsHud = createAssistsHud();
+  const combatHud = createCombatHud();
+  const threatBanner = createWarningBanner('threat-banner');
+  const boundsBanner = createWarningBanner('bounds-banner');
 
   container.appendChild(instructionsPanel.element);
   container.appendChild(flightHud.element);
   container.appendChild(assistsHud.element);
+  container.appendChild(combatHud.element);
+  container.appendChild(threatBanner.element);
+  container.appendChild(boundsBanner.element);
   target.replaceChildren(container);
 
   const debugOverlay = config.enableDebugOverlay
@@ -79,6 +100,9 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   let assistsProvider: AssistsProvider | null = null;
   let cameraModeProvider: CameraModeProvider | null = null;
   let trimStateProvider: TrimStateProvider | null = null;
+  let combatProvider: CombatReadoutProvider | null = null;
+  let threatProvider: ThreatReadoutProvider | null = null;
+  let outOfBoundsProvider: OutOfBoundsProvider | null = null;
   let hudFrameHandle: number | null = null;
 
   const hudLoop = (): void => {
@@ -90,6 +114,9 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     const trimState = trimStateProvider?.() ?? null;
     flightHud.update(flightReadoutProvider());
     assistsHud.update(assistsProvider?.() ?? null, trimState);
+    combatHud.update(combatProvider?.() ?? null);
+    threatBanner.setWarning(threatProvider?.()?.warning ?? null);
+    boundsBanner.setWarning(formatOutOfBoundsWarning(outOfBoundsProvider?.() ?? null));
     if (cameraModeProvider) {
       instructionsPanel.setCameraMode(cameraModeProvider() ?? 'Cockpit');
     }
@@ -125,6 +152,24 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     },
     setTrimStateProvider: (provider: TrimStateProvider) => {
       trimStateProvider = provider;
+      if (hudFrameHandle === null && flightReadoutProvider) {
+        hudFrameHandle = scheduleFrame(hudLoop);
+      }
+    },
+    setCombatReadoutProvider: (provider: CombatReadoutProvider) => {
+      combatProvider = provider;
+      if (hudFrameHandle === null && flightReadoutProvider) {
+        hudFrameHandle = scheduleFrame(hudLoop);
+      }
+    },
+    setThreatReadoutProvider: (provider: ThreatReadoutProvider) => {
+      threatProvider = provider;
+      if (hudFrameHandle === null && flightReadoutProvider) {
+        hudFrameHandle = scheduleFrame(hudLoop);
+      }
+    },
+    setOutOfBoundsProvider: (provider: OutOfBoundsProvider) => {
+      outOfBoundsProvider = provider;
       if (hudFrameHandle === null && flightReadoutProvider) {
         hudFrameHandle = scheduleFrame(hudLoop);
       }
@@ -300,15 +345,23 @@ const createFlightHud = (): FlightHudController => {
   const speedMetric = createHudMetric('Airspeed');
   const altitudeMetric = createHudMetric('Altitude AGL');
   const verticalMetric = createHudMetric('Vertical speed');
+  const headingMetric = createHudMetric('Heading');
   const impactMetric = createHudMetric('Impact severity');
 
-  grid.append(speedMetric.element, altitudeMetric.element, verticalMetric.element, impactMetric.element);
+  grid.append(
+    speedMetric.element,
+    altitudeMetric.element,
+    verticalMetric.element,
+    headingMetric.element,
+    impactMetric.element
+  );
   wrapper.append(heading, landingState.row, grid);
 
   const update = (readout: AltimeterState | null): void => {
     speedMetric.setValue(formatHorizontalSpeed(readout?.horizontalSpeed));
     altitudeMetric.setValue(formatAltitude(readout?.altitude));
     verticalMetric.setValue(formatVerticalSpeed(readout?.verticalSpeed));
+    headingMetric.setValue(formatHeading(readout?.heading));
     impactMetric.setValue(formatImpact(readout?.impactSeverity));
     landingState.setState(readout?.landingState ?? LandingState.Airborne, readout?.isGrounded ?? false);
   };
@@ -350,6 +403,68 @@ const createAssistsHud = (): AssistsHudController => {
   update(null, null);
 
   return { element: wrapper, update };
+};
+
+type CombatHudController = {
+  element: HTMLElement;
+  update: (readout: CombatReadout | null) => void;
+};
+
+const createCombatHud = (): CombatHudController => {
+  const wrapper = document.createElement('section');
+  wrapper.className = 'combat-hud';
+
+  const heading = document.createElement('div');
+  heading.className = 'hud-heading';
+  heading.textContent = 'Combat';
+
+  const grid = document.createElement('div');
+  grid.className = 'combat-grid';
+
+  const weaponMetric = createHudMetric('Weapon');
+  const ammoMetric = createHudMetric('Ammo');
+  const lockMetric = createHudMetric('Lock');
+
+  grid.append(weaponMetric.element, ammoMetric.element, lockMetric.element);
+  wrapper.append(heading, grid);
+
+  const update = (readout: CombatReadout | null): void => {
+    weaponMetric.setValue(readout?.weaponName ?? '—');
+    ammoMetric.setValue(formatAmmo(readout?.ammo));
+    lockMetric.setValue(readout?.lockState ?? '—');
+  };
+
+  update(null);
+
+  return { element: wrapper, update };
+};
+
+type WarningBannerController = {
+  element: HTMLElement;
+  setWarning: (warning: string | null) => void;
+};
+
+const createWarningBanner = (className: string): WarningBannerController => {
+  const banner = document.createElement('div');
+  banner.className = `hud-banner ${className} hidden`;
+
+  const text = document.createElement('span');
+  text.textContent = '—';
+  banner.appendChild(text);
+
+  return {
+    element: banner,
+    setWarning: (warning: string | null) => {
+      if (!warning) {
+        banner.classList.add('hidden');
+        text.textContent = '—';
+        return;
+      }
+
+      banner.classList.remove('hidden');
+      text.textContent = warning;
+    }
+  };
 };
 
 const createAssistRow = (label: string, toggleKey: string) => {
@@ -481,6 +596,34 @@ const formatImpact = (impactSeverity: number | undefined): string => {
   }
 
   return `${impactSeverity.toFixed(1)} m/s`;
+};
+
+const formatHeading = (heading: number | undefined): string => {
+  if (heading === undefined || !Number.isFinite(heading)) {
+    return '—';
+  }
+
+  return `${heading.toFixed(0)}°`;
+};
+
+const formatAmmo = (ammo: number | null | undefined): string => {
+  if (ammo === null || ammo === undefined || !Number.isFinite(ammo)) {
+    return '—';
+  }
+
+  return ammo.toString();
+};
+
+const formatOutOfBoundsWarning = (readout: OutOfBoundsReadout | null): string | null => {
+  if (!readout?.active) {
+    return null;
+  }
+
+  if (readout.secondsRemaining !== null && Number.isFinite(readout.secondsRemaining)) {
+    return `OUT OF BOUNDS • RETURN IN ${Math.max(0, readout.secondsRemaining).toFixed(0)}s`;
+  }
+
+  return 'OUT OF BOUNDS';
 };
 
 const scheduleFrame = (callback: FrameRequestCallback): number => {
