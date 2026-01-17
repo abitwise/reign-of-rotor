@@ -29,13 +29,14 @@ export const spawnPlayerHelicopter = (
   options: {
     startHeight?: number;
     startPosition?: { x: number; y?: number; z: number };
-    yawRateTuning: YawRateControllerTuning;
-  }
+    yawRateTuning?: YawRateControllerTuning;
+  } = {}
 ): PlayerHelicopter => {
   const entity = createEntityId();
   const { rapier } = physics;
   const startHeight = options.startHeight ?? 0.8;
   const startPosition = options.startPosition ?? { x: 0, y: startHeight, z: 0 };
+  const yawRateTuning = options.yawRateTuning ?? { maxRateRad: 1.4, damping: 0.65 };
 
   const body = createRigidBodyForEntity(physics, {
     entity,
@@ -57,7 +58,7 @@ export const spawnPlayerHelicopter = (
     entity,
     body,
     flight,
-    yawRateTuning: options.yawRateTuning,
+    yawRateTuning,
     assists: { stability: true, hover: false },
     input,
     control,
