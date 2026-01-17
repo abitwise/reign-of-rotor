@@ -60,6 +60,8 @@ export const createPropColliderManager = (physics: PhysicsWorldContext): PropCol
         entity,
         descriptor: rapier
           .RigidBodyDesc.fixed()
+          // Y-position at half-height centers the collider vertically (cuboid center).
+          // Rotation from placement data is intentionally ignored for axis-aligned AABB colliders (MVP).
           .setTranslation(placement.position.x, archetype.height * 0.5, placement.position.z)
       });
 

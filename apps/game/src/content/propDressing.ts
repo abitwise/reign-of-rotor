@@ -150,6 +150,9 @@ export const PROP_DRESSING_CONFIG: PropDressingConfig = {
   maxBuildingsPerTile: 3
 };
 
+// Number of cardinal rotations for buildings (0°, 90°, 180°, 270°) to align with axis-aligned colliders
+const CARDINAL_ROTATION_COUNT = 4;
+
 const VARIANT_LOOKUP = new Map(TREE_VARIANTS.map((variant) => [variant.id, variant]));
 const BUILDING_LOOKUP = new Map(BUILDING_ARCHETYPES.map((variant) => [variant.id, variant]));
 const BIOME_LOOKUP = new Map(BIOME_PRESETS.map((preset) => [preset.id, preset]));
@@ -255,7 +258,7 @@ export const getTileDressing = (tileX: number, tileZ: number): TileDressing => {
       y: 0,
       z: tileMinZ + random() * (tileMaxZ - tileMinZ)
     };
-    const rotation = Math.floor(random() * 4) * (Math.PI / 2);
+    const rotation = Math.floor(random() * CARDINAL_ROTATION_COUNT) * (Math.PI / 2);
     buildings.push({ variantId, position, rotation });
   }
 
