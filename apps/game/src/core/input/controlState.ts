@@ -20,9 +20,26 @@ export type ControlState = {
   trim: ControlTrimState;
 };
 
+/**
+ * Tuning parameters for a single control axis.
+ *
+ * These settings control how raw input is transformed into filtered control values.
+ */
 export type ControlAxisTuning = {
+  /**
+   * Exponent for the exponential input curve (gamma).
+   * Values > 1 reduce sensitivity near the center; 1 means a linear response.
+   */
   expo: number;
+  /**
+   * Time constant for exponential smoothing, in seconds.
+   * Larger values increase smoothing (and lag); 0 disables smoothing.
+   */
   smoothingTau: number;
+  /**
+   * Maximum allowed rate of change of the filtered value, in units per second.
+   * Higher values allow faster transitions; 0 disables rate limiting.
+   */
   slewRate: number;
 };
 
@@ -59,7 +76,8 @@ const applyExpoUnsigned = (value: number, gamma: number): number => {
 };
 
 const applySmoothing = (current: number, target: number, dt: number, tau: number): number => {
-  if (tau <= 0) {
+  // Use a minimum threshold to avoid unnecessary exp calculations for effectively-disabled smoothing
+  if (tau < 0.001) {
     return target;
   }
   const alpha = 1 - Math.exp(-dt / tau);
@@ -99,7 +117,8 @@ export const updateControlState = (
   tuning: ControlTuning,
   dtSeconds: number
 ): void => {
-  updateAxis(state.collective, clamp01(input.collective), tuning.collective, dtSeconds, 0, 1);
+  // Collective supports bidirectional input: [0, 1] for lift, negative for braking
+  updateAxis(state.collective, input.collective, tuning.collective, dtSeconds, -1, 1);
   updateAxis(state.cyclicX, input.cyclicX, tuning.cyclicX, dtSeconds, -1, 1, state.trim.cyclicX);
   updateAxis(state.cyclicY, input.cyclicY, tuning.cyclicY, dtSeconds, -1, 1, state.trim.cyclicY);
   updateAxis(state.yaw, input.yaw, tuning.yaw, dtSeconds, -1, 1, state.trim.yaw);
