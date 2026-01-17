@@ -1,7 +1,10 @@
 import type { AppConfig } from '../boot/config';
 import type { LoopFrameMetrics } from '../core/loop/types';
-import type { ControlTrimState } from '../core/input/controlState';
+import type { ControlState, ControlTrimState } from '../core/input/controlState';
 import { isTrimActive } from '../core/input/trimUtils';
+import type { AvionicsReadout } from './hudReadouts';
+import { isVrsEnvelope } from './hudReadouts';
+import { AVIONICS_ALERT_THRESHOLDS } from '../content/avionics';
 
 export type DebugOverlayOptions = {
   host: HTMLElement;
@@ -13,6 +16,8 @@ export type DebugOverlayController = {
   destroy: () => void;
   setLoopMetrics: (metrics: LoopFrameMetrics) => void;
   setTrimState: (trimState: ControlTrimState | null) => void;
+  setControlState: (controlState: ControlState | null) => void;
+  setAvionicsReadout: (readout: AvionicsReadout | null) => void;
   setVisible: (visible: boolean) => void;
 };
 
@@ -83,7 +88,73 @@ export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): Debug
 
   [trimXRow, trimYRow, trimYawRow, trimActiveRow].forEach((row) => trimGrid.appendChild(row.row));
 
-  wrapper.append(heading, description, configGrid, timingHeading, timingGrid, trimHeading, trimGrid);
+  const inputHeading = document.createElement('h3');
+  inputHeading.textContent = 'Input Processing';
+  inputHeading.style.margin = '12px 0 4px';
+  inputHeading.style.fontSize = '14px';
+  inputHeading.style.textTransform = 'uppercase';
+  inputHeading.style.letterSpacing = '0.5px';
+
+  const inputGrid = document.createElement('div');
+  inputGrid.className = 'debug-grid';
+
+  const collectiveRow = createLabelRow('Collective (raw/filtered)', '—');
+  const cyclicXRow = createLabelRow('Cyclic Roll (raw/filtered)', '—');
+  const cyclicYRow = createLabelRow('Cyclic Pitch (raw/filtered)', '—');
+  const yawRow = createLabelRow('Yaw (raw/filtered)', '—');
+
+  [collectiveRow, cyclicXRow, cyclicYRow, yawRow].forEach((row) => inputGrid.appendChild(row.row));
+
+  const powerHeading = document.createElement('h3');
+  powerHeading.textContent = 'Power & Rotor';
+  powerHeading.style.margin = '12px 0 4px';
+  powerHeading.style.fontSize = '14px';
+  powerHeading.style.textTransform = 'uppercase';
+  powerHeading.style.letterSpacing = '0.5px';
+
+  const powerGrid = document.createElement('div');
+  powerGrid.className = 'debug-grid';
+
+  const rotorRpmRow = createLabelRow('Rotor RPM', '—');
+  const powerReqRow = createLabelRow('Power Required', '—');
+  const powerAvailRow = createLabelRow('Power Available', '—');
+  const powerMarginRow = createLabelRow('Power Margin', '—');
+
+  [rotorRpmRow, powerReqRow, powerAvailRow, powerMarginRow].forEach((row) =>
+    powerGrid.appendChild(row.row)
+  );
+
+  const flagsHeading = document.createElement('h3');
+  flagsHeading.textContent = 'Avionics Flags';
+  flagsHeading.style.margin = '12px 0 4px';
+  flagsHeading.style.fontSize = '14px';
+  flagsHeading.style.textTransform = 'uppercase';
+  flagsHeading.style.letterSpacing = '0.5px';
+
+  const flagsGrid = document.createElement('div');
+  flagsGrid.className = 'debug-grid';
+
+  const vrsRow = createLabelRow('VRS Heuristic', '—');
+  const etlRow = createLabelRow('ETL', 'N/A');
+  const groundEffectRow = createLabelRow('Ground Effect', 'N/A');
+
+  [vrsRow, etlRow, groundEffectRow].forEach((row) => flagsGrid.appendChild(row.row));
+
+  wrapper.append(
+    heading,
+    description,
+    configGrid,
+    timingHeading,
+    timingGrid,
+    trimHeading,
+    trimGrid,
+    inputHeading,
+    inputGrid,
+    powerHeading,
+    powerGrid,
+    flagsHeading,
+    flagsGrid
+  );
   host.appendChild(wrapper);
 
   return {
@@ -112,6 +183,36 @@ export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): Debug
       trimYawRow.setValue(formatTrimValue(trimState.yaw));
       trimActiveRow.setValue(isTrimActive(trimState) ? 'Yes' : 'No');
     },
+    setControlState: (controlState: ControlState | null) => {
+      if (!controlState) {
+        collectiveRow.setValue('—');
+        cyclicXRow.setValue('—');
+        cyclicYRow.setValue('—');
+        yawRow.setValue('—');
+        return;
+      }
+
+      collectiveRow.setValue(formatAxisPair(controlState.collective));
+      cyclicXRow.setValue(formatAxisPair(controlState.cyclicX));
+      cyclicYRow.setValue(formatAxisPair(controlState.cyclicY));
+      yawRow.setValue(formatAxisPair(controlState.yaw));
+    },
+    setAvionicsReadout: (readout: AvionicsReadout | null) => {
+      if (!readout) {
+        rotorRpmRow.setValue('—');
+        powerReqRow.setValue('—');
+        powerAvailRow.setValue('—');
+        powerMarginRow.setValue('—');
+        vrsRow.setValue('—');
+        return;
+      }
+
+      rotorRpmRow.setValue(formatRotorRpm(readout.rotorRpm, readout.nominalRotorRpm));
+      powerReqRow.setValue(formatPower(readout.powerRequired));
+      powerAvailRow.setValue(formatPower(readout.powerAvailable));
+      powerMarginRow.setValue(formatPowerMargin(readout.powerMargin));
+      vrsRow.setValue(isVrsEnvelope(readout, AVIONICS_ALERT_THRESHOLDS) ? 'Yes' : 'No');
+    },
     setVisible: (visible: boolean) => {
       wrapper.style.display = visible ? '' : 'none';
     }
@@ -120,6 +221,32 @@ export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): Debug
 
 const formatMs = (value: number): string => `${value.toFixed(2)} ms`;
 const formatTrimValue = (value: number): string => value.toFixed(2);
+const formatAxisValue = (value: number): string => value.toFixed(2);
+const formatAxisPair = (axis: { raw: number; filtered: number }): string =>
+  `${formatAxisValue(axis.raw)} / ${formatAxisValue(axis.filtered)}`;
+
+const formatRotorRpm = (rotorRpm: number, nominalRotorRpm: number): string => {
+  if (!Number.isFinite(rotorRpm) || !Number.isFinite(nominalRotorRpm) || nominalRotorRpm <= 0) {
+    return '—';
+  }
+  const ratio = (rotorRpm / nominalRotorRpm) * 100;
+  return `${ratio.toFixed(0)}% (${rotorRpm.toFixed(0)})`;
+};
+
+const formatPower = (value: number): string => {
+  if (!Number.isFinite(value)) {
+    return '—';
+  }
+  return value.toFixed(2);
+};
+
+const formatPowerMargin = (value: number): string => {
+  if (!Number.isFinite(value)) {
+    return '—';
+  }
+  const sign = value >= 0 ? '+' : '';
+  return `${sign}${value.toFixed(2)}`;
+};
 
 const createLabelRow = (label: string, value: string) => {
   const row = document.createElement('div');

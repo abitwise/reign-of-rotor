@@ -283,7 +283,7 @@
   - [ ] Add tuning thresholds in content config
 
 ### [P1-11C] Debug Avionics Overlay (Tuning & Telemetry)
-- Status: Backlog
+- Status: Done
 - Summary: Add dev-only overlays for input processing, control laws, power margin, and rotor thrust visualization.
 - Context: Helicopter feel and avionics require iterative tuning; without tools, tuning becomes guesswork and rework.
 - Functional behavior (GIVEN/WHEN/THEN):
