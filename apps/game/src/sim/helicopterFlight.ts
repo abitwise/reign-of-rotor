@@ -146,7 +146,7 @@ const applyRotorForces = (heli: PlayerHelicopter): void => {
     return;
   }
 
-  // Guard against invalid or misconfigured nominal rotor RPM to avoid division by zero.
+  // Guard against invalid nominal rotor RPM (zero or negative) to avoid division errors.
   if (heli.flight.nominalRotorRpm <= 0) {
     return;
   }
@@ -169,7 +169,7 @@ const applyRotorForces = (heli: PlayerHelicopter): void => {
 };
 
 const applyControlTorques = (heli: PlayerHelicopter): void => {
-  // Guard against invalid or misconfigured nominal rotor RPM to avoid division by zero.
+  // Guard against invalid nominal rotor RPM (zero or negative) to avoid division errors.
   if (heli.flight.nominalRotorRpm <= 0) {
     return;
   }
@@ -200,7 +200,7 @@ const clamp = (value: number, min: number, max: number): number => Math.min(max,
 const computeAuthorityScale = (heli: PlayerHelicopter): number => {
   const powerMarginForFullAuthority = heli.flight.powerMarginForFullAuthority;
   if (powerMarginForFullAuthority <= 0) {
-    // Fallback to full authority if configuration is invalid to avoid division by zero.
+    // Fallback to full authority for invalid values (zero or negative) to avoid division errors.
     return 1;
   }
   const authorityBlend = clamp(heli.power.powerMargin / powerMarginForFullAuthority, 0, 1);
