@@ -48,6 +48,12 @@ const report = async () => {
     if (!isFiniteNumber(maxTriangles) || !isFiniteNumber(maxMaterials) || !isFiniteNumber(maxTextureSize)) {
       console.error(`Budget "${key}" is missing numeric limits.`);
       hasErrors = true;
+      return;
+    }
+
+    if (maxTriangles <= 0 || maxMaterials <= 0 || maxTextureSize <= 0) {
+      console.error(`Budget "${key}" must have positive limits.`);
+      hasErrors = true;
     }
   });
 
@@ -60,7 +66,10 @@ const report = async () => {
     }
 
     const { minLevels, requiresInstancing } = value;
-    if (!isFiniteNumber(minLevels) || typeof requiresInstancing !== 'boolean') {
+    const isValidMinLevels = isFiniteNumber(minLevels) && minLevels > 0 && Number.isInteger(minLevels);
+    const isValidRequiresInstancing = typeof requiresInstancing === 'boolean';
+
+    if (!isValidMinLevels || !isValidRequiresInstancing) {
       console.error(`lodRequirements "${key}" must include minLevels and requiresInstancing.`);
       hasErrors = true;
     }
@@ -76,9 +85,16 @@ const report = async () => {
 
     const { id, path: assetPath, type, category, lods } = asset;
 
-    if (typeof id !== 'string' || typeof assetPath !== 'string') {
-      console.error('Asset entry is missing id/path.');
+    if (typeof id !== 'string') {
+      console.error('Asset entry is missing required field "id".');
       hasErrors = true;
+      return;
+    }
+
+    if (typeof assetPath !== 'string') {
+      console.error(`Asset "${id}" is missing required field "path".`);
+      hasErrors = true;
+      return;
     }
 
     if (!allowedTypes.has(type)) {
@@ -106,7 +122,10 @@ const report = async () => {
       }
 
       const { level, path: lodPath, type: lodType } = lod;
-      if (!isFiniteNumber(level) || typeof lodPath !== 'string') {
+      const isValidLevel = isFiniteNumber(level) && level >= 0 && Number.isInteger(level);
+      const isValidPath = typeof lodPath === 'string';
+
+      if (!isValidLevel || !isValidPath) {
         console.error(`Asset "${id ?? 'unknown'}" has invalid lod metadata.`);
         hasErrors = true;
       }
@@ -139,8 +158,12 @@ const report = async () => {
       }
     }
 
-    if (category && !budgets[category]) {
-      console.warn(`Asset "${id ?? 'unknown'}" has no budget profile for category "${category}".`);
+    const hasBudgetForCategory = category && budgets[category];
+    const hasDefaultBudget = budgets.default;
+    const isKnownCategory = category && allowedCategories.has(category);
+
+    if (isKnownCategory && !hasBudgetForCategory && !hasDefaultBudget) {
+      console.warn(`Asset "${id}" has no budget profile for category "${category}".`);
       hasWarnings = true;
     }
   });

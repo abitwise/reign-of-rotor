@@ -57,7 +57,10 @@ export class RenderAssetLoader {
       throw new Error(`Mesh id "${meshId}" not found in manifest.`);
     }
 
-    const primaryLod = entry.lods.find((lod) => lod.level === 0) ?? entry.lods[0];
+    const primaryLod = entry.lods.find((lod) => lod.level === 0);
+    if (!primaryLod) {
+      throw new Error(`No LOD0 found for mesh "${meshId}" in manifest entry.`);
+    }
     const { rootUrl, fileName } = splitPath(primaryLod.path);
     const container = await SceneLoader.LoadAssetContainerAsync(rootUrl, fileName, this.scene);
 

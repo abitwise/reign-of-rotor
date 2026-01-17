@@ -70,7 +70,11 @@ const normalizeBudgetProfile = (value: unknown): AssetBudgetProfile | null => {
   const maxMaterials = candidate.maxMaterials;
   const maxTextureSize = candidate.maxTextureSize;
 
-  if (!isFiniteNumber(maxTriangles) || !isFiniteNumber(maxMaterials) || !isFiniteNumber(maxTextureSize)) {
+  const isValidMaxTriangles = isFiniteNumber(maxTriangles) && maxTriangles > 0;
+  const isValidMaxMaterials = isFiniteNumber(maxMaterials) && maxMaterials > 0;
+  const isValidMaxTextureSize = isFiniteNumber(maxTextureSize) && maxTextureSize > 0;
+
+  if (!isValidMaxTriangles || !isValidMaxMaterials || !isValidMaxTextureSize) {
     return null;
   }
 
@@ -91,7 +95,12 @@ const normalizeLodEntry = (entry: unknown): AssetLodEntry | null => {
   const path = candidate.path;
   const type = candidate.type;
 
-  if (!isFiniteNumber(level) || typeof path !== 'string') {
+  if (
+    !isFiniteNumber(level) ||
+    level < 0 ||
+    !Number.isInteger(level) ||
+    typeof path !== 'string'
+  ) {
     return null;
   }
 
@@ -195,7 +204,10 @@ const parseManifest = (raw: unknown): AssetManifest => {
       const minLevels = candidate.minLevels;
       const requiresInstancing = candidate.requiresInstancing;
 
-      if (!isFiniteNumber(minLevels) || typeof requiresInstancing !== 'boolean') {
+      const isValidMinLevels = isFiniteNumber(minLevels) && minLevels > 0 && Number.isInteger(minLevels);
+      const isValidRequiresInstancing = typeof requiresInstancing === 'boolean';
+
+      if (!isValidMinLevels || !isValidRequiresInstancing) {
         return;
       }
 
