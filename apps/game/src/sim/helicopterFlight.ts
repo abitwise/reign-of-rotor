@@ -178,6 +178,19 @@ const applyControlTorques = (heli: PlayerHelicopter): void => {
     return;
   }
 
+  // Skip control torques when raw rotation inputs are zero.
+  // This prevents fighting between lingering filtered values and stability assist.
+  // Filtered values smooth the response during active control, but should not
+  // continue applying torques after the player releases the keys.
+  const hasRotationInput =
+    Math.abs(heli.control.cyclicX.raw) > 0.01 ||
+    Math.abs(heli.control.cyclicY.raw) > 0.01 ||
+    Math.abs(heli.control.yaw.raw) > 0.01;
+
+  if (!hasRotationInput) {
+    return;
+  }
+
   const authorityScale = computeAuthorityScale(heli);
   const rotorRpmScale = clamp(heli.power.rotorRpm / heli.flight.nominalRotorRpm, 0, 1.1);
   const torqueScale = authorityScale * rotorRpmScale;

@@ -77,7 +77,7 @@ export const createControlState = (): ControlState => ({
 });
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
-const clamp01 = (value: number): number => clamp(value, 0, 1);
+const _clamp01 = (value: number): number => clamp(value, 0, 1); // Currently unused but kept for future use
 
 const applyExpoSigned = (value: number, gamma: number): number => {
   if (gamma <= 1) {

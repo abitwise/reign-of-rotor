@@ -467,4 +467,9 @@
   - [x] Define expected “return-to-hover” response targets for cyclic and yaw (time-to-settle and damping) in content config.
   - [x] Implement or tune stabilization so neutral input returns to hover predictably (no loss-of-control on release).
   - [x] Add/extend unit tests for input processing or assist response on key release.
-  - [x] Validate behavior with assists ON and OFF; document tuning values.
+  - [x] Validate behavior with assists ON and OFF; document tuning values.  - [x] (V2) Skip control torque application when raw input is zero to prevent fighting with stability assist.
+  - [x] (V2) Increase stabilityAngularDamping (0.92→0.85) and stabilityLevelingTorqueScale (0.55→0.7) for snappier stabilization.
+- Root cause (V2 fix):
+  - Control torques were applied using `filtered` values while stability assist detected input release using `raw` values.
+  - This caused fighting between lingering filtered-value torques and stability assist leveling torques.
+  - Fixed by skipping control torque application when raw rotation inputs are zero, allowing clean handoff to stability assist.

@@ -135,6 +135,7 @@ describe('helicopter flight system', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();
     const controlState = createControlState();
+    controlState.yaw.raw = 1;
     controlState.yaw.filtered = 1;
 
     const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, { yawRateTuning });
@@ -153,8 +154,11 @@ describe('helicopter flight system', () => {
     const controlState = createControlState();
     controlState.collective.raw = 1;
     controlState.collective.filtered = 1;
+    controlState.cyclicX.raw = 1;
     controlState.cyclicX.filtered = 1;
+    controlState.cyclicY.raw = 1;
     controlState.cyclicY.filtered = 1;
+    controlState.yaw.raw = 1;
     controlState.yaw.filtered = 1;
 
     const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
@@ -170,9 +174,13 @@ describe('helicopter flight system', () => {
     const droopedRpm = heli.power.rotorRpm;
     expect(droopedRpm).toBeLessThan(heli.flight.nominalRotorRpm);
 
+    controlState.collective.raw = 0;
     controlState.collective.filtered = 0;
+    controlState.cyclicX.raw = 0;
     controlState.cyclicX.filtered = 0;
+    controlState.cyclicY.raw = 0;
     controlState.cyclicY.filtered = 0;
+    controlState.yaw.raw = 0;
     controlState.yaw.filtered = 0;
 
     for (let i = 0; i < 30; i++) {
@@ -180,6 +188,40 @@ describe('helicopter flight system', () => {
     }
 
     expect(heli.power.rotorRpm).toBeGreaterThan(droopedRpm);
+  });
+
+  it('does not apply control torques when raw input is zero but filtered is non-zero', () => {
+    const physics = createPhysicsWorld(rapier, { gravity: { x: 0, y: 0, z: 0 } });
+    const input = createPlayerInputState();
+    const controlState = createControlState();
+    // Simulate release: raw is zero but filtered value is still decaying
+    controlState.cyclicX.raw = 0;
+    controlState.cyclicX.filtered = 0.5;
+    controlState.cyclicY.raw = 0;
+    controlState.cyclicY.filtered = 0.5;
+    controlState.yaw.raw = 0;
+    controlState.yaw.filtered = 0.5;
+
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
+    // Disable stability assist so it doesn't interfere
+    heli.assists.stability = false;
+    
+    const initialAngvel = { x: 0, y: 0, z: 0 };
+    heli.body.setAngvel(initialAngvel, true);
+
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
+
+    system.step(stepContext);
+    physics.step(stepContext.fixedDeltaSeconds);
+
+    // Angular velocity should remain near zero since no control torques should be applied
+    const finalAngvel = heli.body.angvel();
+    expect(Math.abs(finalAngvel.x)).toBeLessThan(0.01);
+    expect(Math.abs(finalAngvel.y)).toBeLessThan(0.01);
+    expect(Math.abs(finalAngvel.z)).toBeLessThan(0.01);
   });
 
   it('damps yaw rate toward the target', () => {
