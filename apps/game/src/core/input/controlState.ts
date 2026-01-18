@@ -106,6 +106,8 @@ const applySlew = (current: number, target: number, dt: number, rate: number): n
   return current + delta;
 };
 
+const COLLECTIVE_RELEASE_SLEW_MULTIPLIER = 3;
+
 const updateAxis = (
   axis: ControlAxisState,
   rawInput: number,
@@ -113,7 +115,8 @@ const updateAxis = (
   dt: number,
   min: number,
   max: number,
-  trim = 0
+  trim = 0,
+  releaseSlewMultiplier = 1
 ): void => {
   const raw = clamp(rawInput, min, max);
   axis.raw = raw;
@@ -121,7 +124,9 @@ const updateAxis = (
   const expoValue = min < 0 ? applyExpoSigned(raw, tuning.expo) : applyExpoUnsigned(raw, tuning.expo);
   const trimmed = clamp(expoValue + trim, min, max);
   const smoothed = applySmoothing(axis.filtered, trimmed, dt, tuning.smoothingTau);
-  axis.filtered = applySlew(axis.filtered, smoothed, dt, tuning.slewRate);
+  const isReleasing = smoothed < axis.filtered;
+  const effectiveSlewRate = isReleasing ? tuning.slewRate * releaseSlewMultiplier : tuning.slewRate;
+  axis.filtered = applySlew(axis.filtered, smoothed, dt, effectiveSlewRate);
 };
 
 export const updateControlState = (
@@ -137,7 +142,16 @@ export const updateControlState = (
   }
 
   // Collective supports bidirectional input: [0, 1] for lift, negative for braking
-  updateAxis(state.collective, input.collective, tuning.collective, dtSeconds, -1, 1);
+  updateAxis(
+    state.collective,
+    input.collective,
+    tuning.collective,
+    dtSeconds,
+    -1,
+    1,
+    0,
+    COLLECTIVE_RELEASE_SLEW_MULTIPLIER
+  );
   updateAxis(state.cyclicX, input.cyclicX, tuning.cyclicX, dtSeconds, -1, 1, state.trim.cyclicX);
   updateAxis(state.cyclicY, input.cyclicY, tuning.cyclicY, dtSeconds, -1, 1, state.trim.cyclicY);
   // Yaw input represents a desired yaw-rate target (normalized -1..1).

@@ -32,6 +32,7 @@ describe('helicopter flight system', () => {
     const input = createPlayerInputState();
     const controlState = createControlState();
     controlState.collective.filtered = 1;
+    controlState.collective.raw = 1;
 
     const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
       yawRateTuning
@@ -50,6 +51,7 @@ describe('helicopter flight system', () => {
     const input = createPlayerInputState();
     const controlState = createControlState();
     controlState.collective.filtered = 1;
+    controlState.collective.raw = 1;
 
     const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
       yawRateTuning
@@ -72,6 +74,48 @@ describe('helicopter flight system', () => {
     // Set both raw and filtered to match the input for this test
     controlState.collective.raw = -1;
     controlState.collective.filtered = -1;
+
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
+    heli.body.setLinvel({ x: 0, y: 5, z: 0 }, true);
+
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
+
+    system.step(stepContext);
+    physics.step(stepContext.fixedDeltaSeconds);
+
+    expect(heli.body.linvel().y).toBeLessThan(5);
+  });
+
+  it('applies downward lift when collective is negative', () => {
+    const physics = createPhysicsWorld(rapier, { gravity: { x: 0, y: 0, z: 0 } });
+    const input = createPlayerInputState();
+    input.collective = -1;
+    const controlState = createControlState();
+    controlState.collective.raw = -1;
+    controlState.collective.filtered = -1;
+
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
+
+    system.step(stepContext);
+    physics.step(stepContext.fixedDeltaSeconds);
+
+    expect(heli.body.linvel().y).toBeLessThan(0);
+  });
+
+  it('bleeds upward velocity when collective is neutral', () => {
+    const physics = createPhysicsWorld(rapier, { gravity: { x: 0, y: 0, z: 0 } });
+    const input = createPlayerInputState();
+    input.collective = 0;
+    const controlState = createControlState();
+    controlState.collective.raw = 0;
+    controlState.collective.filtered = 0;
 
     const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
       yawRateTuning

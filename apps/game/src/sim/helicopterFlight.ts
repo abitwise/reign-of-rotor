@@ -140,12 +140,15 @@ export const createPauseToggleSystem = (input: PlayerInputState, gameState: Game
 });
 
 const applyRotorForces = (heli: PlayerHelicopter): void => {
-  // Collective is normalized to [0, 1] via the control processing layer.
+  // Collective supports bidirectional input: positive for lift, negative to reduce lift (allowing descent).
   // With keyboard sampling, idle state is 0 (no keys pressed) to avoid applying lift at rest.
-  const liftInput = clamp01(heli.control.collective.filtered);
-  if (liftInput <= 0) {
+  const rawCollective = heli.control.collective.raw;
+  if (rawCollective === 0) {
     return;
   }
+  const liftInput = rawCollective > 0
+    ? clamp01(heli.control.collective.filtered)
+    : -clamp01(-rawCollective);
 
   // Guard against invalid nominal rotor RPM (zero or negative) to avoid division errors.
   if (heli.flight.nominalRotorRpm <= 0) {
@@ -259,7 +262,9 @@ const applyStabilityAssist = (heli: PlayerHelicopter): void => {
 };
 
 const updatePowerModel = (heli: PlayerHelicopter, dt: number): void => {
-  const collectiveInput = clamp01(heli.control.collective.filtered);
+  const collectiveInput = heli.control.collective.raw > 0
+    ? clamp01(heli.control.collective.filtered)
+    : 0;
   const cyclicLoad = Math.hypot(heli.control.cyclicX.filtered, heli.control.cyclicY.filtered);
   const yawLoad = Math.abs(heli.control.yaw.filtered) * 0.6;
   const maneuverLoad = clamp01(cyclicLoad + yawLoad);
@@ -305,7 +310,7 @@ const applyCollectiveDownBrake = (heli: PlayerHelicopter): void => {
   // PageDown / collective-down should make it easier to reduce upward velocity.
   // We do *not* apply a constant downward thrust (unrealistic); instead, we add a small vertical brake
   // only when the helicopter is moving upward.
-  if (heli.input.collective >= 0) {
+  if (heli.control.collective.raw > 0) {
     return;
   }
 
@@ -314,8 +319,10 @@ const applyCollectiveDownBrake = (heli: PlayerHelicopter): void => {
     return;
   }
 
-  const strength = clamp01(-heli.input.collective); // map [-1..0) -> (0..1]
-  const brakeFactor = 1 - 0.18 * strength; // up to 18% per tick extra reduction
+  const strength = clamp01(-heli.control.collective.raw); // map [-1..0) -> (0..1]
+  const neutralBrake = 0.06; // gentle bleed when collective is neutral
+  const inputBrake = 0.18 * strength; // stronger brake when holding collective-down
+  const brakeFactor = clamp(1 - (neutralBrake + inputBrake), 0.7, 1);
 
   heli.body.setLinvel(
     {

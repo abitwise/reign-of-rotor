@@ -88,6 +88,21 @@ describe('control state processing', () => {
     expect(state.cyclicY.filtered).toBeCloseTo(0.1, 4);
   });
 
+  it('accelerates collective release when slew-limited', () => {
+    const tuning = makeTuning({
+      collective: { expo: 1, smoothingTau: 0, slewRate: 1 }
+    });
+    const state = createControlState();
+    const input = createPlayerInputState();
+
+    state.collective.filtered = 1;
+    input.collective = 0;
+
+    updateControlState(state, input, tuning, 0.1);
+
+    expect(state.collective.filtered).toBeCloseTo(0.7, 4);
+  });
+
   it('applies trim to cyclic and yaw axes', () => {
     const tuning = makeTuning({
       cyclicX: { expo: 1, smoothingTau: 0, slewRate: 0 }
