@@ -420,3 +420,20 @@
 - Summary: Full cockpit immersion and input mapping.
 
 ## Bugs
+
+### [BUG-1] Collective release keeps lift, preventing descent
+- **Status:** New
+- Summary: Releasing collective (R) leaves lift applied long enough that the helicopter keeps climbing; holding collective-down (F) briefly slows the climb, but releasing F resumes rapid climb instead of allowing descent.
+- Context: Reported during normal takeoff/hover attempts with default controls and tuning. This makes it feel impossible to descend once lift has been applied.
+- Repro (GIVEN/WHEN/THEN):
+  - GIVEN a fresh boot with default controls (normal tuning), WHEN holding R until climb starts (~85% collective per HUD), THEN release R and observe continued climb instead of leveling/descending.
+  - GIVEN the climb persists, WHEN holding F, THEN vertical climb slows, BUT WHEN releasing F, THEN the helicopter resumes climbing rapidly.
+- Expected behavior:
+  - Releasing R should allow the helicopter to stabilize or begin descending within a short, predictable time window (subject to inertia), without requiring continuous F input.
+  - Holding F should produce a sustained descent or clearly reduce lift, not just a temporary brake.
+- Actual behavior:
+  - Lift continues after release of R; holding F only brakes upward velocity while pressed; releasing F reintroduces climb.
+- Suspected root cause (code-level):
+  - Lift uses `control.collective.filtered` (smoothed + slew-limited), so it decays slowly after release; meanwhile, the “collective down” path only applies a temporary vertical brake based on raw input and does not counteract lift or drive `control.collective.filtered` toward zero. See lift application in [apps/game/src/sim/helicopterFlight.ts](apps/game/src/sim/helicopterFlight.ts#L83-L132) and collective-down brake in [apps/game/src/sim/helicopterFlight.ts](apps/game/src/sim/helicopterFlight.ts#L214-L250), plus control smoothing in [apps/game/src/core/input/controlState.ts](apps/game/src/core/input/controlState.ts#L69-L123).
+- Notes:
+  - This is most noticeable with the default `CONTROL_TUNING_PRESETS.normal` smoothing/slew for collective in [apps/game/src/content/controls.ts](apps/game/src/content/controls.ts#L12-L33).
