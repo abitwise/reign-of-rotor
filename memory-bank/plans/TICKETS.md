@@ -438,7 +438,7 @@
   - This is most noticeable with the default `CONTROL_TUNING_PRESETS.normal` smoothing/slew for collective in [apps/game/src/content/controls.ts](apps/game/src/content/controls.ts#L12-L33).
 
 ### [BUG-2] World scale still 100x100 units (needs 10 km x 10 km)
-- Status: Open
+- Status: Done
 - Summary: The world still clamps to a 100x100-unit square, so terrain/props/physics only exist inside a tiny backyard-sized area despite P1-4B/C/D being marked done.
 - Player impact: Flying upward reveals the entire map fits in view; there is no sense of city-block/town scale.
 - Evidence:
