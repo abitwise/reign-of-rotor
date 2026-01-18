@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { WORLD_CONFIG } from '../../../content/world';
 import { getLodIndex } from '../terrainChunkManager';
 
 describe('getLodIndex', () => {
@@ -9,44 +10,46 @@ describe('getLodIndex', () => {
   });
 
   it('returns correct LOD index for distance within first ring', () => {
-    // WORLD_CONFIG.render.lodRings[0] = { radius: 1, subdivisions: 20 }
-    const result = getLodIndex(0.5);
+    const radius = WORLD_CONFIG.render.lodRings[0].radius;
+    const result = getLodIndex(radius * 0.5);
     expect(result).toBe(0);
   });
 
   it('returns correct LOD index for distance exactly at first ring boundary', () => {
-    // WORLD_CONFIG.render.lodRings[0] = { radius: 1, subdivisions: 20 }
-    const result = getLodIndex(1);
+    const radius = WORLD_CONFIG.render.lodRings[0].radius;
+    const result = getLodIndex(radius);
     expect(result).toBe(0);
   });
 
   it('returns correct LOD index for distance within second ring', () => {
-    // WORLD_CONFIG.render.lodRings[1] = { radius: 2, subdivisions: 12 }
-    const result = getLodIndex(1.5);
+    const inner = WORLD_CONFIG.render.lodRings[0].radius;
+    const outer = WORLD_CONFIG.render.lodRings[1].radius;
+    const result = getLodIndex((inner + outer) * 0.5);
     expect(result).toBe(1);
   });
 
   it('returns correct LOD index for distance exactly at second ring boundary', () => {
-    // WORLD_CONFIG.render.lodRings[1] = { radius: 2, subdivisions: 12 }
-    const result = getLodIndex(2);
+    const radius = WORLD_CONFIG.render.lodRings[1].radius;
+    const result = getLodIndex(radius);
     expect(result).toBe(1);
   });
 
   it('returns correct LOD index for distance within third ring', () => {
-    // WORLD_CONFIG.render.lodRings[2] = { radius: 3, subdivisions: 4 }
-    const result = getLodIndex(2.5);
+    const inner = WORLD_CONFIG.render.lodRings[1].radius;
+    const outer = WORLD_CONFIG.render.lodRings[2].radius;
+    const result = getLodIndex((inner + outer) * 0.5);
     expect(result).toBe(2);
   });
 
   it('returns correct LOD index for distance exactly at third ring boundary', () => {
-    // WORLD_CONFIG.render.lodRings[2] = { radius: 3, subdivisions: 4 }
-    const result = getLodIndex(3);
+    const radius = WORLD_CONFIG.render.lodRings[2].radius;
+    const result = getLodIndex(radius);
     expect(result).toBe(2);
   });
 
   it('returns -1 for distance beyond all rings', () => {
-    // All rings have max radius of 3
-    const result = getLodIndex(4);
+    const radius = WORLD_CONFIG.render.lodRings[WORLD_CONFIG.render.lodRings.length - 1].radius;
+    const result = getLodIndex(radius + 1);
     expect(result).toBe(-1);
   });
 
@@ -61,8 +64,8 @@ describe('getLodIndex', () => {
   });
 
   it('handles edge case between rings correctly', () => {
-    // Test just above first ring boundary
-    const result = getLodIndex(1.0001);
+    const radius = WORLD_CONFIG.render.lodRings[0].radius;
+    const result = getLodIndex(radius + 0.0001);
     expect(result).toBe(1); // Should fall into second ring
   });
 });

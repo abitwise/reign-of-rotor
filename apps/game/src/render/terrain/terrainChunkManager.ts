@@ -26,16 +26,25 @@ type TerrainChunk = {
 
 const createTerrainMaterial = (scene: Scene): StandardMaterial => {
   const material = new StandardMaterial('terrainMaterial', scene);
-  material.diffuseColor = new Color3(0.15, 0.18, 0.2);
-  material.specularColor = new Color3(0.05, 0.05, 0.05);
-  material.emissiveColor = new Color3(0.02, 0.025, 0.03);
+  material.diffuseColor = new Color3(0.85, 0.79, 0.62);
+  material.specularColor = new Color3(0.06, 0.05, 0.04);
+  material.emissiveColor = new Color3(0.05, 0.045, 0.035);
 
   const gridTexture = new DynamicTexture('terrainGrid', 512, scene, false);
   const ctx = gridTexture.getContext();
-  ctx.fillStyle = '#1a2028';
+  ctx.fillStyle = '#d9c98b';
   ctx.fillRect(0, 0, 512, 512);
-  ctx.strokeStyle = '#2a3540';
+  ctx.strokeStyle = '#b79f63';
   ctx.lineWidth = 2;
+
+  for (let i = 0; i < 28; i += 1) {
+    const x = Math.floor(Math.random() * 480);
+    const y = Math.floor(Math.random() * 480);
+    const w = 24 + Math.floor(Math.random() * 80);
+    const h = 24 + Math.floor(Math.random() * 80);
+    ctx.fillStyle = '#7fa86a';
+    ctx.fillRect(x, y, w, h);
+  }
 
   for (let i = 0; i <= 512; i += 64) {
     ctx.beginPath();

@@ -34,6 +34,8 @@ type PropTile = {
   key: string;
   trees: InstancedMesh[];
   buildings: InstancedMesh[];
+  roads: InstancedMesh[];
+  greenPatches: InstancedMesh[];
 };
 
 export class PropDressingManager {
@@ -41,6 +43,8 @@ export class PropDressingManager {
   private transformProvider: TransformProvider;
   private readonly treeMeshes = new Map<string, Mesh>();
   private readonly buildingMeshes = new Map<string, Mesh>();
+  private roadMesh: Mesh | null = null;
+  private greenPatchMesh: Mesh | null = null;
   private readonly materials: StandardMaterial[] = [];
   private readonly tiles = new Map<string, PropTile>();
   private focusEntity: Entity | null = null;
@@ -161,6 +165,46 @@ export class PropDressingManager {
       mesh.freezeWorldMatrix();
       this.buildingMeshes.set(archetype.id, mesh);
     });
+
+    const roadMaterial = new StandardMaterial('road-material', this.scene);
+    roadMaterial.diffuseColor = new Color3(0.46, 0.35, 0.22);
+    roadMaterial.specularColor = new Color3(0.05, 0.04, 0.03);
+    this.materials.push(roadMaterial);
+
+    const roadBase = MeshBuilder.CreateBox(
+      'road-segment',
+      {
+        width: 1,
+        height: 0.2,
+        depth: 1
+      },
+      this.scene
+    );
+    roadBase.material = roadMaterial;
+    roadBase.isVisible = false;
+    roadBase.isPickable = false;
+    roadBase.freezeWorldMatrix();
+    this.roadMesh = roadBase;
+
+    const patchMaterial = new StandardMaterial('green-patch-material', this.scene);
+    patchMaterial.diffuseColor = new Color3(0.42, 0.64, 0.38);
+    patchMaterial.specularColor = new Color3(0.05, 0.05, 0.05);
+    this.materials.push(patchMaterial);
+
+    const patchBase = MeshBuilder.CreateBox(
+      'green-patch',
+      {
+        width: 1,
+        height: 0.12,
+        depth: 1
+      },
+      this.scene
+    );
+    patchBase.material = patchMaterial;
+    patchBase.isVisible = false;
+    patchBase.isPickable = false;
+    patchBase.freezeWorldMatrix();
+    this.greenPatchMesh = patchBase;
   }
 
   private refreshVisibleTiles(centerTileX: number, centerTileZ: number): void {
@@ -202,6 +246,8 @@ export class PropDressingManager {
     const dressing = getTileDressing(tileX, tileZ);
     const trees: InstancedMesh[] = [];
     const buildings: InstancedMesh[] = [];
+    const roads: InstancedMesh[] = [];
+    const greenPatches: InstancedMesh[] = [];
 
     dressing.trees.forEach((placement) => {
       const variant = getTreeVariant(placement.variantId);
@@ -232,11 +278,40 @@ export class PropDressingManager {
       buildings.push(instance);
     });
 
-    return { key, trees, buildings };
+    if (this.roadMesh) {
+      dressing.roads.forEach((placement) => {
+        const instance = this.roadMesh?.createInstance(`road-${key}-${roads.length}`);
+        if (!instance) {
+          return;
+        }
+        instance.position = new Vector3(placement.position.x, placement.position.y, placement.position.z);
+        instance.rotation = new Vector3(0, placement.rotation, 0);
+        instance.scaling = new Vector3(placement.width, 1, placement.length);
+        instance.isPickable = false;
+        roads.push(instance);
+      });
+    }
+
+    if (this.greenPatchMesh) {
+      dressing.greenPatches.forEach((placement) => {
+        const instance = this.greenPatchMesh?.createInstance(`patch-${key}-${greenPatches.length}`);
+        if (!instance) {
+          return;
+        }
+        instance.position = new Vector3(placement.position.x, placement.position.y, placement.position.z);
+        instance.scaling = new Vector3(placement.size, 1, placement.size);
+        instance.isPickable = false;
+        greenPatches.push(instance);
+      });
+    }
+
+    return { key, trees, buildings, roads, greenPatches };
   }
 
   private disposeTile(tile: PropTile): void {
     tile.trees.forEach((instance) => instance.dispose());
     tile.buildings.forEach((instance) => instance.dispose());
+    tile.roads.forEach((instance) => instance.dispose());
+    tile.greenPatches.forEach((instance) => instance.dispose());
   }
 }

@@ -38,18 +38,18 @@ export type WorldConfig = {
 
 export const WORLD_CONFIG: WorldConfig = {
   bounds: {
-    minX: -50,
-    maxX: 50,
-    minZ: -50,
-    maxZ: 50
+    minX: -50000,
+    maxX: 50000,
+    minZ: -50000,
+    maxZ: 50000
   },
-  // Physics stability: keep coordinates bounded within 100x100 so floating-origin rebasing is unnecessary for MVP.
-  tileSize: 10,
+  // 100 km x 100 km world; tile size keeps streaming budgets reasonable without floating-origin rebasing.
+  tileSize: 500,
   render: {
     lodRings: [
-      { radius: 1, subdivisions: 20 },
-      { radius: 2, subdivisions: 12 },
-      { radius: 3, subdivisions: 4 }
+      { radius: 2, subdivisions: 20 },
+      { radius: 5, subdivisions: 12 },
+      { radius: 9, subdivisions: 6 }
     ],
     textureScale: 1.6
   },
@@ -60,10 +60,10 @@ export const WORLD_CONFIG: WorldConfig = {
     friction: 1.1
   },
   spawnZones: [
-    { id: 'north', center: { x: 0, z: -30 }, radius: 8 },
-    { id: 'south', center: { x: 0, z: 30 }, radius: 8 },
-    { id: 'east', center: { x: 30, z: 0 }, radius: 8 },
-    { id: 'west', center: { x: -30, z: 0 }, radius: 8 }
+    { id: 'north', center: { x: 0, z: -32000 }, radius: 2500 },
+    { id: 'south', center: { x: 0, z: 32000 }, radius: 2500 },
+    { id: 'east', center: { x: 32000, z: 0 }, radius: 2500 },
+    { id: 'west', center: { x: -32000, z: 0 }, radius: 2500 }
   ]
 };
 
