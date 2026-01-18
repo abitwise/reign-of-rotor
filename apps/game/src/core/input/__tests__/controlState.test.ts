@@ -3,10 +3,10 @@ import { createControlState, updateControlState, type ControlTuning } from '../c
 import { createPlayerInputState } from '../playerInput';
 
 const makeTuning = (overrides: Partial<ControlTuning> = {}): ControlTuning => ({
-  collective: { expo: 1, smoothingTau: 0, slewRate: 0 },
-  cyclicX: { expo: 1, smoothingTau: 0, slewRate: 0 },
-  cyclicY: { expo: 1, smoothingTau: 0, slewRate: 0 },
-  yaw: { expo: 1, smoothingTau: 0, slewRate: 0 },
+  collective: { expo: 1, smoothingTau: 0, slewRate: 0, releaseSlewMultiplier: 1 },
+  cyclicX: { expo: 1, smoothingTau: 0, slewRate: 0, releaseSlewMultiplier: 1 },
+  cyclicY: { expo: 1, smoothingTau: 0, slewRate: 0, releaseSlewMultiplier: 1 },
+  yaw: { expo: 1, smoothingTau: 0, slewRate: 0, releaseSlewMultiplier: 1 },
   yawRate: { maxRateRad: 1, damping: 1 },
   ...overrides
 });
@@ -90,7 +90,7 @@ describe('control state processing', () => {
 
   it('accelerates collective release when slew-limited', () => {
     const tuning = makeTuning({
-      collective: { expo: 1, smoothingTau: 0, slewRate: 1 }
+      collective: { expo: 1, smoothingTau: 0, slewRate: 1, releaseSlewMultiplier: 3 }
     });
     const state = createControlState();
     const input = createPlayerInputState();
@@ -101,6 +101,21 @@ describe('control state processing', () => {
     updateControlState(state, input, tuning, 0.1);
 
     expect(state.collective.filtered).toBeCloseTo(0.7, 4);
+  });
+
+  it('accelerates signed axis release when returning to neutral', () => {
+    const tuning = makeTuning({
+      cyclicX: { expo: 1, smoothingTau: 0, slewRate: 1, releaseSlewMultiplier: 2 }
+    });
+    const state = createControlState();
+    const input = createPlayerInputState();
+
+    state.cyclicX.filtered = -1;
+    input.cyclicX = 0;
+
+    updateControlState(state, input, tuning, 0.1);
+
+    expect(state.cyclicX.filtered).toBeCloseTo(-0.8, 4);
   });
 
   it('applies trim to cyclic and yaw axes', () => {

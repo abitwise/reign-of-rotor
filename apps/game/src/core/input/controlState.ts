@@ -53,6 +53,11 @@ export type ControlAxisTuning = {
    * Higher values allow faster transitions; 0 disables rate limiting.
    */
   slewRate: number;
+  /**
+   * Optional multiplier applied to slew rate when returning toward neutral.
+   * Values > 1 speed up release back to center.
+   */
+  releaseSlewMultiplier?: number;
 };
 
 export type ControlTuning = {
@@ -106,8 +111,6 @@ const applySlew = (current: number, target: number, dt: number, rate: number): n
   return current + delta;
 };
 
-const COLLECTIVE_RELEASE_SLEW_MULTIPLIER = 3;
-
 const updateAxis = (
   axis: ControlAxisState,
   rawInput: number,
@@ -115,8 +118,7 @@ const updateAxis = (
   dt: number,
   min: number,
   max: number,
-  trim = 0,
-  releaseSlewMultiplier = 1
+  trim = 0
 ): void => {
   const raw = clamp(rawInput, min, max);
   axis.raw = raw;
@@ -124,8 +126,11 @@ const updateAxis = (
   const expoValue = min < 0 ? applyExpoSigned(raw, tuning.expo) : applyExpoUnsigned(raw, tuning.expo);
   const trimmed = clamp(expoValue + trim, min, max);
   const smoothed = applySmoothing(axis.filtered, trimmed, dt, tuning.smoothingTau);
-  const isReleasing = smoothed < axis.filtered;
-  const effectiveSlewRate = isReleasing ? tuning.slewRate * releaseSlewMultiplier : tuning.slewRate;
+  const isReleasing =
+    Math.abs(smoothed) < Math.abs(axis.filtered) &&
+    (Math.sign(smoothed) === Math.sign(axis.filtered) || smoothed === 0);
+  const releaseMultiplier = tuning.releaseSlewMultiplier ?? 1;
+  const effectiveSlewRate = isReleasing ? tuning.slewRate * releaseMultiplier : tuning.slewRate;
   axis.filtered = applySlew(axis.filtered, smoothed, dt, effectiveSlewRate);
 };
 
@@ -149,8 +154,7 @@ export const updateControlState = (
     dtSeconds,
     -1,
     1,
-    0,
-    COLLECTIVE_RELEASE_SLEW_MULTIPLIER
+    0
   );
   updateAxis(state.cyclicX, input.cyclicX, tuning.cyclicX, dtSeconds, -1, 1, state.trim.cyclicX);
   updateAxis(state.cyclicY, input.cyclicY, tuning.cyclicY, dtSeconds, -1, 1, state.trim.cyclicY);

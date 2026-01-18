@@ -227,7 +227,7 @@ const applyStabilityAssist = (heli: PlayerHelicopter): void => {
   }
 
   const angularVelocity = heli.body.angvel();
-  const dampingFactor = 0.94; // Per-tick damping (0.94 = 94% retained, 6% removed)
+  const dampingFactor = heli.flight.stabilityAngularDamping;
 
   // Always apply some angular damping when stability is enabled.
   // With binary keyboard inputs, this prevents rapid uncontrolled flips while still allowing manual control.
@@ -242,14 +242,18 @@ const applyStabilityAssist = (heli: PlayerHelicopter): void => {
 
   // Only apply leveling (counter-torque) when player is not actively controlling rotation.
   const hasRotationInput =
-    Math.abs(heli.control.cyclicX.filtered) > 0.01 ||
-    Math.abs(heli.control.cyclicY.filtered) > 0.01 ||
-    Math.abs(heli.control.yaw.filtered) > 0.01;
+    Math.abs(heli.control.cyclicX.raw) > 0.01 ||
+    Math.abs(heli.control.cyclicY.raw) > 0.01 ||
+    Math.abs(heli.control.yaw.raw) > 0.01;
+  const hasTrim =
+    Math.abs(heli.control.trim.cyclicX) > 0.01 ||
+    Math.abs(heli.control.trim.cyclicY) > 0.01 ||
+    Math.abs(heli.control.trim.yaw) > 0.01;
 
-  if (hasRotationInput) {
+  if (hasRotationInput || hasTrim) {
     return;
   }
-  const counterTorqueScale = 0.4; // Strength of leveling torque
+  const counterTorqueScale = 0.4; // Strength of damping torque
 
   // Apply counter-torque to level out
   const counterTorque = {
@@ -259,6 +263,28 @@ const applyStabilityAssist = (heli: PlayerHelicopter): void => {
   };
 
   heli.body.addTorque(counterTorque, true);
+
+  if (heli.flight.nominalRotorRpm <= 0) {
+    return;
+  }
+
+  const rotation = heli.body.rotation();
+  const upVector = rotateVector({ x: 0, y: 1, z: 0 }, rotation);
+  const tiltMagnitude = Math.hypot(upVector.x, upVector.z);
+  if (tiltMagnitude < heli.flight.stabilityLevelingDeadzone) {
+    return;
+  }
+
+  const authorityScale = computeAuthorityScale(heli);
+  const rotorRpmScale = clamp(heli.power.rotorRpm / heli.flight.nominalRotorRpm, 0, 1.1);
+  const torqueScale = heli.flight.stabilityLevelingTorqueScale * authorityScale * rotorRpmScale;
+  const levelingTorque = {
+    x: -upVector.z * heli.flight.maxPitchTorque * torqueScale,
+    y: 0,
+    z: upVector.x * heli.flight.maxRollTorque * torqueScale
+  };
+
+  heli.body.addTorque(levelingTorque, true);
 };
 
 const updatePowerModel = (heli: PlayerHelicopter, dt: number): void => {
