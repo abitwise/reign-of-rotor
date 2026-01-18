@@ -390,7 +390,6 @@
   - [ ] Wire to HUD warning banner
 
 ## Backlog / Future
-
 ### [B-1] Chase Camera Polish: Obstruction Avoidance + Tuning
 - Status: Backlog
 - Summary: Improve chase camera readability with simple obstruction avoidance and tuning.
@@ -437,3 +436,16 @@
   - Lift uses `control.collective.filtered` (smoothed + slew-limited), so it decays slowly after release; meanwhile, the “collective down” path only applies a temporary vertical brake based on raw input and does not counteract lift or drive `control.collective.filtered` toward zero. See lift application in [apps/game/src/sim/helicopterFlight.ts](apps/game/src/sim/helicopterFlight.ts#L83-L132) and collective-down brake in [apps/game/src/sim/helicopterFlight.ts](apps/game/src/sim/helicopterFlight.ts#L214-L250), plus control smoothing in [apps/game/src/core/input/controlState.ts](apps/game/src/core/input/controlState.ts#L69-L123).
 - Notes:
   - This is most noticeable with the default `CONTROL_TUNING_PRESETS.normal` smoothing/slew for collective in [apps/game/src/content/controls.ts](apps/game/src/content/controls.ts#L12-L33).
+
+### [BUG-2] World scale still 100x100 units (needs 10 km x 10 km)
+- Status: Open
+- Summary: The world still clamps to a 100x100-unit square, so terrain/props/physics only exist inside a tiny backyard-sized area despite P1-4B/C/D being marked done.
+- Player impact: Flying upward reveals the entire map fits in view; there is no sense of city-block/town scale.
+- Evidence:
+  - World bounds are hard-coded to -50..50 (100x100 units) in [apps/game/src/content/world.ts](apps/game/src/content/world.ts#L35-L76).
+  - Terrain streaming/LOD only loads a small ring around the focus entity (max 3 tiles, 10 units per tile), making the visible area ~70x70 units even smaller than the bounds ([apps/game/src/render/terrain/terrainChunkManager.ts](apps/game/src/render/terrain/terrainChunkManager.ts#L87-L168)).
+  - Physics terrain colliders and prop colliders also clamp to the same small bounds/tile radius, preventing interaction beyond that area ([apps/game/src/sim/terrain/terrainColliders.ts](apps/game/src/sim/terrain/terrainColliders.ts#L12-L112), [apps/game/src/sim/terrain/propColliders.ts](apps/game/src/sim/terrain/propColliders.ts#L12-L118)).
+- Suspected root cause: P1-4B “World Scale Upgrade” was marked done but the config and streaming logic still reflect the original MVP safety constraint (keep coordinates within 100x100). The world size never got updated to the intended large-world scale.
+- Open questions:
+  - Confirm world units are meters (so 10,000 x 10,000 corresponds to 10 km x 10 km) and whether any coordinate scaling is desired.
+  - Confirm acceptable max visible LOD ring radius and streaming budget for a 10 km world (tiles count vs. perf).
