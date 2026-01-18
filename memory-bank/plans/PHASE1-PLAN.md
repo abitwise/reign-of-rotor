@@ -44,3 +44,6 @@
 - SAM threats are readable and avoidable with skill + countermeasures.
 - Performance is stable (no obvious GC hitching during repeated combat).
 - No major sim/render desync; physics remains stable across typical frame rates.
+
+## Progress updates
+- 2026-01-18: P1-7A, P1-7B, P1-11, P1-11B, P1-11C marked done in TICKETS.

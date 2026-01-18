@@ -197,10 +197,10 @@
   - Trim affects control state offsets; does not rewrite physics directly.
   - Provide a simple HUD icon when trim is active and show small trim values in debug.
 - Tasks:
-  - [ ] Define `trim_cyclic_x/y`, `trim_yaw`
-  - [ ] Add input bindings: Force Trim, Reset Trim
-  - [ ] Apply trim offsets in control processing stage
-  - [ ] Add HUD/Debug readout for trim
+  - [x] Define `trim_cyclic_x/y`, `trim_yaw`
+  - [x] Add input bindings: Force Trim, Reset Trim
+  - [x] Apply trim offsets in control processing stage
+  - [x] Add HUD/Debug readout for trim
 
 ### [P1-7B] Engine/Rotor RPM + Power Margin Model (Sim-lite Performance Limits)
 - Status: Done
@@ -214,11 +214,11 @@
   - Keep math simplified: use tunable curves for `P_req` and `P_avail`, with rotor inertia + governor-like behavior.
   - Authority blending: scale effective cyclic + yaw with power margin.
 - Tasks:
-  - [ ] Add state vars: rotorRPM, enginePowerAvail, powerReq, powerMargin
-  - [ ] Implement governor-like RPM holding with inertia
-  - [ ] Implement power requirement approximation (collective + airflow + drag proxy)
-  - [ ] Implement authority scaling vs margin (cyclic/yaw reduction under load)
-  - [ ] Add audio hooks (RPM droop/strain) as events (optional)
+  - [x] Add state vars: rotorRPM, enginePowerAvail, powerReq, powerMargin
+  - [x] Implement governor-like RPM holding with inertia
+  - [x] Implement power requirement approximation (collective + airflow + drag proxy)
+  - [x] Implement authority scaling vs margin (cyclic/yaw reduction under load)
+  - [x] Add audio hooks (RPM droop/strain) as events (optional)
 
 ### [P1-8] Altimeter Raycast + Landing Detection
 - Status: Done
@@ -260,9 +260,9 @@
 - Technical notes:
   - Include out-of-bounds warning + countdown when applicable.
 - Tasks:
-  - [ ] Flight readouts: speed, AGL, heading
-  - [ ] Weapon + ammo + lock state
-  - [ ] Threat warnings (lock/launch)
+  - [x] Flight readouts: speed, AGL, heading
+  - [x] Weapon + ammo + lock state
+  - [x] Threat warnings (lock/launch)
 
 ### [P1-11B] Avionics HUD v2 (Instruments + Alerts + Navigation Lite)
 - Status: Done
@@ -277,10 +277,10 @@
   - Keep alerts short, consistent, and prioritized (banner area).
   - VRS warning can be a heuristic flag (optional) even before full VRS physics.
 - Tasks:
-  - [ ] Add instrument widgets: IAS, VSI, Attitude, Heading, Torque/Power, Rotor RPM, Fuel (optional MVP)
-  - [ ] Add navigation lite: bearing + distance to active waypoint/objective
-  - [ ] Add alert manager with priority ordering (scan/lock/launch + aircraft warnings)
-  - [ ] Add tuning thresholds in content config
+  - [x] Add instrument widgets: IAS, VSI, Attitude, Heading, Torque/Power, Rotor RPM, Fuel (optional MVP)
+  - [x] Add navigation lite: bearing + distance to active waypoint/objective
+  - [x] Add alert manager with priority ordering (scan/lock/launch + aircraft warnings)
+  - [x] Add tuning thresholds in content config
 
 ### [P1-11C] Debug Avionics Overlay (Tuning & Telemetry)
 - Status: Done
@@ -293,10 +293,10 @@
 - Technical notes:
   - Dev-only build flag; zero overhead in production when disabled.
 - Tasks:
-  - [ ] Add debug panel toggle + layout
-  - [ ] Show raw/filtered ControlState per axis
-  - [ ] Show power/RPM/margin values + state flags
-  - [ ] Add optional simple vector gizmo hooks
+  - [x] Add debug panel toggle + layout
+  - [x] Show raw/filtered ControlState per axis
+  - [x] Show power/RPM/margin values + state flags
+  - [x] Add optional simple vector gizmo hooks
 
 ### [P1-12] Cannon Weapon (Raycast) + Hit Feedback
 - Status: Backlog

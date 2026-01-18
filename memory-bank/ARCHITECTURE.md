@@ -77,7 +77,7 @@ The game is a TypeScript browser application built around a data-driven ECS simu
 ### ECS Component families (key fields)
 - Camera intent (recommended add-on): `CCameraRig { mode, yaw, pitch, fov, smoothing }` (cockpit first)
 - Player input: `CPlayerInput { collective, cyclicX/Y, yaw, fire*, countermeasure }`
-- Flight: `CHeliFlight { maxLift, max*Torque, enginePower, rotorRpm, damping }`
+- Flight: `CHelicopterFlight { maxLiftForce, max*Torque, linear/angularDamping, nominal/min/max rotor RPM, power/authority tuning }`
 - Damage: `CDamageSubsystems { engine, rotor, avionics, weapons, sensors }`
 - Missions: `CMissionRuntime`, `CObjective`, `CWaypoint`
 
