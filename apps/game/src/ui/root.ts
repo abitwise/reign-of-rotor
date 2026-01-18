@@ -14,6 +14,7 @@ import {
   selectPriorityAlert,
   toThreatAlertCandidate
 } from './hudReadouts';
+import { createAttitudeIndicator } from './attitudeIndicator';
 
 export type RootUiOptions = {
   target: HTMLElement;
@@ -382,6 +383,9 @@ const createAvionicsHud = (): AvionicsHudController => {
   const marginMetric = createHudMetric('Power Margin');
   const navMetric = createHudMetric('Nav');
 
+  const attitudeIndicator = createAttitudeIndicator();
+  attitudeIndicator.element.classList.add('avionics-attitude-indicator');
+
   grid.append(
     speedMetric.element,
     altitudeMetric.element,
@@ -393,7 +397,7 @@ const createAvionicsHud = (): AvionicsHudController => {
     marginMetric.element,
     navMetric.element
   );
-  wrapper.append(heading, landingState.row, grid);
+  wrapper.append(heading, landingState.row, grid, attitudeIndicator.element);
 
   const update = (readout: AvionicsReadout | null, navReadout: NavigationReadout | null): void => {
     speedMetric.setValue(formatHorizontalSpeed(readout?.horizontalSpeed));
@@ -401,6 +405,7 @@ const createAvionicsHud = (): AvionicsHudController => {
     verticalMetric.setValue(formatVerticalSpeed(readout?.verticalSpeed));
     headingMetric.setValue(formatHeading(readout?.heading));
     attitudeMetric.setValue(formatAttitude(readout?.pitch, readout?.roll));
+    attitudeIndicator.setAttitude(readout?.pitch, readout?.roll);
     rpmMetric.setValue(formatRotorRpm(readout?.rotorRpm, readout?.nominalRotorRpm));
     powerMetric.setValue(formatPowerLoad(readout?.powerRequired, readout?.powerAvailable));
     marginMetric.setValue(formatPowerMargin(readout?.powerMargin));

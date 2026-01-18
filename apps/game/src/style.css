@@ -403,6 +403,95 @@ body {
   gap: 10px;
 }
 
+.avionics-attitude-indicator {
+  display: grid;
+  justify-content: start;
+}
+
+.attitude-indicator {
+  --att-pitch: 0px;
+  --att-roll: 0deg;
+}
+
+.attitude-indicator__frame {
+  width: 140px;
+  height: 140px;
+  border-radius: 999px;
+  border: 1px solid rgba(152, 199, 255, 0.28);
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.attitude-indicator__horizon {
+  position: absolute;
+  width: 220%;
+  height: 220%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(var(--att-roll)) translateY(var(--att-pitch));
+  transform-origin: 50% 50%;
+}
+
+.attitude-indicator__sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(97, 160, 255, 0.5), rgba(34, 62, 96, 0.65));
+  clip-path: inset(0 0 50% 0);
+}
+
+.attitude-indicator__ground {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(94, 68, 43, 0.7), rgba(39, 28, 18, 0.75));
+  clip-path: inset(50% 0 0 0);
+}
+
+.attitude-indicator__horizon-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: rgba(230, 236, 242, 0.9);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.attitude-indicator__aircraft {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 72px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  border-top: 2px solid rgba(230, 236, 242, 0.95);
+}
+
+.attitude-indicator__aircraft::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 14px;
+  transform: translateX(-50%);
+  background: rgba(230, 236, 242, 0.95);
+}
+
+.attitude-indicator__bank-caret {
+  position: absolute;
+  left: 50%;
+  top: 6px;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 8px solid rgba(230, 236, 242, 0.9);
+  opacity: 0.9;
+}
+
 .hud-metric {
   display: grid;
   gap: 4px;

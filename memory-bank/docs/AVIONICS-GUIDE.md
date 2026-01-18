@@ -321,6 +321,34 @@ Keep alerts:
 
 ---
 
+## Appendix A) Gyroscopic Pitch-Bank / Attitude Indicator (Debug-Friendly)
+
+An attitude indicator ("gyro") is one of the fastest ways to diagnose helicopter handling issues because it makes it obvious whether the aircraft is actually pitching/banking as expected, even when groundspeed/IAS looks wrong.
+
+### What it should show
+- **Pitch** (nose up/down) relative to a horizon line.
+- **Bank/Roll** (left/right tilt) shown by rotating the horizon.
+
+### How we implement it (Reign of Rotor)
+- The HUD is an **HTML overlay** and must not mutate sim state.
+- The visual attitude indicator is implemented as a circular widget that:
+  - Rotates the horizon by roll.
+  - Translates the horizon up/down by pitch.
+- Data source is the existing avionics readout (`pitch`/`roll` in degrees), derived from the helicopter rigid body rotation.
+
+### Practical tuning notes
+- Clamp pitch display to a reasonable range (e.g. ±30°) so the horizon stays readable.
+- Clamp roll display (e.g. ±90°) to avoid extreme rotations from transient physics spikes.
+- Prefer showing **both** a visual gyro and a numeric pitch/roll readout during development.
+
+### Debug workflows this enables
+- If the helicopter visibly banks but **IAS stays at 0**, you can confirm whether there is true lateral acceleration (physics velocity) or only rotation.
+- If pressing `W`/`S` causes unexpected roll, the indicator makes cross-axis coupling obvious while you also watch raw/filtered inputs in the debug overlay.
+
+Reference: https://en.wikipedia.org/wiki/Attitude_indicator
+
+---
+
 ## 9) Camera and Perception Considerations
 
 Helicopter control is as much about **visual cues** as physics.
