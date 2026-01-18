@@ -421,7 +421,7 @@
 ## Bugs
 
 ### [BUG-1] Collective release keeps lift, preventing descent
-- **Status:** New
+- **Status:** Done
 - Summary: Releasing collective (R) leaves lift applied long enough that the helicopter keeps climbing; holding collective-down (F) briefly slows the climb, but releasing F resumes rapid climb instead of allowing descent.
 - Context: Reported during normal takeoff/hover attempts with default controls and tuning. This makes it feel impossible to descend once lift has been applied.
 - Repro (GIVEN/WHEN/THEN):
