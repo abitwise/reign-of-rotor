@@ -418,3 +418,5 @@
 ### [B-7] VR / Cockpit Interaction (Stretch)
 - Status: Backlog
 - Summary: Full cockpit immersion and input mapping.
+
+## Bugs
