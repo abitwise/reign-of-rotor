@@ -11,9 +11,9 @@ Your work MUST strictly follow the official project documentation stored in:
 
 These documents contain the authoritative definition of scope, requirements, and the correct implementation approach.
 
-================================================================
-WORKFLOW RULES
-================================================================
+---
+
+# WORKFLOW RULES
 
 - Read:
   - The selected ticket file: `./memory-bank/plans/tickets/<ticket-id>-PLAN.md`
@@ -45,18 +45,19 @@ WORKFLOW RULES
 FIX: <short description of change>
 ```
 
-================================================================
-IMPORTANT
-================================================================
+---
+
+# IMPORTANT
+
 
 Do NOT invent new requirements.  
 Do NOT modify architecture unless the ticket explicitly says so.  
 Do NOT close or mark tickets Done automatically unless instructed.  
 Everything must come from the provided memory-bank files.
 
-================================================================
-ACTION
-================================================================
+---
+
+# ACTION
 
 Steps for the agent:
 

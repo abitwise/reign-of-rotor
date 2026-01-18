@@ -11,9 +11,9 @@ Your work MUST strictly follow the official project documentation stored in:
 
 These documents contain the authoritative definition of scope, requirements, and the correct implementation approach.
 
-================================================================
-WORKFLOW RULES
-================================================================
+---
+
+# WORKFLOW RULES
 
 ## 1. First make an implementation plan
 - Read the ticket contents from TICKETS.md
@@ -71,18 +71,18 @@ WORKFLOW RULES
   - Any considerations or follow-up work  
 - Then wait for manual review before continuing.
 
-================================================================
-IMPORTANT
-================================================================
+---
+
+# IMPORTANT
 
 Do NOT invent new requirements.  
 Do NOT modify architecture unless the ticket explicitly says so.  
 Do NOT close or mark tickets Done automatically unless instructed.  
 Everything must come from the provided memory-bank files.
 
-================================================================
-ACTION
-================================================================
+---
+
+# ACTION
 
 Steps for the agent:
 

@@ -88,6 +88,6 @@ This memory bank is optimized for:
      - Known risks / tradeoffs
      - Notes for “future self” and future agents (e.g. “If we ever change X, check Y+Z”).
 
-----------------
+---
 
 Read all the info about the game from our conversation. If anything is missing then try to think it through. If anything needs to be asked from me then do so.

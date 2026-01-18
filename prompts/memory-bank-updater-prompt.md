@@ -5,9 +5,10 @@ Your task is to update the memory bank based on changes (PRs/commits/plans) whil
 - Append-friendly decision logging
 - Minimal, high-signal diffs
 
-========================
-INPUT
-========================
+---
+
+# INPUT
+
 - Existing memory files (paste or reference):
   - memory-bank/PRODUCT.md
   - memory-bank/ARCHITECTURE.md
@@ -19,9 +20,10 @@ INPUT
 - Any phase plans and ticket plans:
   - memory-bank/plans/*
 
-========================
-UPDATE POLICY (must follow)
-========================
+---
+
+# UPDATE POLICY (must follow)
+
 - Update freely:
   - memory-bank/plans/TICKETS.md (progress and tickets, make sure to keep tickets that are done already correct)
   - memory-bank/plans/PHASE-*.md (plans for phases, make sure the pahse of previous work is correct and does not reflect wrong information)
@@ -35,9 +37,10 @@ UPDATE POLICY (must follow)
   - Do not move phase-specific details into memory-bank core files.
   - Keep phase notes inside phase pack (memory-bank/plans/PHASE-*.md).
 
-========================
-TASKS
-========================
+---
+
+# TASKS
+
 1) Identify what changed (architecture/product/dev workflow).
 2) Propose minimal edits for the relevant files.
 3) For each edit:
@@ -47,7 +50,8 @@ TASKS
 - Update TICKETS.md and link to the phase plan.
 - Update phase plan.
 
-========================
-OUTPUT FORMAT (strict)
-========================
+---
+
+# OUTPUT FORMAT (strict)
+
 Keep the current memory bank format intact.
