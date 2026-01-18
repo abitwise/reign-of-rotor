@@ -151,6 +151,7 @@ describe('helicopter flight system', () => {
     const physics = createPhysicsWorld(rapier, { gravity: { x: 0, y: 0, z: 0 } });
     const input = createPlayerInputState();
     const controlState = createControlState();
+    controlState.collective.raw = 1;
     controlState.collective.filtered = 1;
     controlState.cyclicX.filtered = 1;
     controlState.cyclicY.filtered = 1;
