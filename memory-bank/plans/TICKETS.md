@@ -449,3 +449,22 @@
 - Open questions:
   - Confirm world units are meters (so 10,000 x 10,000 corresponds to 10 km x 10 km) and whether any coordinate scaling is desired.
   - Confirm acceptable max visible LOD ring radius and streaming budget for a 10 km world (tiles count vs. perf).
+
+### [BUG-3] Helicopter Stabilization After Input Release (Arcade Hover)
+- Status: Backlog
+- Summary: Releasing W/A/S/D or Q/E should return the helicopter to a stable hover state quickly and predictably.
+- Context: Current handling can lose control after key release; arcade-style stabilization is a core usability expectation for KB controls.
+- Functional behavior (GIVEN/WHEN/THEN):
+  - GIVEN the player presses and releases W/A/S/D, WHEN inputs return to neutral, THEN pitch/roll should settle back toward a stable hover without sustained drift or tumble.
+  - GIVEN the player presses and releases Q/E, WHEN inputs return to neutral, THEN yaw should recentre or damp out to a stable heading without overshoot.
+  - GIVEN assists are enabled (stability/hover), WHEN inputs are released, THEN stabilization should be noticeably stronger than with assists off.
+- Technical notes:
+  - Keep sim fixed-timestep; do not couple stabilization to render FPS.
+  - Maintain sim/render separation; tuning belongs in `sim/**` or input processing, not render/UI.
+  - Prefer data-driven tuning in `content/**` (new presets or per-axis return-to-neutral rates).
+- Tasks:
+  - [ ] Audit current control filtering, trim behavior, and assists interaction on key release.
+  - [ ] Define expected “return-to-hover” response targets for cyclic and yaw (time-to-settle and damping) in content config.
+  - [ ] Implement or tune stabilization so neutral input returns to hover predictably (no loss-of-control on release).
+  - [ ] Add/extend unit tests for input processing or assist response on key release.
+  - [ ] Validate behavior with assists ON and OFF; document tuning values.
