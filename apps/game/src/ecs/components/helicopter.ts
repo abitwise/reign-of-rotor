@@ -6,6 +6,9 @@ export type HelicopterFlightTuning = {
   maxYawTorque: number;
   linearDamping: number;
   angularDamping: number;
+  stabilityAngularDamping: number;
+  stabilityLevelingTorqueScale: number;
+  stabilityLevelingDeadzone: number;
   nominalRotorRpm: number;
   minRotorRpm: number;
   maxRotorRpm: number;

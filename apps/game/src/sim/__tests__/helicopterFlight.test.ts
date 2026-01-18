@@ -216,6 +216,35 @@ describe('stability assist system', () => {
     rapier = await loadRapier();
   });
 
+  it('applies leveling torque when tilted and inputs are neutral', () => {
+    const physics = createPhysicsWorld(rapier, { gravity: { x: 0, y: 0, z: 0 } });
+    const input = createPlayerInputState();
+    const controlState = createControlState();
+
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
+    heli.assists.stability = true;
+
+    const tiltRadians = 0.2;
+    heli.body.setRotation(
+      { x: Math.sin(tiltRadians / 2), y: 0, z: 0, w: Math.cos(tiltRadians / 2) },
+      true
+    );
+    heli.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+
+    const gameState: GameState = { isPaused: false };
+    const system = createHelicopterFlightSystem(heli, gameState);
+
+    system.step(stepContext);
+    physics.step(stepContext.fixedDeltaSeconds);
+
+    const finalAngvel = heli.body.angvel();
+    const angvelMagnitude = Math.hypot(finalAngvel.x, finalAngvel.y, finalAngvel.z);
+
+    expect(angvelMagnitude).toBeGreaterThan(0);
+  });
+
   it('dampens angular velocity when stability assist is enabled and no input', () => {
     const physics = createPhysicsWorld(rapier);
     const input = createPlayerInputState();

@@ -451,7 +451,7 @@
   - Confirm acceptable max visible LOD ring radius and streaming budget for a 10 km world (tiles count vs. perf).
 
 ### [BUG-3] Helicopter Stabilization After Input Release (Arcade Hover)
-- Status: Backlog
+- Status: Done
 - Summary: Releasing W/A/S/D or Q/E should return the helicopter to a stable hover state quickly and predictably.
 - Context: Current handling can lose control after key release; arcade-style stabilization is a core usability expectation for KB controls.
 - Functional behavior (GIVEN/WHEN/THEN):
@@ -463,8 +463,8 @@
   - Maintain sim/render separation; tuning belongs in `sim/**` or input processing, not render/UI.
   - Prefer data-driven tuning in `content/**` (new presets or per-axis return-to-neutral rates).
 - Tasks:
-  - [ ] Audit current control filtering, trim behavior, and assists interaction on key release.
-  - [ ] Define expected “return-to-hover” response targets for cyclic and yaw (time-to-settle and damping) in content config.
-  - [ ] Implement or tune stabilization so neutral input returns to hover predictably (no loss-of-control on release).
-  - [ ] Add/extend unit tests for input processing or assist response on key release.
-  - [ ] Validate behavior with assists ON and OFF; document tuning values.
+  - [x] Audit current control filtering, trim behavior, and assists interaction on key release.
+  - [x] Define expected “return-to-hover” response targets for cyclic and yaw (time-to-settle and damping) in content config.
+  - [x] Implement or tune stabilization so neutral input returns to hover predictably (no loss-of-control on release).
+  - [x] Add/extend unit tests for input processing or assist response on key release.
+  - [x] Validate behavior with assists ON and OFF; document tuning values.
