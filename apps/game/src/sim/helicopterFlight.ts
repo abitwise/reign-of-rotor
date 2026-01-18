@@ -58,6 +58,7 @@ export const spawnPlayerHelicopter = (
     entity,
     descriptor: rapier.RigidBodyDesc.dynamic()
       .setTranslation(startPosition.x, startPosition.y ?? startHeight, startPosition.z)
+      .setCanSleep(false)
       .setCcdEnabled(true)
   });
 
@@ -106,6 +107,9 @@ export const createHelicopterFlightSystem = (heli: PlayerHelicopter, gameState: 
         }
       }
     }
+
+    // Keep the body awake so gravity and control forces continue to apply.
+    heli.body.wakeUp();
 
     updatePowerModel(heli, context.fixedDeltaSeconds);
     applyRotorForces(heli);
@@ -201,14 +205,18 @@ const applyControlTorques = (heli: PlayerHelicopter): void => {
     torqueScale;
   const rollTorque = -heli.control.cyclicX.filtered * heli.flight.maxRollTorque * torqueScale;
 
-  heli.body.addTorque(
+  // Apply torques in body-local space so pitch/roll remain consistent regardless of yaw.
+  const rotation = heli.body.rotation();
+  const worldTorque = rotateVector(
     {
       x: pitchTorque,
       y: yawTorque,
       z: rollTorque
     },
-    true
+    rotation
   );
+
+  heli.body.addTorque(worldTorque, true);
 };
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));

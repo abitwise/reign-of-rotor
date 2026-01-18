@@ -159,8 +159,8 @@ const computeAttitudeDegrees = (rotation: { x: number; y: number; z: number; w: 
 } => {
   const forward = rotateVector({ x: 0, y: 0, z: 1 }, rotation);
   const right = rotateVector({ x: 1, y: 0, z: 0 }, rotation);
-  const pitch = Math.atan2(forward.y, Math.hypot(forward.x, forward.z));
-  const roll = Math.atan2(right.y, Math.hypot(right.x, right.z));
+  const pitch = -Math.atan2(forward.y, Math.hypot(forward.x, forward.z));
+  const roll = -Math.atan2(right.y, Math.hypot(right.x, right.z));
 
   return {
     pitch: (pitch * 180) / Math.PI,
