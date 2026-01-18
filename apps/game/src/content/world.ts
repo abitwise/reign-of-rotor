@@ -38,18 +38,18 @@ export type WorldConfig = {
 
 export const WORLD_CONFIG: WorldConfig = {
   bounds: {
-    minX: -5000,
-    maxX: 5000,
-    minZ: -5000,
-    maxZ: 5000
+    minX: -50000,
+    maxX: 50000,
+    minZ: -50000,
+    maxZ: 50000
   },
-  // 10 km x 10 km world; tile size keeps streaming budgets reasonable without floating-origin rebasing.
-  tileSize: 100,
+  // 100 km x 100 km world; tile size keeps streaming budgets reasonable without floating-origin rebasing.
+  tileSize: 500,
   render: {
     lodRings: [
-      { radius: 2, subdivisions: 24 },
+      { radius: 2, subdivisions: 20 },
       { radius: 5, subdivisions: 12 },
-      { radius: 8, subdivisions: 6 }
+      { radius: 9, subdivisions: 6 }
     ],
     textureScale: 1.6
   },
@@ -60,10 +60,10 @@ export const WORLD_CONFIG: WorldConfig = {
     friction: 1.1
   },
   spawnZones: [
-    { id: 'north', center: { x: 0, z: -2200 }, radius: 350 },
-    { id: 'south', center: { x: 0, z: 2200 }, radius: 350 },
-    { id: 'east', center: { x: 2200, z: 0 }, radius: 350 },
-    { id: 'west', center: { x: -2200, z: 0 }, radius: 350 }
+    { id: 'north', center: { x: 0, z: -32000 }, radius: 2500 },
+    { id: 'south', center: { x: 0, z: 32000 }, radius: 2500 },
+    { id: 'east', center: { x: 32000, z: 0 }, radius: 2500 },
+    { id: 'west', center: { x: -32000, z: 0 }, radius: 2500 }
   ]
 };
 

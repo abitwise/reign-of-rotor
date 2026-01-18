@@ -10,10 +10,10 @@ import {
 
 describe('world tile math helpers', () => {
   describe('getWorldTileCount', () => {
-    it('calculates correct tile counts for a 10km x 10km world with 100-unit tiles', () => {
+    it('calculates correct tile counts for a 100km x 100km world with 500-unit tiles', () => {
       const result = getWorldTileCount(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize);
-      expect(result.tilesX).toBe(100);
-      expect(result.tilesZ).toBe(100);
+      expect(result.tilesX).toBe(200);
+      expect(result.tilesZ).toBe(200);
     });
 
     it('handles non-square worlds correctly', () => {
@@ -34,64 +34,64 @@ describe('world tile math helpers', () => {
   describe('getTileIndexForPosition', () => {
     it('returns correct tile index for position at world origin', () => {
       const result = getTileIndexForPosition(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, { x: 0, z: 0 });
-      expect(result.tileX).toBe(50); // (-5000 to 5000) / 100, origin at tile 50
-      expect(result.tileZ).toBe(50);
+      expect(result.tileX).toBe(100); // (-50000 to 50000) / 500, origin at tile 100
+      expect(result.tileZ).toBe(100);
     });
 
     it('returns correct tile index for position at world min corner', () => {
-      const result = getTileIndexForPosition(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, { x: -5000, z: -5000 });
+      const result = getTileIndexForPosition(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, { x: -50000, z: -50000 });
       expect(result.tileX).toBe(0);
       expect(result.tileZ).toBe(0);
     });
 
     it('returns correct tile index for position at world max corner', () => {
-      const result = getTileIndexForPosition(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, { x: 4999, z: 4999 });
-      expect(result.tileX).toBe(99);
-      expect(result.tileZ).toBe(99);
+      const result = getTileIndexForPosition(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, { x: 49999, z: 49999 });
+      expect(result.tileX).toBe(199);
+      expect(result.tileZ).toBe(199);
     });
 
     it('clamps positions outside world bounds', () => {
-      const result = getTileIndexForPosition(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, { x: 10000, z: -10000 });
-      expect(result.tileX).toBe(99); // clamped to maxX (5000), which maps to the last tile (99)
-      expect(result.tileZ).toBe(0); // clamped to minZ (-5000), which is tile 0
+      const result = getTileIndexForPosition(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, { x: 100000, z: -100000 });
+      expect(result.tileX).toBe(199); // clamped to maxX (50000), which maps to the last tile (199)
+      expect(result.tileZ).toBe(0); // clamped to minZ (-50000), which is tile 0
     });
 
     it('handles positions in arbitrary tiles correctly', () => {
       const result = getTileIndexForPosition(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, { x: -25, z: 15 });
-      expect(result.tileX).toBe(49); // (-25 - (-5000)) / 100 = 49.75 -> floor to 49
-      expect(result.tileZ).toBe(50); // (15 - (-5000)) / 100 = 50.15 -> floor to 50
+      expect(result.tileX).toBe(99); // (-25 - (-50000)) / 500 = 99.95 -> floor to 99
+      expect(result.tileZ).toBe(100); // (15 - (-50000)) / 500 = 100.03 -> floor to 100
     });
 
     it('handles position exactly at maxX/maxZ boundary', () => {
-      const result = getTileIndexForPosition(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, { x: 5000, z: 5000 });
-      expect(result.tileX).toBe(99); // At boundary, should clamp to last valid tile
-      expect(result.tileZ).toBe(99);
+      const result = getTileIndexForPosition(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, { x: 50000, z: 50000 });
+      expect(result.tileX).toBe(199); // At boundary, should clamp to last valid tile
+      expect(result.tileZ).toBe(199);
     });
   });
 
   describe('getTileCenter', () => {
-    it('returns correct center for tile at index (50, 50)', () => {
-      const result = getTileCenter(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, 50, 50);
-      expect(result.x).toBeCloseTo(50, 5); // -5000 + 100 * 50.5 = 50
-      expect(result.z).toBeCloseTo(50, 5);
+    it('returns correct center for tile at index (100, 100)', () => {
+      const result = getTileCenter(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, 100, 100);
+      expect(result.x).toBeCloseTo(250, 5); // -50000 + 500 * 100.5 = 250
+      expect(result.z).toBeCloseTo(250, 5);
     });
 
     it('returns correct center for tile at min corner', () => {
       const result = getTileCenter(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, 0, 0);
-      expect(result.x).toBeCloseTo(-4950, 5); // -5000 + 100 * 0.5
-      expect(result.z).toBeCloseTo(-4950, 5);
+      expect(result.x).toBeCloseTo(-49750, 5); // -50000 + 500 * 0.5
+      expect(result.z).toBeCloseTo(-49750, 5);
     });
 
     it('returns correct center for tile at max corner', () => {
-      const result = getTileCenter(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, 99, 99);
-      expect(result.x).toBeCloseTo(4950, 5); // -5000 + 100 * 99.5
-      expect(result.z).toBeCloseTo(4950, 5);
+      const result = getTileCenter(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, 199, 199);
+      expect(result.x).toBeCloseTo(49750, 5); // -50000 + 500 * 199.5
+      expect(result.z).toBeCloseTo(49750, 5);
     });
 
     it('returns correct center for arbitrary tile', () => {
       const result = getTileCenter(WORLD_CONFIG.bounds, WORLD_CONFIG.tileSize, 12, 76);
-      expect(result.x).toBeCloseTo(-3750, 5); // -5000 + 100 * 12.5
-      expect(result.z).toBeCloseTo(2650, 5); // -5000 + 100 * 76.5
+      expect(result.x).toBeCloseTo(-43750, 5); // -50000 + 500 * 12.5
+      expect(result.z).toBeCloseTo(-11750, 5); // -50000 + 500 * 76.5
     });
   });
 });
