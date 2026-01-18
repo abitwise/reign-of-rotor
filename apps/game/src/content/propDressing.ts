@@ -34,6 +34,7 @@ export type PropDressingConfig = {
   roadSpacingTiles: number;
   roadWidth: number;
   roadOffsetY: number;
+  greenPatchOffsetY: number;
   greenPatchDensity: number;
   maxGreenPatchesPerTile: number;
   greenPatchSizeMin: number;
@@ -213,7 +214,8 @@ export const PROP_DRESSING_CONFIG: PropDressingConfig = {
   maxBuildingsPerTile: 6,
   roadSpacingTiles: 6,
   roadWidth: 14,
-  roadOffsetY: 0.05,
+  roadOffsetY: 0.08,
+  greenPatchOffsetY: 0.12,
   greenPatchDensity: 1.2,
   maxGreenPatchesPerTile: 6,
   greenPatchSizeMin: 60,
@@ -420,7 +422,7 @@ export const getTileDressing = (tileX: number, tileZ: number): TileDressing => {
     greenPatches.push({
       position: {
         x: tileMinX + random() * (tileMaxX - tileMinX),
-        y: PROP_DRESSING_CONFIG.roadOffsetY * 0.5,
+        y: PROP_DRESSING_CONFIG.greenPatchOffsetY,
         z: tileMinZ + random() * (tileMaxZ - tileMinZ)
       },
       size
