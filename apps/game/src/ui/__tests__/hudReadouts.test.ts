@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   buildAvionicsAlerts,
   buildNavigationReadout,
+  buildCombatReadout,
   selectPriorityAlert,
   type AvionicsReadout,
   type AlertCandidate
 } from '../hudReadouts';
+import type { CannonState } from '../../sim/cannon';
+import type { CannonConfig } from '../../content/weapons';
 
 const baseReadout: AvionicsReadout = {
   altitude: 20,
@@ -100,5 +103,78 @@ describe('selectPriorityAlert', () => {
     const selected = selectPriorityAlert(alerts, ['MISSILE_LAUNCH', 'POWER_LIMIT']);
 
     expect(selected?.id).toBe('MISSILE_LAUNCH');
+  });
+});
+
+describe('buildCombatReadout', () => {
+  it('returns weapon name and ammo from config and state', () => {
+    const cannonState: CannonState = {
+      ammoRemaining: 500,
+      cooldownRemaining: 0,
+      impactEvents: [],
+      damageEvents: []
+    };
+
+    const cannonConfig: CannonConfig = {
+      name: 'Test Cannon',
+      ammo: 1000,
+      cooldownSeconds: 0.1,
+      range: 1000,
+      damage: 10,
+      muzzleOffset: { x: 0, y: 0, z: 0 },
+      impactFx: 'test-fx'
+    };
+
+    const readout = buildCombatReadout(cannonState, cannonConfig);
+
+    expect(readout.weaponName).toBe('Test Cannon');
+    expect(readout.ammo).toBe(500);
+    expect(readout.lockState).toBe('FREE');
+  });
+
+  it('maps ammo correctly when depleted', () => {
+    const cannonState: CannonState = {
+      ammoRemaining: 0,
+      cooldownRemaining: 0,
+      impactEvents: [],
+      damageEvents: []
+    };
+
+    const cannonConfig: CannonConfig = {
+      name: 'Empty Cannon',
+      ammo: 1000,
+      cooldownSeconds: 0.1,
+      range: 1000,
+      damage: 10,
+      muzzleOffset: { x: 0, y: 0, z: 0 },
+      impactFx: 'test-fx'
+    };
+
+    const readout = buildCombatReadout(cannonState, cannonConfig);
+
+    expect(readout.ammo).toBe(0);
+  });
+
+  it('defaults lockState to FREE', () => {
+    const cannonState: CannonState = {
+      ammoRemaining: 100,
+      cooldownRemaining: 0,
+      impactEvents: [],
+      damageEvents: []
+    };
+
+    const cannonConfig: CannonConfig = {
+      name: 'Cannon',
+      ammo: 100,
+      cooldownSeconds: 0.1,
+      range: 1000,
+      damage: 10,
+      muzzleOffset: { x: 0, y: 0, z: 0 },
+      impactFx: 'test-fx'
+    };
+
+    const readout = buildCombatReadout(cannonState, cannonConfig);
+
+    expect(readout.lockState).toBe('FREE');
   });
 });
