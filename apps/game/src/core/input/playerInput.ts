@@ -14,6 +14,7 @@ export type PlayerInputBindings = {
   cyclicX: InputAxisBinding;
   cyclicY: InputAxisBinding;
   yaw: InputAxisBinding;
+  fireCannon: string[];
 };
 
 export type PlayerInputState = {
@@ -21,6 +22,7 @@ export type PlayerInputState = {
   cyclicX: number;
   cyclicY: number;
   yaw: number;
+  fireCannon: boolean;
   forceTrim: boolean;       // One-frame pulse
   resetTrim: boolean;       // One-frame pulse
   toggleStability: boolean; // One-frame pulse
@@ -48,7 +50,8 @@ export const DEFAULT_PLAYER_INPUT_BINDINGS: PlayerInputBindings = {
   yaw: {
     positive: ['KeyE'],
     negative: ['KeyQ']
-  }
+  },
+  fireCannon: ['KeyC']
 };
 
 export const FORCE_TRIM_KEY = 'KeyT';
@@ -83,6 +86,7 @@ export const createPlayerInputState = (): PlayerInputState => ({
   cyclicX: 0,
   cyclicY: 0,
   yaw: 0,
+  fireCannon: false,
   forceTrim: false,
   resetTrim: false,
   toggleStability: false,
@@ -100,6 +104,7 @@ export const samplePlayerInput = (
   state.cyclicX = resolveAxis(bindings.cyclicX, sampler);
   state.cyclicY = resolveAxis(bindings.cyclicY, sampler);
   state.yaw = resolveAxis(bindings.yaw, sampler);
+  state.fireCannon = bindings.fireCannon.some((code) => sampler.isPressed(code));
 
   // Toggle keys (edge-triggered)
   state.forceTrim = sampler.wasJustPressed(FORCE_TRIM_KEY);

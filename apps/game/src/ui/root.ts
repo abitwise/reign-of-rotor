@@ -10,6 +10,7 @@ import {
   type AvionicsReadout,
   type NavigationReadout,
   type ThreatReadout,
+  type CombatReadout,
   buildAvionicsAlerts,
   selectPriorityAlert,
   toThreatAlertCandidate
@@ -28,11 +29,6 @@ export type AssistsProvider = () => CHelicopterAssists | null;
 export type CameraModeProvider = () => string | null;
 export type TrimStateProvider = () => ControlTrimState | null;
 export type ControlStateProvider = () => ControlState | null;
-export type CombatReadout = {
-  weaponName: string | null;
-  ammo: number | null;
-  lockState: string | null;
-};
 export type OutOfBoundsReadout = {
   active: boolean;
   secondsRemaining: number | null;
@@ -246,6 +242,7 @@ const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBinding
     createAxisRow('Cyclic Pitch', bindings.cyclicY, 'Forward', 'Back'),
     createAxisRow('Cyclic Roll', bindings.cyclicX, 'Right', 'Left'),
     createAxisRow('Yaw', bindings.yaw, 'Right', 'Left'),
+    createNoteRow('Cannon Fire', `Hold ${formatKeyList(bindings.fireCannon)} to fire`),
     createCameraModeRow(cameraModeValue),
     createNoteRow('Mouse Look', 'Click canvas to lock pointer; drag if lock unavailable.'),
     createNoteRow('Stability Assist', 'Press Z to toggle auto-leveling'),
@@ -750,6 +747,7 @@ const KEY_LABELS: Record<string, string> = {
   KeyE: 'E',
   KeyR: 'R',
   KeyF: 'F',
+  KeyC: 'C',
   ArrowUp: 'Arrow ↑',
   ArrowDown: 'Arrow ↓',
   ArrowLeft: 'Arrow ←',

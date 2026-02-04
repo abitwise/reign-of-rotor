@@ -299,7 +299,7 @@
   - [x] Add optional simple vector gizmo hooks
 
 ### [P1-12] Cannon Weapon (Raycast) + Hit Feedback
-- Status: Backlog
+- Status: Done
 - Summary: Raycast cannon, damage, and FX hooks.
 - Tasks:
   - [ ] Gun component + cooldown

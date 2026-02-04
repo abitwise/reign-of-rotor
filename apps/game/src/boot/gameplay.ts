@@ -3,6 +3,7 @@ import type { PlayerInputState } from '../core/input/playerInput';
 import type { ControlState, ControlTuning } from '../core/input/controlState';
 import type { SystemScheduler } from '../core/loop/systemScheduler';
 import { DEFAULT_HELICOPTER_FLIGHT } from '../content/helicopters';
+import { DEFAULT_CANNON_CONFIG } from '../content/weapons';
 import { WORLD_CONFIG, pickSpawnPoint } from '../content/world';
 import type { PhysicsWorldContext } from '../physics/world';
 import {
@@ -13,6 +14,7 @@ import {
   type PlayerHelicopter
 } from '../sim/helicopterFlight';
 import { createAltimeterSystem } from '../sim/altimeter';
+import { createCannonState, createCannonSystem, type CannonState } from '../sim/cannon';
 import { createTerrainColliderManager } from '../sim/terrain/terrainColliders';
 import { createTerrainStreamingSystem } from '../sim/terrain/terrainStreamingSystem';
 import { createPropColliderManager } from '../sim/terrain/propColliders';
@@ -20,6 +22,8 @@ import { createPropColliderStreamingSystem } from '../sim/terrain/propColliderSt
 
 export type GameplayContext = {
   player: PlayerHelicopter;
+  cannon: CannonState;
+  cannonConfig: typeof DEFAULT_CANNON_CONFIG;
 };
 
 export const bootstrapGameplay = ({
@@ -42,6 +46,8 @@ export const bootstrapGameplay = ({
     startPosition: { x: spawnPoint.x, y: 0.8, z: spawnPoint.z },
     yawRateTuning: controlTuning.yawRate
   });
+  const cannonConfig = DEFAULT_CANNON_CONFIG;
+  const cannon = createCannonState(cannonConfig);
   const terrain = createTerrainColliderManager(physics);
   terrain.update(spawnPoint);
   const propColliders = createPropColliderManager(physics);
@@ -51,8 +57,17 @@ export const bootstrapGameplay = ({
   scheduler.addSystem(createPauseToggleSystem(input, gameState));
   scheduler.addSystem(createHelicopterFlightSystem(player, gameState));
   scheduler.addSystem(createAltimeterSystem(player, physics));
+  scheduler.addSystem(
+    createCannonSystem({
+      heli: player,
+      physics,
+      config: cannonConfig,
+      state: cannon,
+      gameState
+    })
+  );
   scheduler.addSystem(createTerrainStreamingSystem(player, terrain));
   scheduler.addSystem(createPropColliderStreamingSystem(player, propColliders));
 
-  return { player };
+  return { player, cannon, cannonConfig };
 };
