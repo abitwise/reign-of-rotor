@@ -12,7 +12,7 @@ import { bootstrapGameplay, type GameplayContext } from './gameplay';
 import { createCameraModeToggleSystem } from '../render/camera/cameraModeSystem';
 import { CONTROL_TUNING_PRESETS } from '../content/controls';
 import { NAVIGATION_CONFIG } from '../content/avionics';
-import { buildAvionicsReadout, buildNavigationReadout } from '../ui/hudReadouts';
+import { buildAvionicsReadout, buildCombatReadout, buildNavigationReadout } from '../ui/hudReadouts';
 
 export type GameState = {
   isPaused: boolean;
@@ -88,6 +88,9 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       rootUi.setCameraModeProvider?.(() => renderContext.getCameraModeLabel());
       rootUi.setNavigationReadoutProvider?.(() =>
         buildNavigationReadout(gameplayContext.player, NAVIGATION_CONFIG.defaultTarget)
+      );
+      rootUi.setCombatReadoutProvider?.(() =>
+        buildCombatReadout(gameplayContext.cannon, gameplayContext.cannonConfig)
       );
 
       // Wait for mesh to be loaded before setting camera target

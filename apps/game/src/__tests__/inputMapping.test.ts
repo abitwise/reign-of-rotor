@@ -36,16 +36,22 @@ describe('Player input mapping', () => {
     samplePlayerInput(state, sampler, DEFAULT_PLAYER_INPUT_BINDINGS);
     expect(state.collective).toBe(-1);
 
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyC' }));
+    samplePlayerInput(state, sampler, DEFAULT_PLAYER_INPUT_BINDINGS);
+    expect(state.fireCannon).toBe(true);
+
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW' }));
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowLeft' }));
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyE' }));
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyF' }));
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyC' }));
     samplePlayerInput(state, sampler, DEFAULT_PLAYER_INPUT_BINDINGS);
 
     expect(state.cyclicX).toBe(0);
     expect(state.cyclicY).toBe(0);
     expect(state.yaw).toBe(0);
     expect(state.collective).toBe(0);
+    expect(state.fireCannon).toBe(false);
 
     sampler.destroy();
   });

@@ -1,5 +1,7 @@
 import type { AltimeterState } from '../sim/altimeter';
 import type { PlayerHelicopter } from '../sim/helicopterFlight';
+import type { CannonState } from '../sim/cannon';
+import type { CannonConfig } from '../content/weapons';
 import { rotateVector } from '../physics/math';
 import { AVIONICS_ALERT_THRESHOLDS, ALERT_PRIORITY_ORDER } from '../content/avionics';
 
@@ -32,6 +34,12 @@ export type ThreatAlertLevel = 'scan' | 'lock' | 'launch';
 export type ThreatReadout = {
   warning: string | null;
   level?: ThreatAlertLevel;
+};
+
+export type CombatReadout = {
+  weaponName: string | null;
+  ammo: number | null;
+  lockState: string | null;
 };
 
 export type AlertId =
@@ -90,6 +98,15 @@ export const buildNavigationReadout = (
     distance
   };
 };
+
+export const buildCombatReadout = (
+  cannonState: CannonState,
+  cannonConfig: CannonConfig
+): CombatReadout => ({
+  weaponName: cannonConfig.name,
+  ammo: cannonState.ammoRemaining,
+  lockState: 'FREE'
+});
 
 export const buildAvionicsAlerts = (
   readout: AvionicsReadout,
