@@ -90,7 +90,12 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
         buildNavigationReadout(gameplayContext.player, NAVIGATION_CONFIG.defaultTarget)
       );
       rootUi.setCombatReadoutProvider?.(() =>
-        buildCombatReadout(gameplayContext.cannon, gameplayContext.cannonConfig)
+        buildCombatReadout(
+          gameplayContext.cannon,
+          gameplayContext.cannonConfig,
+          gameplayContext.missiles,
+          gameplayContext.missileConfig
+        )
       );
 
       // Wait for mesh to be loaded before setting camera target

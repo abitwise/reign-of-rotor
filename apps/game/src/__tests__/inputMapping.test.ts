@@ -40,11 +40,16 @@ describe('Player input mapping', () => {
     samplePlayerInput(state, sampler, DEFAULT_PLAYER_INPUT_BINDINGS);
     expect(state.fireCannon).toBe(true);
 
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyM' }));
+    samplePlayerInput(state, sampler, DEFAULT_PLAYER_INPUT_BINDINGS);
+    expect(state.fireMissile).toBe(true);
+
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW' }));
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowLeft' }));
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyE' }));
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyF' }));
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyC' }));
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyM' }));
     samplePlayerInput(state, sampler, DEFAULT_PLAYER_INPUT_BINDINGS);
 
     expect(state.cyclicX).toBe(0);
@@ -52,6 +57,7 @@ describe('Player input mapping', () => {
     expect(state.yaw).toBe(0);
     expect(state.collective).toBe(0);
     expect(state.fireCannon).toBe(false);
+    expect(state.fireMissile).toBe(false);
 
     sampler.destroy();
   });

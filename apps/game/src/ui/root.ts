@@ -243,6 +243,7 @@ const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBinding
     createAxisRow('Cyclic Roll', bindings.cyclicX, 'Right', 'Left'),
     createAxisRow('Yaw', bindings.yaw, 'Right', 'Left'),
     createNoteRow('Cannon Fire', `Hold ${formatKeyList(bindings.fireCannon)} to fire`),
+    createNoteRow('Missile Fire', `Press ${formatKeyList(bindings.fireMissile)} to launch`),
     createCameraModeRow(cameraModeValue),
     createNoteRow('Mouse Look', 'Click canvas to lock pointer; drag if lock unavailable.'),
     createNoteRow('Stability Assist', 'Press Z to toggle auto-leveling'),
@@ -467,14 +468,16 @@ const createCombatHud = (): CombatHudController => {
 
   const weaponMetric = createHudMetric('Weapon');
   const ammoMetric = createHudMetric('Ammo');
+  const missileMetric = createHudMetric('Missiles');
   const lockMetric = createHudMetric('Lock');
 
-  grid.append(weaponMetric.element, ammoMetric.element, lockMetric.element);
+  grid.append(weaponMetric.element, ammoMetric.element, missileMetric.element, lockMetric.element);
   wrapper.append(heading, grid);
 
   const update = (readout: CombatReadout | null): void => {
     weaponMetric.setValue(readout?.weaponName ?? '—');
     ammoMetric.setValue(formatAmmo(readout?.ammo));
+    missileMetric.setValue(formatAmmo(readout?.missileAmmo));
     lockMetric.setValue(readout?.lockState ?? '—');
   };
 
