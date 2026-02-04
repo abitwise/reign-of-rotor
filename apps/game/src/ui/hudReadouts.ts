@@ -1,7 +1,8 @@
 import type { AltimeterState } from '../sim/altimeter';
 import type { PlayerHelicopter } from '../sim/helicopterFlight';
 import type { CannonState } from '../sim/cannon';
-import type { CannonConfig } from '../content/weapons';
+import type { MissileState } from '../sim/missile';
+import type { CannonConfig, MissileConfig } from '../content/weapons';
 import { rotateVector } from '../physics/math';
 import { AVIONICS_ALERT_THRESHOLDS, ALERT_PRIORITY_ORDER } from '../content/avionics';
 
@@ -39,6 +40,7 @@ export type ThreatReadout = {
 export type CombatReadout = {
   weaponName: string | null;
   ammo: number | null;
+  missileAmmo: number | null;
   lockState: string | null;
 };
 
@@ -101,11 +103,14 @@ export const buildNavigationReadout = (
 
 export const buildCombatReadout = (
   cannonState: CannonState,
-  cannonConfig: CannonConfig
+  cannonConfig: CannonConfig,
+  missileState: MissileState,
+  missileConfig: MissileConfig
 ): CombatReadout => ({
   weaponName: cannonConfig.name,
   ammo: cannonState.ammoRemaining,
-  lockState: 'FREE'
+  missileAmmo: missileState.ammoRemaining,
+  lockState: formatMissileLockState(missileState, missileConfig)
 });
 
 export const buildAvionicsAlerts = (
@@ -146,6 +151,23 @@ export const toThreatAlertCandidate = (readout: ThreatReadout | null): AlertCand
     default:
       return { id: 'MISSILE_LOCK', label: readout.warning };
   }
+};
+
+const formatMissileLockState = (state: MissileState, config: MissileConfig): string => {
+  if (state.lockStatus === 'LOCKED') {
+    return 'LOCK';
+  }
+
+  if (state.lockStatus === 'ACQUIRING') {
+    const percent = Math.round(state.lockProgress * 100);
+    return `ACQ ${percent}%`;
+  }
+
+  if (!state.hasCandidate || config.lockRange <= 0) {
+    return 'NO TARGET';
+  }
+
+  return 'SEARCH';
 };
 
 export const selectPriorityAlert = (

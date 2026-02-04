@@ -307,7 +307,7 @@
   - [ ] Impact FX events
 
 ### [P1-13] Missile Weapon: Acquire/Lock/Launch + Guidance
-- Status: Backlog
+- Status: Done
 - Summary: Lock-on missiles and guidance behavior.
 - Technical notes:
   - Target selection is reticle-centric (best candidate near center within cone/range).

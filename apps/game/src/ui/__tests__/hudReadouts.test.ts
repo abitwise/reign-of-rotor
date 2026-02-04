@@ -8,7 +8,8 @@ import {
   type AlertCandidate
 } from '../hudReadouts';
 import type { CannonState } from '../../sim/cannon';
-import type { CannonConfig } from '../../content/weapons';
+import type { CannonConfig, MissileConfig } from '../../content/weapons';
+import type { MissileState } from '../../sim/missile';
 
 const baseReadout: AvionicsReadout = {
   altitude: 20,
@@ -114,6 +115,18 @@ describe('buildCombatReadout', () => {
       impactEvents: [],
       damageEvents: []
     };
+    const missileState: MissileState = {
+      ammoRemaining: 4,
+      cooldownRemaining: 0,
+      lockStatus: 'FREE',
+      lockProgress: 0,
+      lockTarget: null,
+      hasCandidate: false,
+      missiles: [],
+      missileMap: new Map(),
+      explosionEvents: [],
+      damageEvents: []
+    };
 
     const cannonConfig: CannonConfig = {
       name: 'Test Cannon',
@@ -124,12 +137,31 @@ describe('buildCombatReadout', () => {
       muzzleOffset: { x: 0, y: 0, z: 0 },
       impactFx: 'test-fx'
     };
+    const missileConfig: MissileConfig = {
+      name: 'Test Missile',
+      ammo: 8,
+      cooldownSeconds: 1,
+      lockTimeSeconds: 1,
+      lockConeDegrees: 10,
+      lockRange: 1000,
+      requireLineOfSight: true,
+      speed: 10,
+      turnRateDeg: 90,
+      maxFlightSeconds: 5,
+      proximityRadius: 5,
+      damage: 100,
+      explosionRadius: 10,
+      launchOffset: { x: 0, y: 0, z: 0 },
+      colliderRadius: 0.2,
+      explosionFx: 'missile-fx'
+    };
 
-    const readout = buildCombatReadout(cannonState, cannonConfig);
+    const readout = buildCombatReadout(cannonState, cannonConfig, missileState, missileConfig);
 
     expect(readout.weaponName).toBe('Test Cannon');
     expect(readout.ammo).toBe(500);
-    expect(readout.lockState).toBe('FREE');
+    expect(readout.missileAmmo).toBe(4);
+    expect(readout.lockState).toBe('NO TARGET');
   });
 
   it('maps ammo correctly when depleted', () => {
@@ -137,6 +169,18 @@ describe('buildCombatReadout', () => {
       ammoRemaining: 0,
       cooldownRemaining: 0,
       impactEvents: [],
+      damageEvents: []
+    };
+    const missileState: MissileState = {
+      ammoRemaining: 0,
+      cooldownRemaining: 0,
+      lockStatus: 'FREE',
+      lockProgress: 0,
+      lockTarget: null,
+      hasCandidate: false,
+      missiles: [],
+      missileMap: new Map(),
+      explosionEvents: [],
       damageEvents: []
     };
 
@@ -149,17 +193,48 @@ describe('buildCombatReadout', () => {
       muzzleOffset: { x: 0, y: 0, z: 0 },
       impactFx: 'test-fx'
     };
+    const missileConfig: MissileConfig = {
+      name: 'Test Missile',
+      ammo: 0,
+      cooldownSeconds: 1,
+      lockTimeSeconds: 1,
+      lockConeDegrees: 10,
+      lockRange: 1000,
+      requireLineOfSight: false,
+      speed: 10,
+      turnRateDeg: 90,
+      maxFlightSeconds: 5,
+      proximityRadius: 5,
+      damage: 100,
+      explosionRadius: 10,
+      launchOffset: { x: 0, y: 0, z: 0 },
+      colliderRadius: 0.2,
+      explosionFx: 'missile-fx'
+    };
 
-    const readout = buildCombatReadout(cannonState, cannonConfig);
+    const readout = buildCombatReadout(cannonState, cannonConfig, missileState, missileConfig);
 
     expect(readout.ammo).toBe(0);
+    expect(readout.missileAmmo).toBe(0);
   });
 
-  it('defaults lockState to FREE', () => {
+  it('shows search when candidates are present without a lock', () => {
     const cannonState: CannonState = {
       ammoRemaining: 100,
       cooldownRemaining: 0,
       impactEvents: [],
+      damageEvents: []
+    };
+    const missileState: MissileState = {
+      ammoRemaining: 2,
+      cooldownRemaining: 0,
+      lockStatus: 'FREE',
+      lockProgress: 0,
+      lockTarget: null,
+      hasCandidate: true,
+      missiles: [],
+      missileMap: new Map(),
+      explosionEvents: [],
       damageEvents: []
     };
 
@@ -172,9 +247,27 @@ describe('buildCombatReadout', () => {
       muzzleOffset: { x: 0, y: 0, z: 0 },
       impactFx: 'test-fx'
     };
+    const missileConfig: MissileConfig = {
+      name: 'Test Missile',
+      ammo: 2,
+      cooldownSeconds: 1,
+      lockTimeSeconds: 1,
+      lockConeDegrees: 10,
+      lockRange: 1000,
+      requireLineOfSight: false,
+      speed: 10,
+      turnRateDeg: 90,
+      maxFlightSeconds: 5,
+      proximityRadius: 5,
+      damage: 100,
+      explosionRadius: 10,
+      launchOffset: { x: 0, y: 0, z: 0 },
+      colliderRadius: 0.2,
+      explosionFx: 'missile-fx'
+    };
 
-    const readout = buildCombatReadout(cannonState, cannonConfig);
+    const readout = buildCombatReadout(cannonState, cannonConfig, missileState, missileConfig);
 
-    expect(readout.lockState).toBe('FREE');
+    expect(readout.lockState).toBe('SEARCH');
   });
 });
