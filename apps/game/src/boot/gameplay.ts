@@ -5,6 +5,12 @@ import type { SystemScheduler } from '../core/loop/systemScheduler';
 import { DEFAULT_HELICOPTER_FLIGHT } from '../content/helicopters';
 import { DEFAULT_CANNON_CONFIG, DEFAULT_MISSILE_CONFIG } from '../content/weapons';
 import { WORLD_CONFIG, pickSpawnPoint } from '../content/world';
+import {
+  DEFAULT_RADAR_CONFIG,
+  DEFAULT_SAM_CONFIG,
+  DEFAULT_VEHICLE_CONFIG,
+  buildEnemySpawns
+} from '../content/enemies';
 import type { PhysicsWorldContext } from '../physics/world';
 import {
   createHelicopterFlightSystem,
@@ -16,6 +22,7 @@ import {
 import { createAltimeterSystem } from '../sim/altimeter';
 import { createCannonState, createCannonSystem, type CannonState } from '../sim/cannon';
 import { createMissileState, createMissileSystem, type MissileState } from '../sim/missile';
+import { createEnemyState, createEnemySystem, spawnEnemiesFromConfig, type EnemyState } from '../sim/enemies';
 import { createTerrainColliderManager } from '../sim/terrain/terrainColliders';
 import { createTerrainStreamingSystem } from '../sim/terrain/terrainStreamingSystem';
 import { createPropColliderManager } from '../sim/terrain/propColliders';
@@ -27,6 +34,7 @@ export type GameplayContext = {
   cannonConfig: typeof DEFAULT_CANNON_CONFIG;
   missiles: MissileState;
   missileConfig: typeof DEFAULT_MISSILE_CONFIG;
+  enemies: EnemyState;
 };
 
 export const bootstrapGameplay = ({
@@ -53,6 +61,13 @@ export const bootstrapGameplay = ({
   const cannon = createCannonState(cannonConfig);
   const missileConfig = DEFAULT_MISSILE_CONFIG;
   const missiles = createMissileState(missileConfig);
+  const enemies = createEnemyState();
+  const enemySpawns = buildEnemySpawns(spawnPoint);
+  spawnEnemiesFromConfig(enemies, physics, enemySpawns, {
+    radar: DEFAULT_RADAR_CONFIG,
+    sam: DEFAULT_SAM_CONFIG,
+    vehicle: DEFAULT_VEHICLE_CONFIG
+  });
   const terrain = createTerrainColliderManager(physics);
   terrain.update(spawnPoint);
   const propColliders = createPropColliderManager(physics);
@@ -78,11 +93,21 @@ export const bootstrapGameplay = ({
       config: missileConfig,
       state: missiles,
       gameState,
-      targets: () => []
+      targets: () => enemies.targets
+    })
+  );
+  scheduler.addSystem(
+    createEnemySystem({
+      physics,
+      state: enemies,
+      target: { entity: player.entity, body: player.body },
+      cannon,
+      missiles,
+      gameState
     })
   );
   scheduler.addSystem(createTerrainStreamingSystem(player, terrain));
   scheduler.addSystem(createPropColliderStreamingSystem(player, propColliders));
 
-  return { player, cannon, cannonConfig, missiles, missileConfig };
+  return { player, cannon, cannonConfig, missiles, missileConfig, enemies };
 };

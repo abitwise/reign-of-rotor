@@ -319,14 +319,14 @@
   - [ ] Guidance system + explosion
 
 ### [P1-14] Enemy Units v1: Vehicles + Radar Site + SAM
-- Status: Backlog
+- Status: Done
 - Summary: Core enemy actors for mission templates.
 - Technical notes:
   - Escort ally movement uses waypoint rails; no navmesh/pathfinding in MVP.
 - Tasks:
-  - [ ] Radar emitter entity
-  - [ ] SAM scan/lock/fire FSM
-  - [ ] Basic vehicle target entities (static or simple patrol)
+  - [x] Radar emitter entity
+  - [x] SAM scan/lock/fire FSM
+  - [x] Basic vehicle target entities (static or simple patrol)
 
 ### [P1-15] Countermeasures + Threat Warning Receiver (RWR)
 - Status: Backlog
