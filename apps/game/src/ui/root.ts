@@ -10,6 +10,7 @@ import {
   type AvionicsReadout,
   type NavigationReadout,
   type ThreatReadout,
+  type CombatReadout,
   buildAvionicsAlerts,
   selectPriorityAlert,
   toThreatAlertCandidate
@@ -28,11 +29,6 @@ export type AssistsProvider = () => CHelicopterAssists | null;
 export type CameraModeProvider = () => string | null;
 export type TrimStateProvider = () => ControlTrimState | null;
 export type ControlStateProvider = () => ControlState | null;
-export type CombatReadout = {
-  weaponName: string | null;
-  ammo: number | null;
-  lockState: string | null;
-};
 export type OutOfBoundsReadout = {
   active: boolean;
   secondsRemaining: number | null;

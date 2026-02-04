@@ -89,7 +89,8 @@ const fireCannonShot = (
     undefined,
     undefined,
     undefined,
-    heli.body
+    undefined,
+    (collider) => collider.parent() !== heli.body
   );
 
   if (hit) {
