@@ -5,7 +5,7 @@ import type { PlayerInputState } from '../core/input/playerInput';
 import type { PhysicsWorldContext } from '../physics/world';
 import type { Entity } from '../physics/types';
 import { createColliderForEntity, createRigidBodyForEntity, removePhysicsForEntity } from '../physics/factories';
-import { rotateVector } from '../physics/math';
+import { rotateVector, length, dot, clamp, normalize, rotateTowards } from '../physics/math';
 import { createEntityId } from '../ecs/entity';
 import type { MissileConfig } from '../content/weapons';
 import type { PlayerHelicopter } from './helicopterFlight';
@@ -429,50 +429,4 @@ const getTargetBody = (
     return null;
   }
   return physics.world.getRigidBody(handle) ?? null;
-};
-
-const length = (value: { x: number; y: number; z: number }): number =>
-  Math.sqrt(value.x * value.x + value.y * value.y + value.z * value.z);
-
-const dot = (a: { x: number; y: number; z: number }, b: { x: number; y: number; z: number }): number =>
-  a.x * b.x + a.y * b.y + a.z * b.z;
-
-const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
-
-const normalize = (value: { x: number; y: number; z: number }): { x: number; y: number; z: number } => {
-  const magnitude = length(value);
-  if (magnitude <= 0.00001) {
-    return { x: 0, y: 0, z: 1 };
-  }
-  return {
-    x: value.x / magnitude,
-    y: value.y / magnitude,
-    z: value.z / magnitude
-  };
-};
-
-const rotateTowards = (
-  from: { x: number; y: number; z: number },
-  to: { x: number; y: number; z: number },
-  maxRadiansDelta: number
-): { x: number; y: number; z: number } => {
-  const dotValue = clamp(dot(from, to), -1, 1);
-  const angle = Math.acos(dotValue);
-  if (angle <= 0.00001) {
-    return to;
-  }
-  const clampedAngle = Math.min(angle, maxRadiansDelta);
-  const t = clampedAngle / angle;
-  const sinAngle = Math.sin(angle);
-  if (sinAngle <= 0.00001) {
-    return to;
-  }
-  const coeffFrom = Math.sin((1 - t) * angle) / sinAngle;
-  const coeffTo = Math.sin(t * angle) / sinAngle;
-  const blended = {
-    x: from.x * coeffFrom + to.x * coeffTo,
-    y: from.y * coeffFrom + to.y * coeffTo,
-    z: from.z * coeffFrom + to.z * coeffTo
-  };
-  return normalize(blended);
 };
