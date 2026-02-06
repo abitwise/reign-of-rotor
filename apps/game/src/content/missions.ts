@@ -228,8 +228,12 @@ export const createMissionPlan = ({
   templates?: MissionTemplate[];
   world?: WorldConfig;
 }): MissionPlan => {
+  if (!templates || templates.length === 0) {
+    throw new Error('createMissionPlan: templates array must not be empty');
+  }
+
   const random = createSeededRandom(seed);
-  const template = templates[Math.floor(random() * templates.length)] ?? templates[0];
+  const template = templates[Math.floor(random() * templates.length)];
 
   const distance =
     config.minDistanceFromPlayer + random() * (config.maxDistanceFromPlayer - config.minDistanceFromPlayer);
