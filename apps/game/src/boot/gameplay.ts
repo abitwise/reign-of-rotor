@@ -9,9 +9,9 @@ import { WORLD_CONFIG, pickSpawnPoint } from '../content/world';
 import {
   DEFAULT_RADAR_CONFIG,
   DEFAULT_SAM_CONFIG,
-  DEFAULT_VEHICLE_CONFIG,
-  buildEnemySpawns
+  DEFAULT_VEHICLE_CONFIG
 } from '../content/enemies';
+import { createMissionPlan, DEFAULT_CONVOY_VEHICLE_CONFIG } from '../content/missions';
 import type { PhysicsWorldContext } from '../physics/world';
 import {
   createHelicopterFlightSystem,
@@ -28,11 +28,18 @@ import {
   type CountermeasureState
 } from '../sim/countermeasures';
 import { createMissileState, createMissileSystem, type MissileState } from '../sim/missile';
-import { createEnemyState, createEnemySystem, spawnEnemiesFromConfig, type EnemyState } from '../sim/enemies';
+import { createEnemyState, createEnemySystem, type EnemyState } from '../sim/enemies';
+import { createConvoyState, createConvoySystem, spawnConvoy, type ConvoyState } from '../sim/convoy';
 import { createTerrainColliderManager } from '../sim/terrain/terrainColliders';
 import { createTerrainStreamingSystem } from '../sim/terrain/terrainStreamingSystem';
 import { createPropColliderManager } from '../sim/terrain/propColliders';
 import { createPropColliderStreamingSystem } from '../sim/terrain/propColliderStreamingSystem';
+import {
+  createMissionRuntime,
+  createMissionSystem,
+  spawnMissionEnemies,
+  type MissionRuntime
+} from '../sim/missionDirector';
 
 export type GameplayContext = {
   player: PlayerHelicopter;
@@ -43,6 +50,8 @@ export type GameplayContext = {
   missiles: MissileState;
   missileConfig: typeof DEFAULT_MISSILE_CONFIG;
   enemies: EnemyState;
+  convoy: ConvoyState;
+  mission: MissionRuntime;
 };
 
 export const bootstrapGameplay = ({
@@ -61,6 +70,8 @@ export const bootstrapGameplay = ({
   gameState: GameState;
 }): GameplayContext => {
   const spawnPoint = pickSpawnPoint(WORLD_CONFIG);
+  const missionSeed = Math.floor(Math.random() * 1_000_000_000);
+  const missionPlan = createMissionPlan({ seed: missionSeed, playerSpawn: spawnPoint });
   const player = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
     startPosition: { x: spawnPoint.x, y: 0.8, z: spawnPoint.z },
     yawRateTuning: controlTuning.yawRate
@@ -72,11 +83,33 @@ export const bootstrapGameplay = ({
   const missileConfig = DEFAULT_MISSILE_CONFIG;
   const missiles = createMissileState(missileConfig);
   const enemies = createEnemyState();
-  const enemySpawns = buildEnemySpawns(spawnPoint);
-  spawnEnemiesFromConfig(enemies, physics, enemySpawns, {
-    radar: DEFAULT_RADAR_CONFIG,
-    sam: DEFAULT_SAM_CONFIG,
-    vehicle: DEFAULT_VEHICLE_CONFIG
+  const missionTargets = spawnMissionEnemies({
+    state: enemies,
+    physics,
+    plan: missionPlan,
+    configs: {
+      radar: DEFAULT_RADAR_CONFIG,
+      sam: DEFAULT_SAM_CONFIG,
+      vehicle: DEFAULT_VEHICLE_CONFIG
+    }
+  });
+  const convoy = createConvoyState();
+  if (missionPlan.convoyPlan) {
+    spawnConvoy(convoy, physics, DEFAULT_CONVOY_VEHICLE_CONFIG, missionPlan.convoyPlan);
+  }
+  const mission = createMissionRuntime({
+    seed: missionPlan.seed,
+    templateId: missionPlan.template.id,
+    templateName: missionPlan.template.name,
+    summary: missionPlan.template.summary,
+    objectives: missionPlan.template.objectives,
+    targetsByType: missionTargets.targetsByType,
+    navigationTarget: missionPlan.primaryWaypoint
+      ? {
+          label: missionPlan.primaryWaypoint.label,
+          position: missionPlan.primaryWaypoint.position
+        }
+      : null
   });
   const terrain = createTerrainColliderManager(physics);
   terrain.update(spawnPoint);
@@ -126,6 +159,21 @@ export const bootstrapGameplay = ({
       countermeasureConfig
     })
   );
+  scheduler.addSystem(
+    createConvoySystem({
+      state: convoy,
+      gameState
+    })
+  );
+  scheduler.addSystem(
+    createMissionSystem({
+      mission,
+      enemies,
+      convoy,
+      input,
+      gameState
+    })
+  );
   scheduler.addSystem(createTerrainStreamingSystem(player, terrain));
   scheduler.addSystem(createPropColliderStreamingSystem(player, propColliders));
 
@@ -137,6 +185,8 @@ export const bootstrapGameplay = ({
     countermeasureConfig,
     missiles,
     missileConfig,
-    enemies
+    enemies,
+    convoy,
+    mission
   };
 };
