@@ -48,7 +48,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   const avionicsHud = createAvionicsHud();
   const assistsHud = createAssistsHud();
   const combatHud = createCombatHud();
-  const missionHud = createMissionHud();
+  const missionHud = createMissionHud(bindings);
   const alertBanner = createWarningBanner('alert-banner');
   const boundsBanner = createWarningBanner('bounds-banner');
 
@@ -520,7 +520,7 @@ type MissionHudController = {
   update: (readout: MissionReadout | null) => void;
 };
 
-const createMissionHud = (): MissionHudController => {
+const createMissionHud = (bindings: PlayerInputBindings): MissionHudController => {
   const wrapper = document.createElement('section');
   wrapper.className = 'mission-hud';
 
@@ -544,9 +544,12 @@ const createMissionHud = (): MissionHudController => {
   promptText.className = 'mission-prompt-text';
   promptText.textContent = 'Objectives complete.';
 
+  const confirmKey = formatKeyList(bindings.confirmMissionComplete);
+  const continueKey = formatKeyList(bindings.continueMission);
+
   const promptActions = document.createElement('div');
   promptActions.className = 'mission-prompt-actions';
-  promptActions.textContent = 'Press Enter to complete • Press N to continue';
+  promptActions.textContent = `Press ${confirmKey} to complete • Press ${continueKey} to continue`;
 
   prompt.append(promptText, promptActions);
 
@@ -584,14 +587,7 @@ const createMissionHud = (): MissionHudController => {
     if (readout.completion.promptActive) {
       prompt.classList.remove('hidden');
       promptText.textContent = 'Objectives complete.';
-      promptActions.textContent = 'Press Enter to complete • Press N to continue';
-      return;
-    }
-
-    if (readout.completion.available) {
-      prompt.classList.remove('hidden');
-      promptText.textContent = 'Objectives complete.';
-      promptActions.textContent = 'Press Enter to complete mission';
+      promptActions.textContent = `Press ${confirmKey} to complete • Press ${continueKey} to continue`;
       return;
     }
 

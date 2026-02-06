@@ -81,7 +81,7 @@ export const spawnConvoy = (
       entity,
       body,
       route: plan.route,
-      routeIndex: 0,
+      routeIndex: plan.route.length > 1 ? 1 : 0,
       speed: plan.speed,
       arrived: false
     });
