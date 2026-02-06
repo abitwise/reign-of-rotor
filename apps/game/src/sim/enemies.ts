@@ -515,16 +515,15 @@ const hasLineOfSight = (
 ): boolean => {
   const origin = sam.unit.body.translation();
   const targetPos = target.body.translation();
+  const dx = targetPos.x - origin.x;
+  const dy = targetPos.y - origin.y;
+  const dz = targetPos.z - origin.z;
   const direction = normalize({
-    x: targetPos.x - origin.x,
-    y: targetPos.y - origin.y,
-    z: targetPos.z - origin.z
+    x: dx,
+    y: dy,
+    z: dz
   });
-  const distance = length({
-    x: targetPos.x - origin.x,
-    y: targetPos.y - origin.y,
-    z: targetPos.z - origin.z
-  });
+  const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
   const ray = new physics.rapier.Ray(origin, direction);
   const hit = physics.world.castRayAndGetNormal(
     ray,
