@@ -17,6 +17,8 @@ export type PlayerInputBindings = {
   fireCannon: string[];
   fireMissile: string[];
   deployCountermeasure: string[];
+  confirmMissionComplete: string[];
+  continueMission: string[];
 };
 
 export type PlayerInputState = {
@@ -33,6 +35,8 @@ export type PlayerInputState = {
   toggleHover: boolean;      // One-frame pulse
   togglePause: boolean;      // One-frame pulse
   toggleCamera: boolean;     // One-frame pulse
+  confirmMissionComplete: boolean; // One-frame pulse
+  continueMission: boolean;        // One-frame pulse
 };
 
 // Alias used by ECS-facing layers.
@@ -57,7 +61,9 @@ export const DEFAULT_PLAYER_INPUT_BINDINGS: PlayerInputBindings = {
   },
   fireCannon: ['KeyC'],
   fireMissile: ['KeyM'],
-  deployCountermeasure: ['KeyB']
+  deployCountermeasure: ['KeyB'],
+  confirmMissionComplete: ['Enter'],
+  continueMission: ['KeyN']
 };
 
 export const FORCE_TRIM_KEY = 'KeyT';
@@ -100,7 +106,9 @@ export const createPlayerInputState = (): PlayerInputState => ({
   toggleStability: false,
   toggleHover: false,
   togglePause: false,
-  toggleCamera: false
+  toggleCamera: false,
+  confirmMissionComplete: false,
+  continueMission: false
 });
 
 export const samplePlayerInput = (
@@ -115,6 +123,8 @@ export const samplePlayerInput = (
   state.fireCannon = bindings.fireCannon.some((code) => sampler.isPressed(code));
   state.fireMissile = bindings.fireMissile.some((code) => sampler.isPressed(code));
   state.deployCountermeasure = bindings.deployCountermeasure.some((code) => sampler.wasJustPressed(code));
+  state.confirmMissionComplete = bindings.confirmMissionComplete.some((code) => sampler.wasJustPressed(code));
+  state.continueMission = bindings.continueMission.some((code) => sampler.wasJustPressed(code));
 
   // Toggle keys (edge-triggered)
   state.forceTrim = sampler.wasJustPressed(FORCE_TRIM_KEY);

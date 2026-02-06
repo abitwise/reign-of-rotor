@@ -337,7 +337,7 @@
   - [ ] RWR warnings wired to HUD
 
 ### [P1-16] Mission Director v1 + 3 Templates (In-Air Completion)
-- Status: Backlog
+- Status: Done
 - Summary: Generate missions with seeded RNG and objectives; allow mission completion in-air.
 - Functional behavior (GIVEN/WHEN/THEN):
   - GIVEN objectives complete, WHEN the completion prompt is shown, THEN the player can confirm “Complete mission now” in-air.

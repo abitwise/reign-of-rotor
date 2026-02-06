@@ -11,12 +11,12 @@ import { createControlState, createControlStateSystem } from '../core/input/cont
 import { bootstrapGameplay, type GameplayContext } from './gameplay';
 import { createCameraModeToggleSystem } from '../render/camera/cameraModeSystem';
 import { CONTROL_TUNING_PRESETS } from '../content/controls';
-import { NAVIGATION_CONFIG } from '../content/avionics';
 import {
   buildAvionicsReadout,
   buildCombatReadout,
   buildNavigationReadout,
-  buildThreatReadout
+  buildThreatReadout,
+  buildMissionReadout
 } from '../ui/hudReadouts';
 
 export type GameState = {
@@ -92,8 +92,9 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       rootUi.setAssistsProvider?.(() => gameplayContext.player.assists);
       rootUi.setCameraModeProvider?.(() => renderContext.getCameraModeLabel());
       rootUi.setNavigationReadoutProvider?.(() =>
-        buildNavigationReadout(gameplayContext.player, NAVIGATION_CONFIG.defaultTarget)
+        buildNavigationReadout(gameplayContext.player, gameplayContext.mission.navigationTarget)
       );
+      rootUi.setMissionReadoutProvider?.(() => buildMissionReadout(gameplayContext.mission));
       rootUi.setCombatReadoutProvider?.(() =>
         buildCombatReadout(
           gameplayContext.cannon,

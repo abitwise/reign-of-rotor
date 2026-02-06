@@ -11,6 +11,7 @@ import {
   type NavigationReadout,
   type ThreatReadout,
   type CombatReadout,
+  type MissionReadout,
   buildAvionicsAlerts,
   selectPriorityAlert,
   toThreatAlertCandidate
@@ -37,6 +38,7 @@ export type CombatReadoutProvider = () => CombatReadout | null;
 export type ThreatReadoutProvider = () => ThreatReadout | null;
 export type OutOfBoundsProvider = () => OutOfBoundsReadout | null;
 export type NavigationReadoutProvider = () => NavigationReadout | null;
+export type MissionReadoutProvider = () => MissionReadout | null;
 
 export const createRootUi = ({ target, config, bindings, gameState }: RootUiOptions) => {
   const container = document.createElement('div');
@@ -46,6 +48,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   const avionicsHud = createAvionicsHud();
   const assistsHud = createAssistsHud();
   const combatHud = createCombatHud();
+  const missionHud = createMissionHud();
   const alertBanner = createWarningBanner('alert-banner');
   const boundsBanner = createWarningBanner('bounds-banner');
 
@@ -53,6 +56,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   container.appendChild(avionicsHud.element);
   container.appendChild(assistsHud.element);
   container.appendChild(combatHud.element);
+  container.appendChild(missionHud.element);
   container.appendChild(alertBanner.element);
   container.appendChild(boundsBanner.element);
   target.replaceChildren(container);
@@ -109,6 +113,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   let threatProvider: ThreatReadoutProvider | null = null;
   let outOfBoundsProvider: OutOfBoundsProvider | null = null;
   let navigationProvider: NavigationReadoutProvider | null = null;
+  let missionProvider: MissionReadoutProvider | null = null;
   let hudFrameHandle: number | null = null;
 
   const hudLoop = (): void => {
@@ -123,6 +128,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     avionicsHud.update(avionicsReadout, navigationProvider?.() ?? null);
     assistsHud.update(assistsProvider?.() ?? null, trimState);
     combatHud.update(combatProvider?.() ?? null);
+    missionHud.update(missionProvider?.() ?? null);
     const avionicsAlerts = avionicsReadout ? buildAvionicsAlerts(avionicsReadout) : [];
     const threatAlert = toThreatAlertCandidate(threatProvider?.() ?? null);
     const alert = selectPriorityAlert(
@@ -200,6 +206,12 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
       if (hudFrameHandle === null && avionicsReadoutProvider) {
         hudFrameHandle = scheduleFrame(hudLoop);
       }
+    },
+    setMissionReadoutProvider: (provider: MissionReadoutProvider) => {
+      missionProvider = provider;
+      if (hudFrameHandle === null && avionicsReadoutProvider) {
+        hudFrameHandle = scheduleFrame(hudLoop);
+      }
     }
   };
 };
@@ -245,6 +257,14 @@ const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBinding
     createNoteRow('Cannon Fire', `Hold ${formatKeyList(bindings.fireCannon)} to fire`),
     createNoteRow('Missile Fire', `Press ${formatKeyList(bindings.fireMissile)} to launch`),
     createNoteRow('Countermeasure', `Press ${formatKeyList(bindings.deployCountermeasure)} to deploy`),
+    createNoteRow(
+      'Complete Mission',
+      `Press ${formatKeyList(bindings.confirmMissionComplete)} to complete objectives in-air`
+    ),
+    createNoteRow(
+      'Continue Flying',
+      `Press ${formatKeyList(bindings.continueMission)} to defer completion prompt`
+    ),
     createCameraModeRow(cameraModeValue),
     createNoteRow('Mouse Look', 'Click canvas to lock pointer; drag if lock unavailable.'),
     createNoteRow('Stability Assist', 'Press Z to toggle auto-leveling'),
@@ -488,6 +508,94 @@ const createCombatHud = (): CombatHudController => {
     missileMetric.setValue(formatAmmo(readout?.missileAmmo));
     countermeasureMetric.setValue(formatAmmo(readout?.countermeasureAmmo));
     lockMetric.setValue(readout?.lockState ?? '—');
+  };
+
+  update(null);
+
+  return { element: wrapper, update };
+};
+
+type MissionHudController = {
+  element: HTMLElement;
+  update: (readout: MissionReadout | null) => void;
+};
+
+const createMissionHud = (): MissionHudController => {
+  const wrapper = document.createElement('section');
+  wrapper.className = 'mission-hud';
+
+  const heading = document.createElement('div');
+  heading.className = 'hud-heading';
+  heading.textContent = 'Mission';
+
+  const title = document.createElement('strong');
+  title.className = 'mission-title';
+
+  const summary = document.createElement('div');
+  summary.className = 'mission-summary';
+
+  const objectives = document.createElement('div');
+  objectives.className = 'mission-objectives';
+
+  const prompt = document.createElement('div');
+  prompt.className = 'mission-prompt hidden';
+
+  const promptText = document.createElement('div');
+  promptText.className = 'mission-prompt-text';
+  promptText.textContent = 'Objectives complete.';
+
+  const promptActions = document.createElement('div');
+  promptActions.className = 'mission-prompt-actions';
+  promptActions.textContent = 'Press Enter to complete • Press N to continue';
+
+  prompt.append(promptText, promptActions);
+
+  wrapper.append(heading, title, summary, objectives, prompt);
+
+  const update = (readout: MissionReadout | null): void => {
+    if (!readout) {
+      wrapper.classList.add('hidden');
+      return;
+    }
+
+    wrapper.classList.remove('hidden');
+    title.textContent = readout.title;
+    summary.textContent = readout.summary;
+    objectives.replaceChildren(
+      ...readout.objectives.map((objective) => {
+        const row = document.createElement('div');
+        row.className = `mission-objective mission-${objective.status}`;
+        const label = document.createElement('span');
+        label.textContent = objective.label;
+        const progress = document.createElement('strong');
+        progress.textContent = objective.progress ?? '';
+        row.append(label, progress);
+        return row;
+      })
+    );
+
+    if (readout.completion.completed) {
+      prompt.classList.remove('hidden');
+      promptText.textContent = 'Mission complete!';
+      promptActions.textContent = 'Debrief pending';
+      return;
+    }
+
+    if (readout.completion.promptActive) {
+      prompt.classList.remove('hidden');
+      promptText.textContent = 'Objectives complete.';
+      promptActions.textContent = 'Press Enter to complete • Press N to continue';
+      return;
+    }
+
+    if (readout.completion.available) {
+      prompt.classList.remove('hidden');
+      promptText.textContent = 'Objectives complete.';
+      promptActions.textContent = 'Press Enter to complete mission';
+      return;
+    }
+
+    prompt.classList.add('hidden');
   };
 
   update(null);
@@ -769,7 +877,9 @@ const KEY_LABELS: Record<string, string> = {
   PageUp: 'Page Up',
   PageDown: 'Page Down',
   KeyT: 'T',
-  KeyY: 'Y'
+  KeyY: 'Y',
+  Enter: 'Enter',
+  KeyN: 'N'
 };
 
 const formatKey = (code: string): string => KEY_LABELS[code] ?? code;

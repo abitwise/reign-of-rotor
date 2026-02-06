@@ -4,6 +4,7 @@ import type { CannonState } from '../sim/cannon';
 import type { CountermeasureState } from '../sim/countermeasures';
 import type { MissileState } from '../sim/missile';
 import type { EnemyState } from '../sim/enemies';
+import type { MissionRuntime, MissionObjectiveStatus } from '../sim/missionDirector';
 import type { CannonConfig, MissileConfig } from '../content/weapons';
 import { rotateVector } from '../physics/math';
 import {
@@ -49,6 +50,24 @@ export type CombatReadout = {
   missileAmmo: number | null;
   countermeasureAmmo: number | null;
   lockState: string | null;
+};
+
+export type MissionObjectiveReadout = {
+  label: string;
+  status: MissionObjectiveStatus;
+  progress: string | null;
+};
+
+export type MissionReadout = {
+  title: string;
+  summary: string;
+  objectives: MissionObjectiveReadout[];
+  completion: {
+    available: boolean;
+    promptActive: boolean;
+    continueSelected: boolean;
+    completed: boolean;
+  };
 };
 
 export type AlertId =
@@ -149,6 +168,23 @@ export const buildThreatReadout = (
   }
 
   return null;
+};
+
+export const buildMissionReadout = (mission: MissionRuntime | null): MissionReadout | null => {
+  if (!mission) {
+    return null;
+  }
+
+  return {
+    title: mission.templateName,
+    summary: mission.summary,
+    objectives: mission.objectives.map((objective) => ({
+      label: objective.label,
+      status: objective.status,
+      progress: formatObjectiveProgress(objective)
+    })),
+    completion: { ...mission.completion }
+  };
 };
 
 export const buildAvionicsAlerts = (
@@ -261,4 +297,17 @@ export const isVrsEnvelope = (
     readout.verticalSpeed <= -thresholds.vrs.minDescentRate &&
     readout.horizontalSpeed <= thresholds.vrs.maxForwardSpeed
   );
+};
+
+const formatObjectiveProgress = (objective: MissionRuntime['objectives'][number]): string | null => {
+  if (objective.type === 'escort') {
+    return objective.status === 'complete' ? 'Arrived' : 'En route';
+  }
+
+  if (objective.requiredCount <= 0) {
+    return null;
+  }
+
+  const clamped = Math.min(objective.destroyedCount, objective.requiredCount);
+  return `${clamped}/${objective.requiredCount}`;
 };
