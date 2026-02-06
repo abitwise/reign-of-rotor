@@ -73,13 +73,15 @@ export const createTelemetrySystem = ({
     recordTelemetryOnMissionEnd(telemetry, mission, stats, playerDamage);
 
     if (!wasRecorded && telemetry.lastRecordedSeed === mission.seed) {
-      console.info(
-        '[Telemetry]',
-        `Missions=${telemetry.missionsRecorded}`,
-        `AvgTime=${telemetry.averageMissionSeconds.toFixed(1)}s`,
-        `Deaths=${telemetry.deaths}`,
-        `Causes=${JSON.stringify(telemetry.deathCauses)}`
-      );
+      if (process.env.NODE_ENV !== 'production') {
+        console.info(
+          '[Telemetry]',
+          `Missions=${telemetry.missionsRecorded}`,
+          `AvgTime=${telemetry.averageMissionSeconds.toFixed(1)}s`,
+          `Deaths=${telemetry.deaths}`,
+          `Causes=${JSON.stringify(telemetry.deathCauses)}`
+        );
+      }
     }
   }
 });
