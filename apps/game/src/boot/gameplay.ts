@@ -4,6 +4,7 @@ import type { ControlState, ControlTuning } from '../core/input/controlState';
 import type { SystemScheduler } from '../core/loop/systemScheduler';
 import { DEFAULT_HELICOPTER_FLIGHT } from '../content/helicopters';
 import { DEFAULT_CANNON_CONFIG, DEFAULT_MISSILE_CONFIG } from '../content/weapons';
+import { DEFAULT_COUNTERMEASURE_CONFIG } from '../content/countermeasures';
 import { WORLD_CONFIG, pickSpawnPoint } from '../content/world';
 import {
   DEFAULT_RADAR_CONFIG,
@@ -21,6 +22,11 @@ import {
 } from '../sim/helicopterFlight';
 import { createAltimeterSystem } from '../sim/altimeter';
 import { createCannonState, createCannonSystem, type CannonState } from '../sim/cannon';
+import {
+  createCountermeasureState,
+  createCountermeasureSystem,
+  type CountermeasureState
+} from '../sim/countermeasures';
 import { createMissileState, createMissileSystem, type MissileState } from '../sim/missile';
 import { createEnemyState, createEnemySystem, spawnEnemiesFromConfig, type EnemyState } from '../sim/enemies';
 import { createTerrainColliderManager } from '../sim/terrain/terrainColliders';
@@ -32,6 +38,8 @@ export type GameplayContext = {
   player: PlayerHelicopter;
   cannon: CannonState;
   cannonConfig: typeof DEFAULT_CANNON_CONFIG;
+  countermeasures: CountermeasureState;
+  countermeasureConfig: typeof DEFAULT_COUNTERMEASURE_CONFIG;
   missiles: MissileState;
   missileConfig: typeof DEFAULT_MISSILE_CONFIG;
   enemies: EnemyState;
@@ -59,6 +67,8 @@ export const bootstrapGameplay = ({
   });
   const cannonConfig = DEFAULT_CANNON_CONFIG;
   const cannon = createCannonState(cannonConfig);
+  const countermeasureConfig = DEFAULT_COUNTERMEASURE_CONFIG;
+  const countermeasures = createCountermeasureState(countermeasureConfig);
   const missileConfig = DEFAULT_MISSILE_CONFIG;
   const missiles = createMissileState(missileConfig);
   const enemies = createEnemyState();
@@ -77,6 +87,14 @@ export const bootstrapGameplay = ({
   scheduler.addSystem(createPauseToggleSystem(input, gameState));
   scheduler.addSystem(createHelicopterFlightSystem(player, gameState));
   scheduler.addSystem(createAltimeterSystem(player, physics));
+  scheduler.addSystem(
+    createCountermeasureSystem({
+      heli: player,
+      config: countermeasureConfig,
+      state: countermeasures,
+      gameState
+    })
+  );
   scheduler.addSystem(
     createCannonSystem({
       heli: player,
@@ -103,11 +121,22 @@ export const bootstrapGameplay = ({
       target: { entity: player.entity, body: player.body },
       cannon,
       missiles,
-      gameState
+      gameState,
+      countermeasures,
+      countermeasureConfig
     })
   );
   scheduler.addSystem(createTerrainStreamingSystem(player, terrain));
   scheduler.addSystem(createPropColliderStreamingSystem(player, propColliders));
 
-  return { player, cannon, cannonConfig, missiles, missileConfig, enemies };
+  return {
+    player,
+    cannon,
+    cannonConfig,
+    countermeasures,
+    countermeasureConfig,
+    missiles,
+    missileConfig,
+    enemies
+  };
 };

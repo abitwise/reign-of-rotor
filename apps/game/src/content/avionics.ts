@@ -38,6 +38,18 @@ export const ALERT_PRIORITY_ORDER = [
   'VRS_SETTLING'
 ] as const;
 
+export type RwrWarningLabels = {
+  scan: string;
+  lock: string;
+  launch: string;
+};
+
+export const RWR_WARNING_LABELS: RwrWarningLabels = {
+  scan: 'RADAR SCAN',
+  lock: 'MISSILE LOCK',
+  launch: 'MISSILE LAUNCH'
+};
+
 export const NAVIGATION_CONFIG: NavigationConfig = {
   defaultTarget: {
     label: 'Waypoint',

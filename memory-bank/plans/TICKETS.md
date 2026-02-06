@@ -329,7 +329,7 @@
   - [x] Basic vehicle target entities (static or simple patrol)
 
 ### [P1-15] Countermeasures + Threat Warning Receiver (RWR)
-- Status: Backlog
+- Status: Done
 - Summary: Flares/chaff simplified + warnings.
 - Tasks:
   - [ ] Countermeasure inventory + cooldown

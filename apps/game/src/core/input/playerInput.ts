@@ -16,6 +16,7 @@ export type PlayerInputBindings = {
   yaw: InputAxisBinding;
   fireCannon: string[];
   fireMissile: string[];
+  deployCountermeasure: string[];
 };
 
 export type PlayerInputState = {
@@ -25,6 +26,7 @@ export type PlayerInputState = {
   yaw: number;
   fireCannon: boolean;
   fireMissile: boolean;
+  deployCountermeasure: boolean; // One-frame pulse
   forceTrim: boolean;       // One-frame pulse
   resetTrim: boolean;       // One-frame pulse
   toggleStability: boolean; // One-frame pulse
@@ -54,7 +56,8 @@ export const DEFAULT_PLAYER_INPUT_BINDINGS: PlayerInputBindings = {
     negative: ['KeyQ']
   },
   fireCannon: ['KeyC'],
-  fireMissile: ['KeyM']
+  fireMissile: ['KeyM'],
+  deployCountermeasure: ['KeyB']
 };
 
 export const FORCE_TRIM_KEY = 'KeyT';
@@ -91,6 +94,7 @@ export const createPlayerInputState = (): PlayerInputState => ({
   yaw: 0,
   fireCannon: false,
   fireMissile: false,
+  deployCountermeasure: false,
   forceTrim: false,
   resetTrim: false,
   toggleStability: false,
@@ -110,6 +114,7 @@ export const samplePlayerInput = (
   state.yaw = resolveAxis(bindings.yaw, sampler);
   state.fireCannon = bindings.fireCannon.some((code) => sampler.isPressed(code));
   state.fireMissile = bindings.fireMissile.some((code) => sampler.isPressed(code));
+  state.deployCountermeasure = bindings.deployCountermeasure.some((code) => sampler.wasJustPressed(code));
 
   // Toggle keys (edge-triggered)
   state.forceTrim = sampler.wasJustPressed(FORCE_TRIM_KEY);

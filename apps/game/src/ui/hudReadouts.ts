@@ -1,10 +1,16 @@
 import type { AltimeterState } from '../sim/altimeter';
 import type { PlayerHelicopter } from '../sim/helicopterFlight';
 import type { CannonState } from '../sim/cannon';
+import type { CountermeasureState } from '../sim/countermeasures';
 import type { MissileState } from '../sim/missile';
+import type { EnemyState } from '../sim/enemies';
 import type { CannonConfig, MissileConfig } from '../content/weapons';
 import { rotateVector } from '../physics/math';
-import { AVIONICS_ALERT_THRESHOLDS, ALERT_PRIORITY_ORDER } from '../content/avionics';
+import {
+  AVIONICS_ALERT_THRESHOLDS,
+  ALERT_PRIORITY_ORDER,
+  RWR_WARNING_LABELS
+} from '../content/avionics';
 
 export type AvionicsReadout = {
   altitude: number;
@@ -41,6 +47,7 @@ export type CombatReadout = {
   weaponName: string | null;
   ammo: number | null;
   missileAmmo: number | null;
+  countermeasureAmmo: number | null;
   lockState: string | null;
 };
 
@@ -105,13 +112,44 @@ export const buildCombatReadout = (
   cannonState: CannonState,
   cannonConfig: CannonConfig,
   missileState: MissileState,
-  missileConfig: MissileConfig
+  missileConfig: MissileConfig,
+  countermeasures?: CountermeasureState | null
 ): CombatReadout => ({
   weaponName: cannonConfig.name,
   ammo: cannonState.ammoRemaining,
   missileAmmo: missileState.ammoRemaining,
+  countermeasureAmmo: countermeasures?.ammoRemaining ?? null,
   lockState: formatMissileLockState(missileState, missileConfig)
 });
+
+export const buildThreatReadout = (
+  enemies: EnemyState,
+  player: PlayerHelicopter,
+  labels = RWR_WARNING_LABELS
+): ThreatReadout | null => {
+  if (enemies.samMissiles.some((missile) => missile.target === player.entity)) {
+    return { warning: labels.launch, level: 'launch' };
+  }
+
+  if (enemies.samSites.some((sam) => sam.hasLineOfSight && sam.lockProgress > 0)) {
+    return { warning: labels.lock, level: 'lock' };
+  }
+
+  const playerPos = player.body.translation();
+  const hasScan = enemies.radarSites.some((radar) => {
+    const origin = radar.unit.body.translation();
+    const dx = origin.x - playerPos.x;
+    const dy = origin.y - playerPos.y;
+    const dz = origin.z - playerPos.z;
+    return dx * dx + dy * dy + dz * dz <= radar.range * radar.range;
+  });
+
+  if (hasScan) {
+    return { warning: labels.scan, level: 'scan' };
+  }
+
+  return null;
+};
 
 export const buildAvionicsAlerts = (
   readout: AvionicsReadout,

@@ -3,6 +3,7 @@ import {
   buildAvionicsAlerts,
   buildNavigationReadout,
   buildCombatReadout,
+  buildThreatReadout,
   selectPriorityAlert,
   type AvionicsReadout,
   type AlertCandidate
@@ -10,6 +11,7 @@ import {
 import type { CannonState } from '../../sim/cannon';
 import type { CannonConfig, MissileConfig } from '../../content/weapons';
 import type { MissileState } from '../../sim/missile';
+import type { EnemyState } from '../../sim/enemies';
 
 const baseReadout: AvionicsReadout = {
   altitude: 20,
@@ -156,11 +158,18 @@ describe('buildCombatReadout', () => {
       explosionFx: 'missile-fx'
     };
 
-    const readout = buildCombatReadout(cannonState, cannonConfig, missileState, missileConfig);
+    const readout = buildCombatReadout(cannonState, cannonConfig, missileState, missileConfig, {
+      ammoRemaining: 6,
+      cooldownRemaining: 0,
+      activeRemaining: 0,
+      decoyPosition: null,
+      deployedThisFrame: false
+    });
 
     expect(readout.weaponName).toBe('Test Cannon');
     expect(readout.ammo).toBe(500);
     expect(readout.missileAmmo).toBe(4);
+    expect(readout.countermeasureAmmo).toBe(6);
     expect(readout.lockState).toBe('NO TARGET');
   });
 
@@ -212,7 +221,7 @@ describe('buildCombatReadout', () => {
       explosionFx: 'missile-fx'
     };
 
-    const readout = buildCombatReadout(cannonState, cannonConfig, missileState, missileConfig);
+    const readout = buildCombatReadout(cannonState, cannonConfig, missileState, missileConfig, null);
 
     expect(readout.ammo).toBe(0);
     expect(readout.missileAmmo).toBe(0);
@@ -266,8 +275,77 @@ describe('buildCombatReadout', () => {
       explosionFx: 'missile-fx'
     };
 
-    const readout = buildCombatReadout(cannonState, cannonConfig, missileState, missileConfig);
+    const readout = buildCombatReadout(cannonState, cannonConfig, missileState, missileConfig, null);
 
     expect(readout.lockState).toBe('SEARCH');
+  });
+});
+
+describe('buildThreatReadout', () => {
+  const player = {
+    entity: 42,
+    body: {
+      translation: () => ({ x: 0, y: 0, z: 0 })
+    }
+  } as Parameters<typeof buildThreatReadout>[1];
+
+  const baseEnemyState: EnemyState = {
+    units: [],
+    unitMap: new Map(),
+    targets: [],
+    radarSites: [],
+    samSites: [],
+    vehicles: [],
+    samMissiles: [],
+    samMissileMap: new Map(),
+    explosionEvents: []
+  };
+
+  it('returns launch warning when a SAM missile targets the player', () => {
+    const readout = buildThreatReadout(
+      {
+        ...baseEnemyState,
+        samMissiles: [{ target: player.entity }] as EnemyState['samMissiles']
+      },
+      player
+    );
+
+    expect(readout?.level).toBe('launch');
+  });
+
+  it('returns lock warning when a SAM site has line of sight', () => {
+    const readout = buildThreatReadout(
+      {
+        ...baseEnemyState,
+        samSites: [
+          {
+            hasLineOfSight: true,
+            lockProgress: 0.5
+          } as EnemyState['samSites'][number]
+        ]
+      },
+      player
+    );
+
+    expect(readout?.level).toBe('lock');
+  });
+
+  it('returns scan warning when radar detects the player', () => {
+    const readout = buildThreatReadout(
+      {
+        ...baseEnemyState,
+        radarSites: [
+          {
+            range: 100,
+            unit: {
+              body: { translation: () => ({ x: 0, y: 0, z: 50 }) }
+            }
+          } as EnemyState['radarSites'][number]
+        ]
+      },
+      player
+    );
+
+    expect(readout?.level).toBe('scan');
   });
 });
