@@ -293,6 +293,6 @@ describe('enemy systems', () => {
     physics.step(stepContext.fixedDeltaSeconds);
     system.step(stepContext);
 
-    expect(enemyState.samMissiles[0].target).toBeNull();
+    expect(enemyState.samMissiles[0].target).toBeNaN();
   });
 });

@@ -381,7 +381,7 @@ const updateSamMissiles = (
       const dz = missilePos.z - decoyPos.z;
       const radius = countermeasureConfig.decoyRadius;
       if (dx * dx + dy * dy + dz * dz <= radius * radius) {
-        missile.target = null;
+        missile.target = Number.NaN as Entity;
         continue;
       }
     }
