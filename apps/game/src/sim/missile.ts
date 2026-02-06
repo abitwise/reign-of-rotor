@@ -41,6 +41,7 @@ export type MissileState = {
   lockProgress: number;
   lockTarget: Entity | null;
   hasCandidate: boolean;
+  missilesFired: number;
   missiles: MissileInstance[];
   missileMap: Map<Entity, MissileInstance>;
   explosionEvents: MissileExplosionEvent[];
@@ -54,6 +55,7 @@ export const createMissileState = (config: MissileConfig): MissileState => ({
   lockProgress: 0,
   lockTarget: null,
   hasCandidate: false,
+  missilesFired: 0,
   missiles: [],
   missileMap: new Map(),
   explosionEvents: [],
@@ -103,6 +105,7 @@ export const createMissileSystem = ({
       spawnMissile(heli, physics, config, state, state.lockTarget);
       state.cooldownRemaining = config.cooldownSeconds;
       state.ammoRemaining = Math.max(0, state.ammoRemaining - 1);
+      state.missilesFired += 1;
     }
 
     handleMissileCollisions(heli, physics, state, config);

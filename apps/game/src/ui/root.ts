@@ -12,6 +12,7 @@ import {
   type ThreatReadout,
   type CombatReadout,
   type MissionReadout,
+  type DebriefReadout,
   buildAvionicsAlerts,
   selectPriorityAlert,
   toThreatAlertCandidate
@@ -39,6 +40,7 @@ export type ThreatReadoutProvider = () => ThreatReadout | null;
 export type OutOfBoundsProvider = () => OutOfBoundsReadout | null;
 export type NavigationReadoutProvider = () => NavigationReadout | null;
 export type MissionReadoutProvider = () => MissionReadout | null;
+export type DebriefReadoutProvider = () => DebriefReadout | null;
 
 export const createRootUi = ({ target, config, bindings, gameState }: RootUiOptions) => {
   const container = document.createElement('div');
@@ -49,6 +51,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   const assistsHud = createAssistsHud();
   const combatHud = createCombatHud();
   const missionHud = createMissionHud(bindings);
+  const debriefOverlay = createDebriefOverlay();
   const alertBanner = createWarningBanner('alert-banner');
   const boundsBanner = createWarningBanner('bounds-banner');
 
@@ -57,6 +60,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   container.appendChild(assistsHud.element);
   container.appendChild(combatHud.element);
   container.appendChild(missionHud.element);
+  container.appendChild(debriefOverlay.element);
   container.appendChild(alertBanner.element);
   container.appendChild(boundsBanner.element);
   target.replaceChildren(container);
@@ -114,7 +118,10 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   let outOfBoundsProvider: OutOfBoundsProvider | null = null;
   let navigationProvider: NavigationReadoutProvider | null = null;
   let missionProvider: MissionReadoutProvider | null = null;
+  let debriefProvider: DebriefReadoutProvider | null = null;
   let hudFrameHandle: number | null = null;
+  let previousDebriefActive = false;
+  let previousFlightHudVisible = isFlightHudVisible;
 
   const hudLoop = (): void => {
     if (!avionicsReadoutProvider) {
@@ -125,17 +132,35 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     const trimState = trimStateProvider?.() ?? null;
     const controlState = controlStateProvider?.() ?? null;
     const avionicsReadout = avionicsReadoutProvider();
-    avionicsHud.update(avionicsReadout, navigationProvider?.() ?? null);
+    const navigationReadout = navigationProvider?.() ?? null;
+    const missionReadout = missionProvider?.() ?? null;
+    const debriefReadout = debriefProvider?.() ?? null;
+    const debriefActive = Boolean(debriefReadout?.active);
+    avionicsHud.update(avionicsReadout, navigationReadout);
     assistsHud.update(assistsProvider?.() ?? null, trimState);
     combatHud.update(combatProvider?.() ?? null);
-    missionHud.update(missionProvider?.() ?? null);
+    missionHud.update(missionReadout);
+    debriefOverlay.update(debriefReadout);
     const avionicsAlerts = avionicsReadout ? buildAvionicsAlerts(avionicsReadout) : [];
     const threatAlert = toThreatAlertCandidate(threatProvider?.() ?? null);
     const alert = selectPriorityAlert(
       threatAlert ? [...avionicsAlerts, threatAlert] : avionicsAlerts
     );
-    alertBanner.setWarning(alert?.label ?? null);
-    boundsBanner.setWarning(formatOutOfBoundsWarning(outOfBoundsProvider?.() ?? null));
+    alertBanner.setWarning(debriefActive ? null : alert?.label ?? null);
+    boundsBanner.setWarning(
+      debriefActive ? null : formatOutOfBoundsWarning(outOfBoundsProvider?.() ?? null)
+    );
+    // Only update display styles when visibility state changes
+    if (debriefActive !== previousDebriefActive || isFlightHudVisible !== previousFlightHudVisible) {
+      avionicsHud.element.style.display = !debriefActive && isFlightHudVisible ? '' : 'none';
+      assistsHud.element.style.display = debriefActive ? 'none' : '';
+      combatHud.element.style.display = debriefActive ? 'none' : '';
+      missionHud.element.style.display = debriefActive ? 'none' : '';
+      alertBanner.element.style.display = debriefActive ? 'none' : '';
+      boundsBanner.element.style.display = debriefActive ? 'none' : '';
+      previousDebriefActive = debriefActive;
+      previousFlightHudVisible = isFlightHudVisible;
+    }
     if (cameraModeProvider) {
       instructionsPanel.setCameraMode(cameraModeProvider() ?? 'Cockpit');
     }
@@ -209,6 +234,12 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     },
     setMissionReadoutProvider: (provider: MissionReadoutProvider) => {
       missionProvider = provider;
+      if (hudFrameHandle === null && avionicsReadoutProvider) {
+        hudFrameHandle = scheduleFrame(hudLoop);
+      }
+    },
+    setDebriefReadoutProvider: (provider: DebriefReadoutProvider) => {
+      debriefProvider = provider;
       if (hudFrameHandle === null && avionicsReadoutProvider) {
         hudFrameHandle = scheduleFrame(hudLoop);
       }
@@ -599,6 +630,98 @@ const createMissionHud = (bindings: PlayerInputBindings): MissionHudController =
   return { element: wrapper, update };
 };
 
+type DebriefOverlayController = {
+  element: HTMLElement;
+  update: (readout: DebriefReadout | null) => void;
+};
+
+const createDebriefOverlay = (): DebriefOverlayController => {
+  const overlay = document.createElement('div');
+  overlay.className = 'debrief-overlay hidden';
+
+  const panel = document.createElement('div');
+  panel.className = 'debrief-panel';
+
+  const title = document.createElement('div');
+  title.className = 'debrief-title';
+
+  const outcome = document.createElement('div');
+  outcome.className = 'debrief-outcome';
+
+  const statsGrid = document.createElement('div');
+  statsGrid.className = 'debrief-stats';
+
+  const timeRow = createDebriefStat('Time', '—');
+  const killsRow = createDebriefStat('Kills', '—');
+  const damageRow = createDebriefStat('Damage Dealt', '—');
+  const shotsRow = createDebriefStat('Shots Fired', '—');
+  const shotsDetail = document.createElement('div');
+  shotsDetail.className = 'debrief-shots-detail';
+
+  const actions = document.createElement('div');
+  actions.className = 'debrief-actions';
+
+  const replayButton = document.createElement('button');
+  replayButton.className = 'debrief-replay';
+  replayButton.textContent = 'Replay Mission';
+  replayButton.onclick = () => {
+    window.location.reload();
+  };
+
+  actions.append(replayButton);
+  statsGrid.append(timeRow.element, killsRow.element, damageRow.element, shotsRow.element, shotsDetail);
+  panel.append(title, outcome, statsGrid, actions);
+  overlay.append(panel);
+
+  const update = (readout: DebriefReadout | null): void => {
+    if (!readout) {
+      overlay.classList.add('hidden');
+      overlay.hidden = true;
+      overlay.setAttribute('aria-hidden', 'true');
+      replayButton.disabled = true;
+      replayButton.tabIndex = -1;
+      return;
+    }
+
+    overlay.classList.remove('hidden');
+    overlay.hidden = false;
+    overlay.removeAttribute('aria-hidden');
+    replayButton.disabled = false;
+    replayButton.tabIndex = 0;
+    title.textContent = readout.title;
+    outcome.textContent = readout.outcomeLabel;
+    timeRow.setValue(formatElapsedTime(readout.elapsedSeconds));
+    killsRow.setValue(readout.kills.toString());
+    damageRow.setValue(readout.damageDealt.toFixed(0));
+    shotsRow.setValue(readout.shotsFired.toString());
+    shotsDetail.textContent = `Cannon ${readout.cannonShots} • Missiles ${readout.missileShots}`;
+  };
+
+  update(null);
+
+  return { element: overlay, update };
+};
+
+const createDebriefStat = (label: string, value: string) => {
+  const row = document.createElement('div');
+  row.className = 'debrief-stat';
+
+  const title = document.createElement('span');
+  title.textContent = label;
+
+  const detail = document.createElement('strong');
+  detail.textContent = value;
+
+  row.append(title, detail);
+
+  return {
+    element: row,
+    setValue: (text: string) => {
+      detail.textContent = text;
+    }
+  };
+};
+
 type WarningBannerController = {
   element: HTMLElement;
   setWarning: (warning: string | null) => void;
@@ -832,6 +955,17 @@ const formatOutOfBoundsWarning = (readout: OutOfBoundsReadout | null): string | 
   }
 
   return 'OUT OF BOUNDS';
+};
+
+const formatElapsedTime = (seconds: number): string => {
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return '—';
+  }
+
+  const totalSeconds = Math.floor(seconds);
+  const minutes = Math.floor(totalSeconds / 60);
+  const remaining = totalSeconds % 60;
+  return `${minutes}:${remaining.toString().padStart(2, '0')}`;
 };
 
 const scheduleFrame = (callback: FrameRequestCallback): number => {

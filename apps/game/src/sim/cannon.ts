@@ -25,6 +25,7 @@ export type CannonDamageEvent = {
 export type CannonState = {
   ammoRemaining: number;
   cooldownRemaining: number;
+  shotsFired: number;
   impactEvents: CannonImpactEvent[];
   damageEvents: CannonDamageEvent[];
 };
@@ -32,6 +33,7 @@ export type CannonState = {
 export const createCannonState = (config: CannonConfig): CannonState => ({
   ammoRemaining: config.ammo,
   cooldownRemaining: 0,
+  shotsFired: 0,
   impactEvents: [],
   damageEvents: []
 });
@@ -120,6 +122,7 @@ const fireCannonShot = (
 
   state.ammoRemaining = Math.max(0, state.ammoRemaining - 1);
   state.cooldownRemaining = config.cooldownSeconds;
+  state.shotsFired += 1;
 };
 
 const computeMuzzleWorldPosition = (

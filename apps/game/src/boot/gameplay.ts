@@ -40,6 +40,11 @@ import {
   spawnMissionEnemies,
   type MissionRuntime
 } from '../sim/missionDirector';
+import {
+  createMissionStatsState,
+  createMissionStatsSystem,
+  type MissionStatsState
+} from '../sim/missionStats';
 
 export type GameplayContext = {
   player: PlayerHelicopter;
@@ -52,6 +57,7 @@ export type GameplayContext = {
   enemies: EnemyState;
   convoy: ConvoyState;
   mission: MissionRuntime;
+  missionStats: MissionStatsState;
 };
 
 export const bootstrapGameplay = ({
@@ -111,6 +117,7 @@ export const bootstrapGameplay = ({
         }
       : null
   });
+  const missionStats = createMissionStatsState();
   const terrain = createTerrainColliderManager(physics);
   terrain.update(spawnPoint);
   const propColliders = createPropColliderManager(physics);
@@ -174,6 +181,16 @@ export const bootstrapGameplay = ({
       gameState
     })
   );
+  scheduler.addSystem(
+    createMissionStatsSystem({
+      stats: missionStats,
+      mission,
+      enemies,
+      cannon,
+      missiles,
+      gameState
+    })
+  );
   scheduler.addSystem(createTerrainStreamingSystem(player, terrain));
   scheduler.addSystem(createPropColliderStreamingSystem(player, propColliders));
 
@@ -187,6 +204,7 @@ export const bootstrapGameplay = ({
     missileConfig,
     enemies,
     convoy,
-    mission
+    mission,
+    missionStats
   };
 };
