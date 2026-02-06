@@ -233,7 +233,7 @@ export const createMissionPlan = ({
   }
 
   const random = createSeededRandom(seed);
-  const template = templates[Math.floor(random() * templates.length)] ?? templates[0];
+  const template = templates[Math.floor(random() * templates.length)];
 
   const distance =
     config.minDistanceFromPlayer + random() * (config.maxDistanceFromPlayer - config.minDistanceFromPlayer);
