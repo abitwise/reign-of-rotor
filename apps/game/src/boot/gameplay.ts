@@ -11,7 +11,7 @@ import {
   DEFAULT_SAM_CONFIG,
   DEFAULT_VEHICLE_CONFIG
 } from '../content/enemies';
-import { applySamDifficulty, DEFAULT_DIFFICULTY_PRESET } from '../content/difficulty';
+import { applySamDifficulty } from '../content/difficulty';
 import { createMissionPlan, DEFAULT_CONVOY_VEHICLE_CONFIG } from '../content/missions';
 import type { PhysicsWorldContext } from '../physics/world';
 import {
@@ -83,7 +83,7 @@ export const bootstrapGameplay = ({
   const spawnPoint = pickSpawnPoint(WORLD_CONFIG);
   const missionSeed = Math.floor(Math.random() * 1_000_000_000);
   const missionPlan = createMissionPlan({ seed: missionSeed, playerSpawn: spawnPoint });
-  const difficulty = DEFAULT_DIFFICULTY_PRESET;
+  const difficulty = gameState.difficultyPreset;
   const playerDamage = createPlayerDamageState(difficulty);
   const player = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
     startPosition: { x: spawnPoint.x, y: 0.8, z: spawnPoint.z },

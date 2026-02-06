@@ -120,7 +120,7 @@ export const DEFAULT_DIFFICULTY_PRESET = DIFFICULTY_PRESETS.normal;
 export const applySamDifficulty = (config: SamConfig, tuning: SamDifficultyTuning): SamConfig => ({
   ...config,
   lockTimeSeconds: config.lockTimeSeconds * tuning.lockTimeMultiplier,
-  lockConeDegrees: config.lockConeDegrees / tuning.accuracyMultiplier,
+  lockConeDegrees: config.lockConeDegrees * tuning.accuracyMultiplier,
   missileTurnRateDeg: config.missileTurnRateDeg * tuning.accuracyMultiplier,
   missileDamage: config.missileDamage * tuning.damageMultiplier
 });
