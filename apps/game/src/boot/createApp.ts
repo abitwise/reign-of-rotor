@@ -19,9 +19,11 @@ import {
   buildThreatReadout,
   buildMissionReadout
 } from '../ui/hudReadouts';
+import { DEFAULT_DIFFICULTY_PRESET, type DifficultyPreset } from '../content/difficulty';
 
 export type GameState = {
   isPaused: boolean;
+  difficultyPreset: DifficultyPreset;
 };
 
 export type GameApp = {
@@ -52,7 +54,7 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       tuning: CONTROL_TUNING_PRESETS.normal
     })
   );
-  const gameState: GameState = { isPaused: false };
+  const gameState: GameState = { isPaused: false, difficultyPreset: DEFAULT_DIFFICULTY_PRESET };
   const rootUi = createRootUi({ target: layout.uiHost, config, bindings: input.bindings, gameState });
   rootUi.setTrimStateProvider?.(() => controlState.trim);
   rootUi.setControlStateProvider?.(() => controlState);

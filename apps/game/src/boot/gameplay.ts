@@ -11,6 +11,7 @@ import {
   DEFAULT_SAM_CONFIG,
   DEFAULT_VEHICLE_CONFIG
 } from '../content/enemies';
+import { applySamDifficulty } from '../content/difficulty';
 import { createMissionPlan, DEFAULT_CONVOY_VEHICLE_CONFIG } from '../content/missions';
 import type { PhysicsWorldContext } from '../physics/world';
 import {
@@ -45,6 +46,8 @@ import {
   createMissionStatsSystem,
   type MissionStatsState
 } from '../sim/missionStats';
+import { createPlayerDamageState, createPlayerDamageSystem, type PlayerDamageState } from '../sim/playerDamage';
+import { createTelemetryState, createTelemetrySystem, type TelemetryState } from '../sim/telemetry';
 
 export type GameplayContext = {
   player: PlayerHelicopter;
@@ -58,6 +61,8 @@ export type GameplayContext = {
   convoy: ConvoyState;
   mission: MissionRuntime;
   missionStats: MissionStatsState;
+  playerDamage: PlayerDamageState;
+  telemetry: TelemetryState;
 };
 
 export const bootstrapGameplay = ({
@@ -78,9 +83,12 @@ export const bootstrapGameplay = ({
   const spawnPoint = pickSpawnPoint(WORLD_CONFIG);
   const missionSeed = Math.floor(Math.random() * 1_000_000_000);
   const missionPlan = createMissionPlan({ seed: missionSeed, playerSpawn: spawnPoint });
+  const difficulty = gameState.difficultyPreset;
+  const playerDamage = createPlayerDamageState(difficulty);
   const player = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
     startPosition: { x: spawnPoint.x, y: 0.8, z: spawnPoint.z },
-    yawRateTuning: controlTuning.yawRate
+    yawRateTuning: controlTuning.yawRate,
+    damageState: playerDamage
   });
   const cannonConfig = DEFAULT_CANNON_CONFIG;
   const cannon = createCannonState(cannonConfig);
@@ -89,13 +97,14 @@ export const bootstrapGameplay = ({
   const missileConfig = DEFAULT_MISSILE_CONFIG;
   const missiles = createMissileState(missileConfig);
   const enemies = createEnemyState();
+  const samConfig = applySamDifficulty(DEFAULT_SAM_CONFIG, difficulty.sam);
   const missionTargets = spawnMissionEnemies({
     state: enemies,
     physics,
     plan: missionPlan,
     configs: {
       radar: DEFAULT_RADAR_CONFIG,
-      sam: DEFAULT_SAM_CONFIG,
+      sam: samConfig,
       vehicle: DEFAULT_VEHICLE_CONFIG
     }
   });
@@ -167,6 +176,16 @@ export const bootstrapGameplay = ({
     })
   );
   scheduler.addSystem(
+    createPlayerDamageSystem({
+      heli: player,
+      state: playerDamage,
+      mission,
+      enemies,
+      gameState,
+      difficulty
+    })
+  );
+  scheduler.addSystem(
     createConvoySystem({
       state: convoy,
       gameState
@@ -191,6 +210,16 @@ export const bootstrapGameplay = ({
       gameState
     })
   );
+  const telemetry = createTelemetryState();
+  scheduler.addSystem(
+    createTelemetrySystem({
+      telemetry,
+      mission,
+      stats: missionStats,
+      playerDamage,
+      gameState
+    })
+  );
   scheduler.addSystem(createTerrainStreamingSystem(player, terrain));
   scheduler.addSystem(createPropColliderStreamingSystem(player, propColliders));
 
@@ -205,6 +234,8 @@ export const bootstrapGameplay = ({
     enemies,
     convoy,
     mission,
-    missionStats
+    missionStats,
+    playerDamage,
+    telemetry
   };
 };

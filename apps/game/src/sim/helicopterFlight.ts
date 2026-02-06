@@ -10,6 +10,8 @@ import type { PhysicsWorldContext } from '../physics/world';
 import { createAltimeterState, type AltimeterState } from './altimeter';
 import type { GameState } from '../boot/createApp';
 import { rotateVector } from '../physics/math';
+import { createPlayerDamageState, type PlayerDamageState } from './playerDamage';
+import { DEFAULT_DIFFICULTY_PRESET } from '../content/difficulty';
 
 export type PlayerHelicopter = {
   entity: Entity;
@@ -21,6 +23,7 @@ export type PlayerHelicopter = {
   control: ControlState;
   altimeter: AltimeterState;
   power: HelicopterPowerState;
+  damage: PlayerDamageState;
 };
 
 export type HelicopterPowerState = {
@@ -46,6 +49,7 @@ export const spawnPlayerHelicopter = (
     startHeight?: number;
     startPosition?: { x: number; y?: number; z: number };
     yawRateTuning?: YawRateControllerTuning;
+    damageState?: PlayerDamageState;
   } = {}
 ): PlayerHelicopter => {
   const entity = createEntityId();
@@ -80,7 +84,8 @@ export const spawnPlayerHelicopter = (
     input,
     control,
     altimeter: createAltimeterState(),
-    power: createPowerState(flight)
+    power: createPowerState(flight),
+    damage: options.damageState ?? createPlayerDamageState(DEFAULT_DIFFICULTY_PRESET)
   };
 };
 
@@ -160,7 +165,7 @@ const applyRotorForces = (heli: PlayerHelicopter): void => {
   }
 
   const rotorRpmScale = clamp(heli.power.rotorRpm / heli.flight.nominalRotorRpm, 0, 1.1);
-  const magnitude = heli.flight.maxLiftForce * liftInput * rotorRpmScale;
+  const magnitude = heli.flight.maxLiftForce * liftInput * rotorRpmScale * heli.damage.effects.rotorLiftScale;
   const rotation = heli.body.rotation();
   const forceDirection = rotateVector({ x: 0, y: 1, z: 0 }, rotation);
 
@@ -198,12 +203,15 @@ const applyControlTorques = (heli: PlayerHelicopter): void => {
   const authorityScale = computeAuthorityScale(heli);
   const rotorRpmScale = clamp(heli.power.rotorRpm / heli.flight.nominalRotorRpm, 0, 1.1);
   const torqueScale = authorityScale * rotorRpmScale;
-  const pitchTorque = -heli.control.cyclicY.filtered * heli.flight.maxPitchTorque * torqueScale;
+  const pitchTorque =
+    -heli.control.cyclicY.filtered * heli.flight.maxPitchTorque * torqueScale * heli.damage.effects.rotorTorqueScale;
   const yawTorque =
     computeYawRateCommand(heli.control.yaw.filtered, heli.body.angvel().y, heli.yawRateTuning) *
     heli.flight.maxYawTorque *
-    torqueScale;
-  const rollTorque = -heli.control.cyclicX.filtered * heli.flight.maxRollTorque * torqueScale;
+    torqueScale *
+    heli.damage.effects.rotorTorqueScale;
+  const rollTorque =
+    -heli.control.cyclicX.filtered * heli.flight.maxRollTorque * torqueScale * heli.damage.effects.rotorTorqueScale;
 
   // Apply torques in body-local space so pitch/roll remain consistent regardless of yaw.
   const rotation = heli.body.rotation();
@@ -248,7 +256,7 @@ const applyStabilityAssist = (heli: PlayerHelicopter): void => {
   }
 
   const angularVelocity = heli.body.angvel();
-  const dampingFactor = heli.flight.stabilityAngularDamping;
+  const dampingFactor = heli.flight.stabilityAngularDamping * heli.damage.effects.avionicsScale;
 
   // Always apply some angular damping when stability is enabled.
   // With binary keyboard inputs, this prevents rapid uncontrolled flips while still allowing manual control.
@@ -278,9 +286,21 @@ const applyStabilityAssist = (heli: PlayerHelicopter): void => {
 
   // Apply counter-torque to level out
   const counterTorque = {
-    x: -angularVelocity.x * heli.flight.maxPitchTorque * counterTorqueScale,
-    y: -angularVelocity.y * heli.flight.maxYawTorque * counterTorqueScale,
-    z: -angularVelocity.z * heli.flight.maxRollTorque * counterTorqueScale
+    x:
+      -angularVelocity.x *
+      heli.flight.maxPitchTorque *
+      counterTorqueScale *
+      heli.damage.effects.avionicsScale,
+    y:
+      -angularVelocity.y *
+      heli.flight.maxYawTorque *
+      counterTorqueScale *
+      heli.damage.effects.avionicsScale,
+    z:
+      -angularVelocity.z *
+      heli.flight.maxRollTorque *
+      counterTorqueScale *
+      heli.damage.effects.avionicsScale
   };
 
   heli.body.addTorque(counterTorque, true);
@@ -298,7 +318,11 @@ const applyStabilityAssist = (heli: PlayerHelicopter): void => {
 
   const authorityScale = computeAuthorityScale(heli);
   const rotorRpmScale = clamp(heli.power.rotorRpm / heli.flight.nominalRotorRpm, 0, 1.1);
-  const torqueScale = heli.flight.stabilityLevelingTorqueScale * authorityScale * rotorRpmScale;
+  const torqueScale =
+    heli.flight.stabilityLevelingTorqueScale *
+    authorityScale *
+    rotorRpmScale *
+    heli.damage.effects.avionicsScale;
   const levelingTorque = {
     x: -upVector.z * heli.flight.maxPitchTorque * torqueScale,
     y: 0,
@@ -334,7 +358,7 @@ const updatePowerModel = (heli: PlayerHelicopter, dt: number): void => {
     0,
     heli.flight.powerMaxRequired
   );
-  const powerAvailable = heli.flight.powerAvailable;
+  const powerAvailable = heli.flight.powerAvailable * heli.damage.effects.enginePowerScale;
   const powerMargin = powerAvailable - powerRequired;
   const rpmTarget = clamp(
     heli.flight.nominalRotorRpm + powerMargin * heli.flight.rpmMarginToTarget,

@@ -358,7 +358,7 @@
   - [ ] Replay flow (new seed)
 
 ### [P1-18] Difficulty Tuning: “Arcade but Hardcore”
-- Status: Backlog
+- Status: Done
 - Summary: Tune damage/threat fairness to the intended midpoint between arcade and sim.
 - Context: Damage should matter and degrade capability, but not be constant instant-fail.
 - Tasks:
