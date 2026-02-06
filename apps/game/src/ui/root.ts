@@ -244,6 +244,7 @@ const createInstructionsPanel = (config: AppConfig, bindings: PlayerInputBinding
     createAxisRow('Yaw', bindings.yaw, 'Right', 'Left'),
     createNoteRow('Cannon Fire', `Hold ${formatKeyList(bindings.fireCannon)} to fire`),
     createNoteRow('Missile Fire', `Press ${formatKeyList(bindings.fireMissile)} to launch`),
+    createNoteRow('Countermeasure', `Press ${formatKeyList(bindings.deployCountermeasure)} to deploy`),
     createCameraModeRow(cameraModeValue),
     createNoteRow('Mouse Look', 'Click canvas to lock pointer; drag if lock unavailable.'),
     createNoteRow('Stability Assist', 'Press Z to toggle auto-leveling'),
@@ -469,15 +470,23 @@ const createCombatHud = (): CombatHudController => {
   const weaponMetric = createHudMetric('Weapon');
   const ammoMetric = createHudMetric('Ammo');
   const missileMetric = createHudMetric('Missiles');
+  const countermeasureMetric = createHudMetric('CM');
   const lockMetric = createHudMetric('Lock');
 
-  grid.append(weaponMetric.element, ammoMetric.element, missileMetric.element, lockMetric.element);
+  grid.append(
+    weaponMetric.element,
+    ammoMetric.element,
+    missileMetric.element,
+    countermeasureMetric.element,
+    lockMetric.element
+  );
   wrapper.append(heading, grid);
 
   const update = (readout: CombatReadout | null): void => {
     weaponMetric.setValue(readout?.weaponName ?? '—');
     ammoMetric.setValue(formatAmmo(readout?.ammo));
     missileMetric.setValue(formatAmmo(readout?.missileAmmo));
+    countermeasureMetric.setValue(formatAmmo(readout?.countermeasureAmmo));
     lockMetric.setValue(readout?.lockState ?? '—');
   };
 
@@ -751,6 +760,8 @@ const KEY_LABELS: Record<string, string> = {
   KeyR: 'R',
   KeyF: 'F',
   KeyC: 'C',
+  KeyB: 'B',
+  KeyM: 'M',
   ArrowUp: 'Arrow ↑',
   ArrowDown: 'Arrow ↓',
   ArrowLeft: 'Arrow ←',

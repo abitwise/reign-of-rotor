@@ -5,11 +5,13 @@ import type { GameState } from '../boot/createApp';
 import type { CannonState } from './cannon';
 import type { MissileState } from './missile';
 import type { EnemySpawn, RadarConfig, SamConfig, VehicleConfig } from '../content/enemies';
+import type { CountermeasureConfig } from '../content/countermeasures';
 import type { Entity } from '../physics/types';
 import type { PhysicsWorldContext } from '../physics/world';
 import { createColliderForEntity, createRigidBodyForEntity, removePhysicsForEntity } from '../physics/factories';
 import { clamp, dot, length, normalize, rotateTowards, rotateVector } from '../physics/math';
 import { createEntityId } from '../ecs/entity';
+import type { CountermeasureState } from './countermeasures';
 
 export type EnemyUnitType = 'radar' | 'sam' | 'vehicle';
 
@@ -245,7 +247,9 @@ export const createEnemySystem = ({
   target,
   cannon,
   missiles,
-  gameState
+  gameState,
+  countermeasures,
+  countermeasureConfig
 }: {
   physics: PhysicsWorldContext;
   state: EnemyState;
@@ -253,6 +257,8 @@ export const createEnemySystem = ({
   cannon: CannonState;
   missiles: MissileState;
   gameState: GameState;
+  countermeasures?: CountermeasureState;
+  countermeasureConfig?: CountermeasureConfig;
 }): LoopSystem => ({
   id: 'sim.enemies',
   phase: SystemPhase.PostPhysics,
@@ -264,7 +270,14 @@ export const createEnemySystem = ({
     }
 
     updateSamSites(state, physics, target, fixedDeltaSeconds);
-    updateSamMissiles(state, physics, target, fixedDeltaSeconds);
+    updateSamMissiles(
+      state,
+      physics,
+      target,
+      fixedDeltaSeconds,
+      countermeasures,
+      countermeasureConfig
+    );
     handleSamMissileCollisions(state, physics);
     updateVehiclePatrols(state, fixedDeltaSeconds);
     applyDamageEvents(state, physics, cannon.damageEvents);
@@ -336,7 +349,9 @@ const updateSamMissiles = (
   state: EnemyState,
   physics: PhysicsWorldContext,
   target: EnemyTarget,
-  dt: number
+  dt: number,
+  countermeasures?: CountermeasureState,
+  countermeasureConfig?: CountermeasureConfig
 ): void => {
   for (let i = state.samMissiles.length - 1; i >= 0; i -= 1) {
     const missile = state.samMissiles[i];
@@ -351,6 +366,25 @@ const updateSamMissiles = (
     const config = missile.config;
 
     const targetBody = target.entity === missile.target ? target.body : null;
+    if (
+      targetBody &&
+      countermeasures &&
+      countermeasureConfig &&
+      countermeasures.activeRemaining > 0 &&
+      countermeasures.decoyPosition &&
+      missile.target === target.entity
+    ) {
+      const decoyPos = countermeasures.decoyPosition;
+      const missilePos = missile.body.translation();
+      const dx = missilePos.x - decoyPos.x;
+      const dy = missilePos.y - decoyPos.y;
+      const dz = missilePos.z - decoyPos.z;
+      const radius = countermeasureConfig.decoyRadius;
+      if (dx * dx + dy * dy + dz * dz <= radius * radius) {
+        missile.target = null;
+        continue;
+      }
+    }
     if (!targetBody) {
       continue;
     }
