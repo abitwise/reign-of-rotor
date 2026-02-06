@@ -5,6 +5,7 @@ import type { CountermeasureState } from '../sim/countermeasures';
 import type { MissileState } from '../sim/missile';
 import type { EnemyState } from '../sim/enemies';
 import type { MissionRuntime, MissionObjectiveStatus } from '../sim/missionDirector';
+import type { MissionStatsState } from '../sim/missionStats';
 import type { CannonConfig, MissileConfig } from '../content/weapons';
 import { rotateVector } from '../physics/math';
 import {
@@ -68,6 +69,18 @@ export type MissionReadout = {
     continueSelected: boolean;
     completed: boolean;
   };
+};
+
+export type DebriefReadout = {
+  active: boolean;
+  title: string;
+  outcomeLabel: string;
+  elapsedSeconds: number;
+  kills: number;
+  damageDealt: number;
+  shotsFired: number;
+  cannonShots: number;
+  missileShots: number;
 };
 
 export type AlertId =
@@ -184,6 +197,27 @@ export const buildMissionReadout = (mission: MissionRuntime | null): MissionRead
       progress: formatObjectiveProgress(objective)
     })),
     completion: { ...mission.completion }
+  };
+};
+
+export const buildDebriefReadout = (
+  mission: MissionRuntime | null,
+  stats: MissionStatsState | null
+): DebriefReadout | null => {
+  if (!mission || !stats || !stats.debriefActive) {
+    return null;
+  }
+
+  return {
+    active: stats.debriefActive,
+    title: mission.templateName,
+    outcomeLabel: mission.status === 'completed' ? 'Mission Complete' : 'Mission Failed',
+    elapsedSeconds: stats.elapsedSeconds,
+    kills: stats.kills,
+    damageDealt: stats.damageDealt,
+    shotsFired: stats.totalShots,
+    cannonShots: stats.cannonShots,
+    missileShots: stats.missileShots
   };
 };
 

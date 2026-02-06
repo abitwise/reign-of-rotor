@@ -71,6 +71,7 @@ export type EnemyState = {
   samMissiles: SamMissile[];
   samMissileMap: Map<Entity, SamMissile>;
   explosionEvents: SamExplosionEvent[];
+  killedUnits: Entity[];
 };
 
 export type EnemyTarget = {
@@ -87,7 +88,8 @@ export const createEnemyState = (): EnemyState => ({
   vehicles: [],
   samMissiles: [],
   samMissileMap: new Map(),
-  explosionEvents: []
+  explosionEvents: [],
+  killedUnits: []
 });
 
 export const spawnRadarEmitter = (
@@ -264,6 +266,7 @@ export const createEnemySystem = ({
   phase: SystemPhase.PostPhysics,
   step: ({ fixedDeltaSeconds }) => {
     state.explosionEvents.length = 0;
+    state.killedUnits.length = 0;
 
     if (gameState.isPaused) {
       return;
@@ -296,6 +299,7 @@ const removeUnitByEntity = (state: EnemyState, physics: PhysicsWorldContext, ent
   if (!unit) {
     return;
   }
+  state.killedUnits.push(entity);
   removePhysicsForEntity(physics, entity);
   state.unitMap.delete(entity);
   removeByPredicate(state.units, (candidate) => candidate.entity === entity);

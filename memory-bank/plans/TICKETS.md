@@ -350,7 +350,7 @@
   - [ ] Add in-air completion prompt state + input action to confirm
 
 ### [P1-17] Debrief Screen v1 (Stats + Outcome)
-- Status: Backlog
+- Status: Done
 - Summary: Show results; enable quick replay.
 - Tasks:
   - [ ] Collect stats (time, kills, damage, shots fired)

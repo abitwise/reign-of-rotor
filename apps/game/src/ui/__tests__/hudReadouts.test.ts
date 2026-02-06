@@ -4,6 +4,7 @@ import {
   buildNavigationReadout,
   buildCombatReadout,
   buildThreatReadout,
+  buildDebriefReadout,
   selectPriorityAlert,
   type AvionicsReadout,
   type AlertCandidate
@@ -12,6 +13,8 @@ import type { CannonState } from '../../sim/cannon';
 import type { CannonConfig, MissileConfig } from '../../content/weapons';
 import type { MissileState } from '../../sim/missile';
 import type { EnemyState } from '../../sim/enemies';
+import type { MissionStatsState } from '../../sim/missionStats';
+import type { MissionRuntime } from '../../sim/missionDirector';
 
 const baseReadout: AvionicsReadout = {
   altitude: 20,
@@ -114,6 +117,7 @@ describe('buildCombatReadout', () => {
     const cannonState: CannonState = {
       ammoRemaining: 500,
       cooldownRemaining: 0,
+      shotsFired: 0,
       impactEvents: [],
       damageEvents: []
     };
@@ -124,6 +128,7 @@ describe('buildCombatReadout', () => {
       lockProgress: 0,
       lockTarget: null,
       hasCandidate: false,
+      missilesFired: 0,
       missiles: [],
       missileMap: new Map(),
       explosionEvents: [],
@@ -177,6 +182,7 @@ describe('buildCombatReadout', () => {
     const cannonState: CannonState = {
       ammoRemaining: 0,
       cooldownRemaining: 0,
+      shotsFired: 0,
       impactEvents: [],
       damageEvents: []
     };
@@ -187,6 +193,7 @@ describe('buildCombatReadout', () => {
       lockProgress: 0,
       lockTarget: null,
       hasCandidate: false,
+      missilesFired: 0,
       missiles: [],
       missileMap: new Map(),
       explosionEvents: [],
@@ -231,6 +238,7 @@ describe('buildCombatReadout', () => {
     const cannonState: CannonState = {
       ammoRemaining: 100,
       cooldownRemaining: 0,
+      shotsFired: 0,
       impactEvents: [],
       damageEvents: []
     };
@@ -241,6 +249,7 @@ describe('buildCombatReadout', () => {
       lockProgress: 0,
       lockTarget: null,
       hasCandidate: true,
+      missilesFired: 0,
       missiles: [],
       missileMap: new Map(),
       explosionEvents: [],
@@ -298,7 +307,8 @@ describe('buildThreatReadout', () => {
     vehicles: [],
     samMissiles: [],
     samMissileMap: new Map(),
-    explosionEvents: []
+    explosionEvents: [],
+    killedUnits: []
   };
 
   it('returns launch warning when a SAM missile targets the player', () => {
@@ -347,5 +357,57 @@ describe('buildThreatReadout', () => {
     );
 
     expect(readout?.level).toBe('scan');
+  });
+});
+
+describe('buildDebriefReadout', () => {
+  const baseMission: MissionRuntime = {
+    seed: 123,
+    templateId: 'convoy-strike',
+    templateName: 'Convoy Strike',
+    summary: 'Test mission',
+    status: 'completed',
+    objectives: [],
+    completion: {
+      available: true,
+      promptActive: false,
+      continueSelected: false,
+      completed: true
+    },
+    navigationTarget: null
+  };
+
+  it('returns null when debrief is not active', () => {
+    const stats: MissionStatsState = {
+      elapsedSeconds: 10,
+      kills: 2,
+      damageDealt: 50,
+      cannonShots: 5,
+      missileShots: 1,
+      totalShots: 6,
+      debriefActive: false,
+      outcome: null
+    };
+
+    expect(buildDebriefReadout(baseMission, stats)).toBeNull();
+  });
+
+  it('builds a debrief readout when active', () => {
+    const stats: MissionStatsState = {
+      elapsedSeconds: 75,
+      kills: 3,
+      damageDealt: 120,
+      cannonShots: 12,
+      missileShots: 2,
+      totalShots: 14,
+      debriefActive: true,
+      outcome: 'success'
+    };
+
+    const readout = buildDebriefReadout(baseMission, stats);
+
+    expect(readout?.title).toBe('Convoy Strike');
+    expect(readout?.outcomeLabel).toBe('Mission Complete');
+    expect(readout?.shotsFired).toBe(14);
   });
 });

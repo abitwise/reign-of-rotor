@@ -14,6 +14,7 @@ import { CONTROL_TUNING_PRESETS } from '../content/controls';
 import {
   buildAvionicsReadout,
   buildCombatReadout,
+  buildDebriefReadout,
   buildNavigationReadout,
   buildThreatReadout,
   buildMissionReadout
@@ -95,6 +96,9 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
         buildNavigationReadout(gameplayContext.player, gameplayContext.mission.navigationTarget)
       );
       rootUi.setMissionReadoutProvider?.(() => buildMissionReadout(gameplayContext.mission));
+      rootUi.setDebriefReadoutProvider?.(() =>
+        buildDebriefReadout(gameplayContext.mission, gameplayContext.missionStats)
+      );
       rootUi.setCombatReadoutProvider?.(() =>
         buildCombatReadout(
           gameplayContext.cannon,
