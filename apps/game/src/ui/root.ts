@@ -687,7 +687,7 @@ const createDebriefOverlay = (): DebriefOverlayController => {
     overlay.hidden = false;
     overlay.removeAttribute('aria-hidden');
     replayButton.disabled = false;
-    replayButton.removeAttribute('tabindex');
+    replayButton.tabIndex = 0;
     title.textContent = readout.title;
     outcome.textContent = readout.outcomeLabel;
     timeRow.setValue(formatElapsedTime(readout.elapsedSeconds));
