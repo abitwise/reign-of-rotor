@@ -102,6 +102,7 @@ const fireCannonShot = (
       z: origin.z + forward.z * hit.timeOfImpact
     };
     const targetEntity = physics.handles.getEntityFromCollider(hit.collider.handle) ?? null;
+    const damageScale = heli.damage.effects.weaponsScale;
 
     state.impactEvents.push({
       position,
@@ -111,11 +112,11 @@ const fireCannonShot = (
       fxId: config.impactFx
     });
 
-    if (targetEntity !== null) {
+    if (targetEntity !== null && damageScale > 0) {
       state.damageEvents.push({
         source: heli.entity,
         target: targetEntity,
-        amount: config.damage
+        amount: config.damage * damageScale
       });
     }
   }

@@ -93,7 +93,10 @@ export const createMissileSystem = ({
       state.cooldownRemaining = Math.max(0, state.cooldownRemaining - fixedDeltaSeconds);
     }
 
-    updateLockState(heli, physics, config, state, targets(), fixedDeltaSeconds);
+    const sensorScale = clamp(heli.damage.effects.sensorsScale, 0.35, 1);
+    const weaponScale = Math.max(0, heli.damage.effects.weaponsScale);
+
+    updateLockState(heli, physics, config, state, targets(), fixedDeltaSeconds, sensorScale);
 
     if (
       input.fireMissile &&
@@ -108,8 +111,8 @@ export const createMissileSystem = ({
       state.missilesFired += 1;
     }
 
-    handleMissileCollisions(heli, physics, state, config);
-    updateMissileGuidance(physics, config, state, fixedDeltaSeconds);
+    handleMissileCollisions(heli, physics, state, config, weaponScale);
+    updateMissileGuidance(physics, config, state, fixedDeltaSeconds, weaponScale);
   }
 });
 
@@ -119,9 +122,10 @@ const updateLockState = (
   config: MissileConfig,
   state: MissileState,
   candidates: readonly Entity[],
-  fixedDeltaSeconds: number
+  fixedDeltaSeconds: number,
+  sensorScale: number
 ): void => {
-  const selection = selectBestTarget(heli, physics, config, candidates);
+  const selection = selectBestTarget(heli, physics, config, candidates, sensorScale);
   state.hasCandidate = selection !== null;
 
   if (!selection) {
@@ -148,13 +152,15 @@ const updateLockState = (
     return;
   }
 
-  if (config.lockTimeSeconds <= 0) {
+  const lockTimeSeconds = sensorScale > 0 ? config.lockTimeSeconds / sensorScale : config.lockTimeSeconds;
+
+  if (lockTimeSeconds <= 0) {
     state.lockProgress = 1;
     state.lockStatus = 'LOCKED';
     return;
   }
 
-  const nextProgress = Math.min(1, state.lockProgress + fixedDeltaSeconds / config.lockTimeSeconds);
+  const nextProgress = Math.min(1, state.lockProgress + fixedDeltaSeconds / lockTimeSeconds);
   state.lockProgress = nextProgress;
   state.lockStatus = nextProgress >= 1 ? 'LOCKED' : 'ACQUIRING';
 };
@@ -163,7 +169,8 @@ const selectBestTarget = (
   heli: PlayerHelicopter,
   physics: PhysicsWorldContext,
   config: MissileConfig,
-  candidates: readonly Entity[]
+  candidates: readonly Entity[],
+  sensorScale: number
 ): { entity: Entity } | null => {
   if (!candidates.length) {
     return null;
@@ -171,6 +178,8 @@ const selectBestTarget = (
 
   const origin = heli.body.translation();
   const forward = normalize(rotateVector({ x: 0, y: 0, z: 1 }, heli.body.rotation()));
+  const effectiveLockRange = config.lockRange * sensorScale;
+  const effectiveLockCone = config.lockConeDegrees * sensorScale;
 
   let best: { entity: Entity; angle: number; distance: number } | null = null;
 
@@ -189,13 +198,13 @@ const selectBestTarget = (
       z: targetPos.z - origin.z
     };
     const distance = length(toTarget);
-    if (distance <= 0.001 || distance > config.lockRange) {
+    if (distance <= 0.001 || distance > effectiveLockRange) {
       continue;
     }
 
     const direction = normalize(toTarget);
     const angleDegrees = Math.acos(clamp(dot(forward, direction), -1, 1)) * (180 / Math.PI);
-    if (angleDegrees > config.lockConeDegrees * 0.5) {
+    if (angleDegrees > effectiveLockCone * 0.5) {
       continue;
     }
 
@@ -301,7 +310,8 @@ const updateMissileGuidance = (
   physics: PhysicsWorldContext,
   config: MissileConfig,
   state: MissileState,
-  fixedDeltaSeconds: number
+  fixedDeltaSeconds: number,
+  damageScale: number
 ): void => {
   const maxTurnRadians = (config.turnRateDeg * Math.PI / 180) * fixedDeltaSeconds;
 
@@ -326,7 +336,7 @@ const updateMissileGuidance = (
       };
       const distance = length(toTarget);
       if (distance <= config.proximityRadius) {
-        explodeMissile(physics, config, state, missile, missile.target);
+        explodeMissile(physics, config, state, missile, missile.target, damageScale);
         state.missiles.splice(i, 1);
         continue;
       }
@@ -355,7 +365,8 @@ const handleMissileCollisions = (
   heli: PlayerHelicopter,
   physics: PhysicsWorldContext,
   state: MissileState,
-  config: MissileConfig
+  config: MissileConfig,
+  damageScale: number
 ): void => {
   const collisions = physics.collisions.read();
   for (const collision of collisions) {
@@ -370,7 +381,7 @@ const handleMissileCollisions = (
     if (other === heli.entity) {
       continue;
     }
-    explodeMissile(physics, config, state, missile, other);
+    explodeMissile(physics, config, state, missile, other, damageScale);
     const index = state.missiles.indexOf(missile);
     if (index >= 0) {
       state.missiles.splice(index, 1);
@@ -383,22 +394,24 @@ const explodeMissile = (
   config: MissileConfig,
   state: MissileState,
   missile: MissileInstance,
-  target: Entity | null
+  target: Entity | null,
+  damageScale: number
 ): void => {
   const translation = missile.body.translation();
+  const scaledDamage = config.damage * damageScale;
   state.explosionEvents.push({
     position: { x: translation.x, y: translation.y, z: translation.z },
     radius: config.explosionRadius,
-    damage: config.damage,
+    damage: scaledDamage,
     targetEntity: target,
     fxId: config.explosionFx
   });
 
-  if (target !== null) {
+  if (target !== null && scaledDamage > 0) {
     state.damageEvents.push({
       source: missile.entity,
       target,
-      amount: config.damage
+      amount: scaledDamage
     });
   }
 
