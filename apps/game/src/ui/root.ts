@@ -120,6 +120,8 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   let missionProvider: MissionReadoutProvider | null = null;
   let debriefProvider: DebriefReadoutProvider | null = null;
   let hudFrameHandle: number | null = null;
+  let previousDebriefActive = false;
+  let previousFlightHudVisible = isFlightHudVisible;
 
   const hudLoop = (): void => {
     if (!avionicsReadoutProvider) {
@@ -148,12 +150,17 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     boundsBanner.setWarning(
       debriefActive ? null : formatOutOfBoundsWarning(outOfBoundsProvider?.() ?? null)
     );
-    avionicsHud.element.style.display = !debriefActive && isFlightHudVisible ? '' : 'none';
-    assistsHud.element.style.display = debriefActive ? 'none' : '';
-    combatHud.element.style.display = debriefActive ? 'none' : '';
-    missionHud.element.style.display = debriefActive ? 'none' : '';
-    alertBanner.element.style.display = debriefActive ? 'none' : '';
-    boundsBanner.element.style.display = debriefActive ? 'none' : '';
+    // Only update display styles when visibility state changes
+    if (debriefActive !== previousDebriefActive || isFlightHudVisible !== previousFlightHudVisible) {
+      avionicsHud.element.style.display = !debriefActive && isFlightHudVisible ? '' : 'none';
+      assistsHud.element.style.display = debriefActive ? 'none' : '';
+      combatHud.element.style.display = debriefActive ? 'none' : '';
+      missionHud.element.style.display = debriefActive ? 'none' : '';
+      alertBanner.element.style.display = debriefActive ? 'none' : '';
+      boundsBanner.element.style.display = debriefActive ? 'none' : '';
+      previousDebriefActive = debriefActive;
+      previousFlightHudVisible = isFlightHudVisible;
+    }
     if (cameraModeProvider) {
       instructionsPanel.setCameraMode(cameraModeProvider() ?? 'Cockpit');
     }
@@ -669,10 +676,18 @@ const createDebriefOverlay = (): DebriefOverlayController => {
   const update = (readout: DebriefReadout | null): void => {
     if (!readout) {
       overlay.classList.add('hidden');
+      overlay.hidden = true;
+      overlay.setAttribute('aria-hidden', 'true');
+      replayButton.disabled = true;
+      replayButton.tabIndex = -1;
       return;
     }
 
     overlay.classList.remove('hidden');
+    overlay.hidden = false;
+    overlay.removeAttribute('aria-hidden');
+    replayButton.disabled = false;
+    replayButton.tabIndex = 0;
     title.textContent = readout.title;
     outcome.textContent = readout.outcomeLabel;
     timeRow.setValue(formatElapsedTime(readout.elapsedSeconds));
