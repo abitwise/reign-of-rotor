@@ -1,5 +1,5 @@
 import type { AppConfig } from '../boot/config';
-import { createDebugOverlay } from './debugOverlay';
+import { createDebugOverlay, type PerfMetrics } from './debugOverlay';
 import { FORCE_TRIM_KEY, RESET_TRIM_KEY, type PlayerInputBindings } from '../core/input/playerInput';
 import type { ControlState, ControlTrimState } from '../core/input/controlState';
 import { isTrimActive } from '../core/input/trimUtils';
@@ -41,6 +41,7 @@ export type OutOfBoundsProvider = () => OutOfBoundsReadout | null;
 export type NavigationReadoutProvider = () => NavigationReadout | null;
 export type MissionReadoutProvider = () => MissionReadout | null;
 export type DebriefReadoutProvider = () => DebriefReadout | null;
+export type PerfMetricsProvider = () => PerfMetrics | null;
 
 export const createRootUi = ({ target, config, bindings, gameState }: RootUiOptions) => {
   const container = document.createElement('div');
@@ -119,6 +120,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
   let navigationProvider: NavigationReadoutProvider | null = null;
   let missionProvider: MissionReadoutProvider | null = null;
   let debriefProvider: DebriefReadoutProvider | null = null;
+  let perfMetricsProvider: PerfMetricsProvider | null = null;
   let hudFrameHandle: number | null = null;
   let previousDebriefActive = false;
   let previousFlightHudVisible = isFlightHudVisible;
@@ -167,6 +169,7 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     debugOverlay?.setTrimState?.(trimState);
     debugOverlay?.setControlState?.(controlState);
     debugOverlay?.setAvionicsReadout?.(avionicsReadout);
+    debugOverlay?.setPerfMetrics?.(perfMetricsProvider?.() ?? null);
     hudFrameHandle = scheduleFrame(hudLoop);
   };
 
@@ -240,6 +243,12 @@ export const createRootUi = ({ target, config, bindings, gameState }: RootUiOpti
     },
     setDebriefReadoutProvider: (provider: DebriefReadoutProvider) => {
       debriefProvider = provider;
+      if (hudFrameHandle === null && avionicsReadoutProvider) {
+        hudFrameHandle = scheduleFrame(hudLoop);
+      }
+    },
+    setPerfMetricsProvider: (provider: PerfMetricsProvider) => {
+      perfMetricsProvider = provider;
       if (hudFrameHandle === null && avionicsReadoutProvider) {
         hudFrameHandle = scheduleFrame(hudLoop);
       }

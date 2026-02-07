@@ -367,7 +367,7 @@
   - [ ] Add minimal telemetry (average mission time, deaths, causes)
 
 ### [P1-19] Performance Pass + Pooling + Smoke Tests
-- Status: Backlog
+- Status: Done
 - Summary: Reduce GC spikes, ensure stable FPS, add basic e2e checks.
 - Tasks:
   - [ ] Pool missiles/flares/FX entities

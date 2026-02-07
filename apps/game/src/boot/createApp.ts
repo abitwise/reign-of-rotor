@@ -113,6 +113,9 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       rootUi.setThreatReadoutProvider?.(() =>
         buildThreatReadout(gameplayContext.enemies, gameplayContext.player)
       );
+      rootUi.setPerfMetricsProvider?.(() => ({
+        entityCount: countTrackedEntities(gameplayContext)
+      }));
 
       // Wait for mesh to be loaded before setting camera target
       await renderContext.bindEntityMesh(gameplayContext.player.entity, 'apache-gunship');
@@ -154,4 +157,14 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       layout.destroy();
     }
   };
+};
+
+const countTrackedEntities = (context: GameplayContext): number => {
+  return (
+    1 +
+    context.enemies.units.length +
+    context.enemies.samMissiles.length +
+    context.missiles.missiles.length +
+    context.convoy.vehicles.length
+  );
 };
