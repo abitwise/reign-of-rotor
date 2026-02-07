@@ -392,7 +392,8 @@ describe('buildDebriefReadout', () => {
       continueSelected: false,
       completed: true
     },
-    navigationTarget: null
+    navigationTarget: null,
+    bounds: { type: 'circle', center: { x: 0, z: 0 }, radius: 20000 }
   };
 
   it('returns null when debrief is not active', () => {

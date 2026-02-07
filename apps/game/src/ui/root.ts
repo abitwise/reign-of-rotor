@@ -33,7 +33,7 @@ export type TrimStateProvider = () => ControlTrimState | null;
 export type ControlStateProvider = () => ControlState | null;
 export type OutOfBoundsReadout = {
   active: boolean;
-  secondsRemaining: number | null;
+  remainingSeconds: number;
 };
 export type CombatReadoutProvider = () => CombatReadout | null;
 export type ThreatReadoutProvider = () => ThreatReadout | null;
@@ -959,8 +959,8 @@ const formatOutOfBoundsWarning = (readout: OutOfBoundsReadout | null): string | 
     return null;
   }
 
-  if (readout.secondsRemaining !== null && Number.isFinite(readout.secondsRemaining)) {
-    return `OUT OF BOUNDS • RETURN IN ${Math.max(0, readout.secondsRemaining).toFixed(0)}s`;
+  if (Number.isFinite(readout.remainingSeconds)) {
+    return `OUT OF BOUNDS • RETURN IN ${Math.max(0, readout.remainingSeconds).toFixed(0)}s`;
   }
 
   return 'OUT OF BOUNDS';

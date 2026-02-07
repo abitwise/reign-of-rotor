@@ -115,7 +115,7 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       );
       rootUi.setOutOfBoundsProvider?.(() => ({
         active: gameplayContext.outOfBounds.active,
-        secondsRemaining: gameplayContext.outOfBounds.secondsRemaining
+        remainingSeconds: gameplayContext.outOfBounds.remainingSeconds
       }));
       const perfMetrics = { entityCount: 0 };
       rootUi.setPerfMetricsProvider?.(() => {
