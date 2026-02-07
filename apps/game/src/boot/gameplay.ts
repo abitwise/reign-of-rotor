@@ -12,7 +12,12 @@ import {
   DEFAULT_VEHICLE_CONFIG
 } from '../content/enemies';
 import { applySamDifficulty } from '../content/difficulty';
-import { createMissionPlan, DEFAULT_CONVOY_VEHICLE_CONFIG } from '../content/missions';
+import {
+  createMissionPlan,
+  DEFAULT_CONVOY_VEHICLE_CONFIG,
+  createMissionBounds,
+  MISSION_BOUNDS_CONFIG
+} from '../content/missions';
 import type { PhysicsWorldContext } from '../physics/world';
 import {
   createHelicopterFlightSystem,
@@ -48,6 +53,11 @@ import {
 } from '../sim/missionStats';
 import { createPlayerDamageState, createPlayerDamageSystem, type PlayerDamageState } from '../sim/playerDamage';
 import { createTelemetryState, createTelemetrySystem, type TelemetryState } from '../sim/telemetry';
+import {
+  createOutOfBoundsState,
+  createOutOfBoundsSystem,
+  type OutOfBoundsState
+} from '../sim/outOfBounds';
 
 export type GameplayContext = {
   player: PlayerHelicopter;
@@ -61,6 +71,7 @@ export type GameplayContext = {
   convoy: ConvoyState;
   mission: MissionRuntime;
   missionStats: MissionStatsState;
+  outOfBounds: OutOfBoundsState;
   playerDamage: PlayerDamageState;
   telemetry: TelemetryState;
 };
@@ -83,6 +94,7 @@ export const bootstrapGameplay = ({
   const spawnPoint = pickSpawnPoint(WORLD_CONFIG);
   const missionSeed = Math.floor(Math.random() * 1_000_000_000);
   const missionPlan = createMissionPlan({ seed: missionSeed, playerSpawn: spawnPoint });
+  const missionBounds = createMissionBounds(missionPlan.origin, MISSION_BOUNDS_CONFIG);
   const difficulty = gameState.difficultyPreset;
   const playerDamage = createPlayerDamageState(difficulty);
   const player = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
@@ -124,8 +136,10 @@ export const bootstrapGameplay = ({
           label: missionPlan.primaryWaypoint.label,
           position: missionPlan.primaryWaypoint.position
         }
-      : null
+      : null,
+    bounds: missionBounds
   });
+  const outOfBounds = createOutOfBoundsState(MISSION_BOUNDS_CONFIG);
   const missionStats = createMissionStatsState();
   const terrain = createTerrainColliderManager(physics);
   terrain.update(spawnPoint);
@@ -210,6 +224,15 @@ export const bootstrapGameplay = ({
       gameState
     })
   );
+  scheduler.addSystem(
+    createOutOfBoundsSystem({
+      state: outOfBounds,
+      config: MISSION_BOUNDS_CONFIG,
+      mission,
+      player,
+      gameState
+    })
+  );
   const telemetry = createTelemetryState();
   scheduler.addSystem(
     createTelemetrySystem({
@@ -235,6 +258,7 @@ export const bootstrapGameplay = ({
     convoy,
     mission,
     missionStats,
+    outOfBounds,
     playerDamage,
     telemetry
   };

@@ -4,7 +4,7 @@ import type { GameState } from '../boot/createApp';
 import type { PlayerInputState } from '../core/input/playerInput';
 import type { EnemyState, EnemyUnitType } from './enemies';
 import type { ConvoyState } from './convoy';
-import type { MissionObjectiveTemplate, MissionPlan } from '../content/missions';
+import type { MissionBounds, MissionObjectiveTemplate, MissionPlan } from '../content/missions';
 import type { NavigationTarget } from '../content/avionics';
 import type { Entity } from '../physics/types';
 import type { PhysicsWorldContext } from '../physics/world';
@@ -41,6 +41,7 @@ export type MissionRuntime = {
   objectives: MissionObjective[];
   completion: MissionCompletionState;
   navigationTarget: NavigationTarget | null;
+  bounds: MissionBounds;
 };
 
 export type MissionSpawnResult = {
@@ -99,7 +100,8 @@ export const createMissionRuntime = ({
   summary,
   objectives,
   targetsByType,
-  navigationTarget
+  navigationTarget,
+  bounds
 }: {
   seed: number;
   templateId: string;
@@ -108,6 +110,7 @@ export const createMissionRuntime = ({
   objectives: MissionObjectiveTemplate[];
   targetsByType: Record<EnemyUnitType, Entity[]>;
   navigationTarget: NavigationTarget | null;
+  bounds: MissionBounds;
 }): MissionRuntime => {
   const runtimeObjectives = objectives.map((objective) => {
     const targets = objective.targetType ? targetsByType[objective.targetType] ?? [] : [];
@@ -139,7 +142,8 @@ export const createMissionRuntime = ({
       continueSelected: false,
       completed: false
     },
-    navigationTarget
+    navigationTarget,
+    bounds
   };
 };
 

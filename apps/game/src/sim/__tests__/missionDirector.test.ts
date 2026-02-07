@@ -46,7 +46,8 @@ describe('mission director', () => {
         sam: [],
         vehicle: []
       },
-      navigationTarget: null
+      navigationTarget: null,
+      bounds: { type: 'circle', center: { x: 0, z: 0 }, radius: 1000 }
     });
 
     const input = createPlayerInputState();
