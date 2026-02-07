@@ -38,6 +38,32 @@ export type MissionDirectorConfig = {
   convoySpeed: number;
 };
 
+export type MissionBoundsConfig =
+  | {
+      type: 'circle';
+      radius: number;
+      warningSeconds: number;
+    }
+  | {
+      type: 'rect';
+      halfWidth: number;
+      halfDepth: number;
+      warningSeconds: number;
+    };
+
+export type MissionBounds =
+  | {
+      type: 'circle';
+      center: { x: number; z: number };
+      radius: number;
+    }
+  | {
+      type: 'rect';
+      center: { x: number; z: number };
+      halfWidth: number;
+      halfDepth: number;
+    };
+
 export type ConvoyPlan = {
   route: { x: number; y: number; z: number }[];
   unitCount: number;
@@ -60,6 +86,12 @@ export const MISSION_DIRECTOR_CONFIG: MissionDirectorConfig = {
   rotationVarianceDegrees: 360,
   convoySpacing: 18,
   convoySpeed: 12
+};
+
+export const MISSION_BOUNDS_CONFIG: MissionBoundsConfig = {
+  type: 'circle',
+  radius: 20000,
+  warningSeconds: 20
 };
 
 export const DEFAULT_CONVOY_VEHICLE_CONFIG: VehicleConfig = {
@@ -267,6 +299,26 @@ export const createMissionPlan = ({
     enemySpawns,
     convoyPlan,
     primaryWaypoint
+  };
+};
+
+export const createMissionBounds = (
+  origin: { x: number; z: number },
+  config: MissionBoundsConfig = MISSION_BOUNDS_CONFIG
+): MissionBounds => {
+  if (config.type === 'rect') {
+    return {
+      type: 'rect',
+      center: { x: origin.x, z: origin.z },
+      halfWidth: config.halfWidth,
+      halfDepth: config.halfDepth
+    };
+  }
+
+  return {
+    type: 'circle',
+    center: { x: origin.x, z: origin.z },
+    radius: config.radius
   };
 };
 

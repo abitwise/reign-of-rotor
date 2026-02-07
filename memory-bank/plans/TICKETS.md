@@ -375,7 +375,7 @@
   - [ ] Playwright smoke tests (boot + start mission)
  
 ### [P1-20] Out-of-Bounds Rules + Warning UI
-- Status: Backlog
+- Status: Done
 - Summary: Define mission area bounds and implement warning + fail countdown.
 - Context: Prevents players from wandering indefinitely and supports consistent mission pacing.
 - Functional behavior (GIVEN/WHEN/THEN):

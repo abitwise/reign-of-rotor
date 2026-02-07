@@ -113,6 +113,10 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       rootUi.setThreatReadoutProvider?.(() =>
         buildThreatReadout(gameplayContext.enemies, gameplayContext.player)
       );
+      rootUi.setOutOfBoundsProvider?.(() => ({
+        active: gameplayContext.outOfBounds.active,
+        secondsRemaining: gameplayContext.outOfBounds.secondsRemaining
+      }));
       const perfMetrics = { entityCount: 0 };
       rootUi.setPerfMetricsProvider?.(() => {
         perfMetrics.entityCount = countTrackedEntities(gameplayContext);
