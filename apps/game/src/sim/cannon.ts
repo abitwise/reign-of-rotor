@@ -28,6 +28,8 @@ export type CannonState = {
   shotsFired: number;
   impactEvents: CannonImpactEvent[];
   damageEvents: CannonDamageEvent[];
+  impactEventPool: CannonImpactEvent[];
+  damageEventPool: CannonDamageEvent[];
 };
 
 export const createCannonState = (config: CannonConfig): CannonState => ({
@@ -35,7 +37,9 @@ export const createCannonState = (config: CannonConfig): CannonState => ({
   cooldownRemaining: 0,
   shotsFired: 0,
   impactEvents: [],
-  damageEvents: []
+  damageEvents: [],
+  impactEventPool: [],
+  damageEventPool: []
 });
 
 export const createCannonSystem = ({
@@ -56,6 +60,8 @@ export const createCannonSystem = ({
   id: `sim.cannon.${heli.entity}`,
   phase: SystemPhase.PostPhysics,
   step: ({ fixedDeltaSeconds }) => {
+    recycleImpactEvents(state);
+    recycleDamageEvents(state);
     state.impactEvents.length = 0;
     state.damageEvents.length = 0;
 
@@ -104,20 +110,24 @@ const fireCannonShot = (
     const targetEntity = physics.handles.getEntityFromCollider(hit.collider.handle) ?? null;
     const damageScale = heli.damage.effects.weaponsScale;
 
-    state.impactEvents.push({
-      position,
-      normal: { x: hit.normal.x, y: hit.normal.y, z: hit.normal.z },
-      distance: hit.timeOfImpact,
-      targetEntity,
-      fxId: config.impactFx
-    });
+    const impactEvent = acquireImpactEvent(state);
+    impactEvent.position.x = position.x;
+    impactEvent.position.y = position.y;
+    impactEvent.position.z = position.z;
+    impactEvent.normal.x = hit.normal.x;
+    impactEvent.normal.y = hit.normal.y;
+    impactEvent.normal.z = hit.normal.z;
+    impactEvent.distance = hit.timeOfImpact;
+    impactEvent.targetEntity = targetEntity;
+    impactEvent.fxId = config.impactFx;
+    state.impactEvents.push(impactEvent);
 
     if (targetEntity !== null && damageScale > 0) {
-      state.damageEvents.push({
-        source: heli.entity,
-        target: targetEntity,
-        amount: config.damage * damageScale
-      });
+      const damageEvent = acquireDamageEvent(state);
+      damageEvent.source = heli.entity;
+      damageEvent.target = targetEntity;
+      damageEvent.amount = config.damage * damageScale;
+      state.damageEvents.push(damageEvent);
     }
   }
 
@@ -137,4 +147,47 @@ const computeMuzzleWorldPosition = (
     y: translation.y + rotatedOffset.y,
     z: translation.z + rotatedOffset.z
   };
+};
+
+const IMPACT_EVENT_POOL_LIMIT = 48;
+const DAMAGE_EVENT_POOL_LIMIT = 48;
+
+const recycleImpactEvents = (state: CannonState): void => {
+  for (let i = 0; i < state.impactEvents.length; i += 1) {
+    const event = state.impactEvents[i];
+    if (state.impactEventPool.length < IMPACT_EVENT_POOL_LIMIT) {
+      state.impactEventPool.push(event);
+    }
+  }
+};
+
+const recycleDamageEvents = (state: CannonState): void => {
+  for (let i = 0; i < state.damageEvents.length; i += 1) {
+    const event = state.damageEvents[i];
+    if (state.damageEventPool.length < DAMAGE_EVENT_POOL_LIMIT) {
+      state.damageEventPool.push(event);
+    }
+  }
+};
+
+const acquireImpactEvent = (state: CannonState): CannonImpactEvent => {
+  return (
+    state.impactEventPool.pop() ?? {
+      position: { x: 0, y: 0, z: 0 },
+      normal: { x: 0, y: 0, z: 0 },
+      distance: 0,
+      targetEntity: null,
+      fxId: ''
+    }
+  );
+};
+
+const acquireDamageEvent = (state: CannonState): CannonDamageEvent => {
+  return (
+    state.damageEventPool.pop() ?? {
+      source: 0 as Entity,
+      target: 0 as Entity,
+      amount: 0
+    }
+  );
 };

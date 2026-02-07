@@ -10,10 +10,12 @@
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "test": "cross-env NODE_OPTIONS= vitest run",
     "test:watch": "cross-env NODE_OPTIONS= vitest",
+    "test:e2e": "playwright test",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,json,css,html}\"",
     "validate:assets": "node scripts/validate-assets.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
     "@types/node": "^22.7.4",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",

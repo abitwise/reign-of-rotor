@@ -27,7 +27,9 @@ const createCannonState = (): CannonState => ({
   cooldownRemaining: 0,
   shotsFired: 0,
   impactEvents: [],
-  damageEvents: []
+  damageEvents: [],
+  impactEventPool: [],
+  damageEventPool: []
 });
 
 const createMissileState = (): MissileState => ({
@@ -39,9 +41,12 @@ const createMissileState = (): MissileState => ({
   hasCandidate: false,
   missilesFired: 0,
   missiles: [],
+  missilePool: [],
   missileMap: new Map(),
   explosionEvents: [],
-  damageEvents: []
+  damageEvents: [],
+  explosionEventPool: [],
+  damageEventPool: []
 });
 
 describe('mission stats system', () => {

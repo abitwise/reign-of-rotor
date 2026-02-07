@@ -119,7 +119,9 @@ describe('buildCombatReadout', () => {
       cooldownRemaining: 0,
       shotsFired: 0,
       impactEvents: [],
-      damageEvents: []
+      damageEvents: [],
+      impactEventPool: [],
+      damageEventPool: []
     };
     const missileState: MissileState = {
       ammoRemaining: 4,
@@ -130,9 +132,12 @@ describe('buildCombatReadout', () => {
       hasCandidate: false,
       missilesFired: 0,
       missiles: [],
+      missilePool: [],
       missileMap: new Map(),
       explosionEvents: [],
-      damageEvents: []
+      damageEvents: [],
+      explosionEventPool: [],
+      damageEventPool: []
     };
 
     const cannonConfig: CannonConfig = {
@@ -168,6 +173,7 @@ describe('buildCombatReadout', () => {
       cooldownRemaining: 0,
       activeRemaining: 0,
       decoyPosition: null,
+      decoyPool: [],
       deployedThisFrame: false
     });
 
@@ -184,7 +190,9 @@ describe('buildCombatReadout', () => {
       cooldownRemaining: 0,
       shotsFired: 0,
       impactEvents: [],
-      damageEvents: []
+      damageEvents: [],
+      impactEventPool: [],
+      damageEventPool: []
     };
     const missileState: MissileState = {
       ammoRemaining: 0,
@@ -195,9 +203,12 @@ describe('buildCombatReadout', () => {
       hasCandidate: false,
       missilesFired: 0,
       missiles: [],
+      missilePool: [],
       missileMap: new Map(),
       explosionEvents: [],
-      damageEvents: []
+      damageEvents: [],
+      explosionEventPool: [],
+      damageEventPool: []
     };
 
     const cannonConfig: CannonConfig = {
@@ -240,7 +251,9 @@ describe('buildCombatReadout', () => {
       cooldownRemaining: 0,
       shotsFired: 0,
       impactEvents: [],
-      damageEvents: []
+      damageEvents: [],
+      impactEventPool: [],
+      damageEventPool: []
     };
     const missileState: MissileState = {
       ammoRemaining: 2,
@@ -251,9 +264,12 @@ describe('buildCombatReadout', () => {
       hasCandidate: true,
       missilesFired: 0,
       missiles: [],
+      missilePool: [],
       missileMap: new Map(),
       explosionEvents: [],
-      damageEvents: []
+      damageEvents: [],
+      explosionEventPool: [],
+      damageEventPool: []
     };
 
     const cannonConfig: CannonConfig = {
@@ -306,8 +322,10 @@ describe('buildThreatReadout', () => {
     samSites: [],
     vehicles: [],
     samMissiles: [],
+    samMissilePool: [],
     samMissileMap: new Map(),
     explosionEvents: [],
+    explosionEventPool: [],
     killedUnits: []
   };
 

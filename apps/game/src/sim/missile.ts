@@ -43,9 +43,12 @@ export type MissileState = {
   hasCandidate: boolean;
   missilesFired: number;
   missiles: MissileInstance[];
+  missilePool: MissileInstance[];
   missileMap: Map<Entity, MissileInstance>;
   explosionEvents: MissileExplosionEvent[];
   damageEvents: MissileDamageEvent[];
+  explosionEventPool: MissileExplosionEvent[];
+  damageEventPool: MissileDamageEvent[];
 };
 
 export const createMissileState = (config: MissileConfig): MissileState => ({
@@ -57,9 +60,12 @@ export const createMissileState = (config: MissileConfig): MissileState => ({
   hasCandidate: false,
   missilesFired: 0,
   missiles: [],
+  missilePool: [],
   missileMap: new Map(),
   explosionEvents: [],
-  damageEvents: []
+  damageEvents: [],
+  explosionEventPool: [],
+  damageEventPool: []
 });
 
 export const createMissileSystem = ({
@@ -82,6 +88,8 @@ export const createMissileSystem = ({
   id: `sim.missile.${heli.entity}`,
   phase: SystemPhase.PostPhysics,
   step: ({ fixedDeltaSeconds }) => {
+    recycleExplosionEvents(state);
+    recycleDamageEvents(state);
     state.explosionEvents.length = 0;
     state.damageEvents.length = 0;
 
@@ -266,7 +274,8 @@ const spawnMissile = (
   state: MissileState,
   target: Entity
 ): void => {
-  const entity = createEntityId();
+  const pooled = state.missilePool.pop();
+  const entity = pooled?.entity ?? createEntityId();
   const origin = computeLaunchWorldPosition(heli, config.launchOffset);
   const forward = normalize(rotateVector({ x: 0, y: 0, z: 1 }, heli.body.rotation()));
   const body = createRigidBodyForEntity(physics, {
@@ -295,12 +304,16 @@ const spawnMissile = (
     rigidBody: body
   });
 
-  const instance: MissileInstance = {
+  const instance: MissileInstance = pooled ?? {
     entity,
     body,
     target,
     lifetimeSeconds: 0
   };
+  instance.entity = entity;
+  instance.body = body;
+  instance.target = target;
+  instance.lifetimeSeconds = 0;
 
   state.missiles.push(instance);
   state.missileMap.set(entity, instance);
@@ -399,20 +412,22 @@ const explodeMissile = (
 ): void => {
   const translation = missile.body.translation();
   const scaledDamage = config.damage * damageScale;
-  state.explosionEvents.push({
-    position: { x: translation.x, y: translation.y, z: translation.z },
-    radius: config.explosionRadius,
-    damage: scaledDamage,
-    targetEntity: target,
-    fxId: config.explosionFx
-  });
+  const explosionEvent = acquireExplosionEvent(state);
+  explosionEvent.position.x = translation.x;
+  explosionEvent.position.y = translation.y;
+  explosionEvent.position.z = translation.z;
+  explosionEvent.radius = config.explosionRadius;
+  explosionEvent.damage = scaledDamage;
+  explosionEvent.targetEntity = target;
+  explosionEvent.fxId = config.explosionFx;
+  state.explosionEvents.push(explosionEvent);
 
   if (target !== null && scaledDamage > 0) {
-    state.damageEvents.push({
-      source: missile.entity,
-      target,
-      amount: scaledDamage
-    });
+    const damageEvent = acquireDamageEvent(state);
+    damageEvent.source = missile.entity;
+    damageEvent.target = target;
+    damageEvent.amount = scaledDamage;
+    state.damageEvents.push(damageEvent);
   }
 
   removeMissile(physics, state, missile);
@@ -421,6 +436,11 @@ const explodeMissile = (
 const removeMissile = (physics: PhysicsWorldContext, state: MissileState, missile: MissileInstance): void => {
   removePhysicsForEntity(physics, missile.entity);
   state.missileMap.delete(missile.entity);
+  missile.target = null;
+  missile.lifetimeSeconds = 0;
+  if (state.missilePool.length < MISSILE_POOL_LIMIT) {
+    state.missilePool.push(missile);
+  }
 };
 
 const computeLaunchWorldPosition = (
@@ -445,4 +465,48 @@ const getTargetBody = (
     return null;
   }
   return physics.world.getRigidBody(handle) ?? null;
+};
+
+const MISSILE_POOL_LIMIT = 16;
+const EXPLOSION_POOL_LIMIT = 24;
+const DAMAGE_EVENT_POOL_LIMIT = 32;
+
+const recycleExplosionEvents = (state: MissileState): void => {
+  for (let i = 0; i < state.explosionEvents.length; i += 1) {
+    const event = state.explosionEvents[i];
+    if (state.explosionEventPool.length < EXPLOSION_POOL_LIMIT) {
+      state.explosionEventPool.push(event);
+    }
+  }
+};
+
+const recycleDamageEvents = (state: MissileState): void => {
+  for (let i = 0; i < state.damageEvents.length; i += 1) {
+    const event = state.damageEvents[i];
+    if (state.damageEventPool.length < DAMAGE_EVENT_POOL_LIMIT) {
+      state.damageEventPool.push(event);
+    }
+  }
+};
+
+const acquireExplosionEvent = (state: MissileState): MissileExplosionEvent => {
+  return (
+    state.explosionEventPool.pop() ?? {
+      position: { x: 0, y: 0, z: 0 },
+      radius: 0,
+      damage: 0,
+      targetEntity: null,
+      fxId: ''
+    }
+  );
+};
+
+const acquireDamageEvent = (state: MissileState): MissileDamageEvent => {
+  return (
+    state.damageEventPool.pop() ?? {
+      source: 0 as Entity,
+      target: 0 as Entity,
+      amount: 0
+    }
+  );
 };

@@ -69,8 +69,10 @@ export type EnemyState = {
   samSites: SamSite[];
   vehicles: EnemyVehicle[];
   samMissiles: SamMissile[];
+  samMissilePool: SamMissile[];
   samMissileMap: Map<Entity, SamMissile>;
   explosionEvents: SamExplosionEvent[];
+  explosionEventPool: SamExplosionEvent[];
   killedUnits: Entity[];
 };
 
@@ -87,8 +89,10 @@ export const createEnemyState = (): EnemyState => ({
   samSites: [],
   vehicles: [],
   samMissiles: [],
+  samMissilePool: [],
   samMissileMap: new Map(),
   explosionEvents: [],
+  explosionEventPool: [],
   killedUnits: []
 });
 
@@ -265,6 +269,7 @@ export const createEnemySystem = ({
   id: 'sim.enemies',
   phase: SystemPhase.PostPhysics,
   step: ({ fixedDeltaSeconds }) => {
+    recycleExplosionEvents(state);
     state.explosionEvents.length = 0;
     state.killedUnits.length = 0;
 
@@ -587,7 +592,8 @@ const spawnSamMissile = (
   sam: SamSite,
   target: EnemyTarget
 ): void => {
-  const entity = createEntityId();
+  const pooled = state.samMissilePool.pop();
+  const entity = pooled?.entity ?? createEntityId();
   const origin = computeLaunchPosition(sam.unit.body, sam.config.missileLaunchOffset);
   const forward = normalize(rotateVector({ x: 0, y: 0, z: 1 }, sam.unit.body.rotation()));
   const body = createRigidBodyForEntity(physics, {
@@ -616,7 +622,7 @@ const spawnSamMissile = (
     descriptor: physics.rapier.ColliderDesc.ball(sam.config.missileColliderRadius).setDensity(0.1)
   });
 
-  const missile: SamMissile = {
+  const missile: SamMissile = pooled ?? {
     entity,
     body,
     target: target.entity,
@@ -624,6 +630,12 @@ const spawnSamMissile = (
     lifetimeSeconds: 0,
     config: sam.config
   };
+  missile.entity = entity;
+  missile.body = body;
+  missile.target = target.entity;
+  missile.source = sam.unit.entity;
+  missile.lifetimeSeconds = 0;
+  missile.config = sam.config;
 
   state.samMissiles.push(missile);
   state.samMissileMap.set(entity, missile);
@@ -637,19 +649,26 @@ const explodeSamMissile = (
   targetEntity: Entity | null
 ): void => {
   const translation = missile.body.translation();
-  state.explosionEvents.push({
-    position: { x: translation.x, y: translation.y, z: translation.z },
-    radius: config.missileExplosionRadius,
-    damage: config.missileDamage,
-    targetEntity,
-    fxId: config.explosionFx
-  });
+  const explosionEvent = acquireExplosionEvent(state);
+  explosionEvent.position.x = translation.x;
+  explosionEvent.position.y = translation.y;
+  explosionEvent.position.z = translation.z;
+  explosionEvent.radius = config.missileExplosionRadius;
+  explosionEvent.damage = config.missileDamage;
+  explosionEvent.targetEntity = targetEntity;
+  explosionEvent.fxId = config.explosionFx;
+  state.explosionEvents.push(explosionEvent);
   removeSamMissile(state, physics, missile);
 };
 
 const removeSamMissile = (state: EnemyState, physics: PhysicsWorldContext, missile: SamMissile): void => {
   removePhysicsForEntity(physics, missile.entity);
   state.samMissileMap.delete(missile.entity);
+  missile.target = Number.NaN as Entity;
+  missile.lifetimeSeconds = 0;
+  if (state.samMissilePool.length < SAM_MISSILE_POOL_LIMIT) {
+    state.samMissilePool.push(missile);
+  }
 };
 
 const computeLaunchPosition = (
@@ -663,4 +682,28 @@ const computeLaunchPosition = (
     y: translation.y + rotatedOffset.y,
     z: translation.z + rotatedOffset.z
   };
+};
+
+const SAM_MISSILE_POOL_LIMIT = 24;
+const EXPLOSION_POOL_LIMIT = 32;
+
+const recycleExplosionEvents = (state: EnemyState): void => {
+  for (let i = 0; i < state.explosionEvents.length; i += 1) {
+    const event = state.explosionEvents[i];
+    if (state.explosionEventPool.length < EXPLOSION_POOL_LIMIT) {
+      state.explosionEventPool.push(event);
+    }
+  }
+};
+
+const acquireExplosionEvent = (state: EnemyState): SamExplosionEvent => {
+  return (
+    state.explosionEventPool.pop() ?? {
+      position: { x: 0, y: 0, z: 0 },
+      radius: 0,
+      damage: 0,
+      targetEntity: null,
+      fxId: ''
+    }
+  );
 };

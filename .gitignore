@@ -7,3 +7,5 @@
 .vscode
 .idea
 **/.vite
+playwright-report/
+test-results/

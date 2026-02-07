@@ -9,6 +9,7 @@
     "preview": "pnpm --filter @reign-of-rotor/game preview",
     "lint": "pnpm --filter @reign-of-rotor/game lint",
     "test": "cross-env NODE_OPTIONS= pnpm --filter @reign-of-rotor/game test",
+    "test:e2e": "pnpm --filter @reign-of-rotor/game test:e2e",
     "format": "pnpm --filter @reign-of-rotor/game format"
   },
   "devDependencies": {

@@ -15,10 +15,15 @@ export type DebugOverlayController = {
   element: HTMLElement;
   destroy: () => void;
   setLoopMetrics: (metrics: LoopFrameMetrics) => void;
+  setPerfMetrics: (metrics: PerfMetrics | null) => void;
   setTrimState: (trimState: ControlTrimState | null) => void;
   setControlState: (controlState: ControlState | null) => void;
   setAvionicsReadout: (readout: AvionicsReadout | null) => void;
   setVisible: (visible: boolean) => void;
+};
+
+export type PerfMetrics = {
+  entityCount: number;
 };
 
 export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): DebugOverlayController => {
@@ -70,6 +75,22 @@ export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): Debug
   [frameDeltaRow, usedDeltaRow, fixedDeltaRow, stepsRow, clampedRow, accumulatorRow].forEach(
     (row) => timingGrid.appendChild(row.row)
   );
+
+  const perfHeading = document.createElement('h3');
+  perfHeading.textContent = 'Performance';
+  perfHeading.style.margin = '12px 0 4px';
+  perfHeading.style.fontSize = '14px';
+  perfHeading.style.textTransform = 'uppercase';
+  perfHeading.style.letterSpacing = '0.5px';
+
+  const perfGrid = document.createElement('div');
+  perfGrid.className = 'debug-grid';
+
+  const fpsRow = createLabelRow('FPS', '—');
+  const entityRow = createLabelRow('Entities (tracked)', '—');
+  const stepsPerfRow = createLabelRow('Steps / frame', '—');
+
+  [fpsRow, entityRow, stepsPerfRow].forEach((row) => perfGrid.appendChild(row.row));
 
   const trimHeading = document.createElement('h3');
   trimHeading.textContent = 'Control Trim';
@@ -146,6 +167,8 @@ export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): Debug
     configGrid,
     timingHeading,
     timingGrid,
+    perfHeading,
+    perfGrid,
     trimHeading,
     trimGrid,
     inputHeading,
@@ -169,6 +192,15 @@ export const createDebugOverlay = ({ host, config }: DebugOverlayOptions): Debug
       stepsRow.setValue(String(metrics.stepsExecuted));
       clampedRow.setValue(formatMs(metrics.clampedMs));
       accumulatorRow.setValue(formatMs(metrics.accumulatorMs));
+      fpsRow.setValue(formatFps(metrics.frameDeltaMs));
+      stepsPerfRow.setValue(String(metrics.stepsExecuted));
+    },
+    setPerfMetrics: (metrics: PerfMetrics | null) => {
+      if (!metrics) {
+        entityRow.setValue('—');
+        return;
+      }
+      entityRow.setValue(String(metrics.entityCount));
     },
     setTrimState: (trimState: ControlTrimState | null) => {
       if (!trimState) {
@@ -224,6 +256,12 @@ const formatTrimValue = (value: number): string => value.toFixed(2);
 const formatAxisValue = (value: number): string => value.toFixed(2);
 const formatAxisPair = (axis: { raw: number; filtered: number }): string =>
   `${formatAxisValue(axis.raw)} / ${formatAxisValue(axis.filtered)}`;
+const formatFps = (frameDeltaMs: number): string => {
+  if (!Number.isFinite(frameDeltaMs) || frameDeltaMs <= 0) {
+    return '—';
+  }
+  return (1000 / frameDeltaMs).toFixed(1);
+};
 
 const formatRotorRpm = (rotorRpm: number, nominalRotorRpm: number): string => {
   if (!Number.isFinite(rotorRpm) || !Number.isFinite(nominalRotorRpm) || nominalRotorRpm <= 0) {
