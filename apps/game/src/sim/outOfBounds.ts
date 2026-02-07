@@ -7,13 +7,11 @@ import type { MissionBounds, MissionBoundsConfig } from '../content/missions';
 
 export type OutOfBoundsState = {
   active: boolean;
-  secondsRemaining: number | null;
   remainingSeconds: number;
 };
 
 export const createOutOfBoundsState = (config: MissionBoundsConfig): OutOfBoundsState => ({
   active: false,
-  secondsRemaining: null,
   remainingSeconds: Math.max(0, config.warningSeconds)
 });
 
@@ -47,7 +45,6 @@ export const updateOutOfBoundsState = ({
 }): boolean => {
   if (isWithinMissionBounds(bounds, position)) {
     state.active = false;
-    state.secondsRemaining = null;
     state.remainingSeconds = Math.max(0, config.warningSeconds);
     return false;
   }
@@ -55,20 +52,17 @@ export const updateOutOfBoundsState = ({
   const delta = Number.isFinite(deltaSeconds) ? Math.max(0, deltaSeconds) : 0;
   state.active = true;
   state.remainingSeconds = Math.max(0, state.remainingSeconds - delta);
-  state.secondsRemaining = state.remainingSeconds;
   return state.remainingSeconds <= 0;
 };
 
 export const createOutOfBoundsSystem = ({
   state,
-  bounds,
   config,
   mission,
   player,
   gameState
 }: {
   state: OutOfBoundsState;
-  bounds: MissionBounds;
   config: MissionBoundsConfig;
   mission: MissionRuntime;
   player: PlayerHelicopter;
@@ -84,7 +78,7 @@ export const createOutOfBoundsSystem = ({
     const position = player.body.translation();
     const expired = updateOutOfBoundsState({
       state,
-      bounds,
+      bounds: mission.bounds,
       config,
       position: { x: position.x, z: position.z },
       deltaSeconds: fixedDeltaSeconds

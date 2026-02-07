@@ -227,7 +227,6 @@ export const bootstrapGameplay = ({
   scheduler.addSystem(
     createOutOfBoundsSystem({
       state: outOfBounds,
-      bounds: missionBounds,
       config: MISSION_BOUNDS_CONFIG,
       mission,
       player,

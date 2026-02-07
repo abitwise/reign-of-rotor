@@ -42,7 +42,7 @@ describe('out-of-bounds countdown', () => {
     });
     expect(expiredFirst).toBe(false);
     expect(state.active).toBe(true);
-    expect(state.secondsRemaining).toBe(3);
+    expect(state.remainingSeconds).toBe(3);
 
     updateOutOfBoundsState({
       state,
@@ -52,7 +52,7 @@ describe('out-of-bounds countdown', () => {
       deltaSeconds: 1
     });
     expect(state.active).toBe(false);
-    expect(state.secondsRemaining).toBeNull();
+    expect(state.remainingSeconds).toBe(5);
 
     const expiredSecond = updateOutOfBoundsState({
       state,
@@ -62,6 +62,6 @@ describe('out-of-bounds countdown', () => {
       deltaSeconds: 5
     });
     expect(expiredSecond).toBe(true);
-    expect(state.secondsRemaining).toBe(0);
+    expect(state.remainingSeconds).toBe(0);
   });
 });
