@@ -1,7 +1,7 @@
 # Requirements: Reign of Rotor
 
 **Defined:** 2026-02-08
-**Core Value:** A satisfying cockpit helicopter combat loop where the player flies, fights, and survives against deadly but fair threats — all running in a browser with no install.
+**Core Value:** A satisfying cockpit helicopter combat loop where the player flies, fights, and survives against deadly but fair threats -- all running in a browser with no install.
 
 ## v1 Requirements
 
@@ -117,13 +117,53 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| — | — | Pending |
+| FLOW-01 | Phase 2 | Pending |
+| FLOW-02 | Phase 2 | Pending |
+| FLOW-03 | Phase 1 | Pending |
+| FLOW-04 | Phase 2 | Pending |
+| FLOW-05 | Phase 2 | Pending |
+| FLOW-06 | Phase 2 | Pending |
+| FLOW-07 | Phase 2 | Pending |
+| FLOW-08 | Phase 1 | Pending |
+| CMBT-01 | Phase 3 | Pending |
+| CMBT-02 | Phase 3 | Pending |
+| CMBT-03 | Phase 3 | Pending |
+| CMBT-04 | Phase 3 | Pending |
+| CMBT-05 | Phase 3 | Pending |
+| CMBT-06 | Phase 3 | Pending |
+| DMG-01 | Phase 3 | Pending |
+| DMG-02 | Phase 3 | Pending |
+| DMG-03 | Phase 3 | Pending |
+| DMG-04 | Phase 3 | Pending |
+| DMG-05 | Phase 3 | Pending |
+| DMG-06 | Phase 3 | Pending |
+| MSNT-01 | Phase 2 | Pending |
+| MSNT-02 | Phase 2 | Pending |
+| MSNT-03 | Phase 2 | Pending |
+| MSNT-04 | Phase 2 | Pending |
+| MSNT-05 | Phase 2 | Pending |
+| MSNT-06 | Phase 2 | Pending |
+| AUD-01 | Phase 3 | Pending |
+| AUD-02 | Phase 3 | Pending |
+| AUD-03 | Phase 3 | Pending |
+| AUD-04 | Phase 3 | Pending |
+| AUD-05 | Phase 3 | Pending |
+| HUD-01 | Phase 3 | Pending |
+| HUD-02 | Phase 3 | Pending |
+| HUD-03 | Phase 3 | Pending |
+| HUD-04 | Phase 3 | Pending |
+| HUD-05 | Phase 3 | Pending |
+| HUD-06 | Phase 3 | Pending |
+| VFX-01 | Phase 4 | Pending |
+| VFX-02 | Phase 4 | Pending |
+| VFX-03 | Phase 4 | Pending |
+| VFX-04 | Phase 4 | Pending |
 
 **Coverage:**
-- v1 requirements: 33 total
-- Mapped to phases: 0
-- Unmapped: 33
+- v1 requirements: 41 total
+- Mapped to phases: 41
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-08*
-*Last updated: 2026-02-08 after initial definition*
+*Last updated: 2026-02-08 after roadmap creation*
