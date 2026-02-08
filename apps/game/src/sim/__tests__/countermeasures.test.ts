@@ -6,6 +6,7 @@ import { createPlayerInputState } from '../../core/input/playerInput';
 import { createControlState } from '../../core/input/controlState';
 import { spawnPlayerHelicopter } from '../helicopterFlight';
 import { DEFAULT_HELICOPTER_FLIGHT } from '../../content/helicopters';
+import { DEFAULT_DIFFICULTY_PRESET } from '../../content/difficulty';
 import { createCountermeasureState, createCountermeasureSystem } from '../countermeasures';
 
 const stepContext: FixedStepContext = {
@@ -40,7 +41,7 @@ describe('countermeasure system', () => {
       heli,
       config,
       state,
-      gameState: { isPaused: false }
+      gameState: { isPaused: false, difficultyPreset: DEFAULT_DIFFICULTY_PRESET }
     });
 
     input.deployCountermeasure = true;

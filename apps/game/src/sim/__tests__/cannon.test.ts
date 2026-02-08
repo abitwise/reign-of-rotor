@@ -9,6 +9,7 @@ import { createCannonState, createCannonSystem } from '../cannon';
 import { createEntityId } from '../../ecs/entity';
 import { createColliderForEntity, createRigidBodyForEntity } from '../../physics/factories';
 import { DEFAULT_HELICOPTER_FLIGHT } from '../../content/helicopters';
+import { DEFAULT_DIFFICULTY_PRESET } from '../../content/difficulty';
 
 const stepContext: FixedStepContext = {
   fixedDeltaMs: 16,
@@ -63,7 +64,7 @@ describe('cannon system', () => {
       physics,
       config,
       state: cannonState,
-      gameState: { isPaused: false }
+      gameState: { isPaused: false, difficultyPreset: DEFAULT_DIFFICULTY_PRESET }
     });
 
     physics.step(stepContext.fixedDeltaSeconds);
@@ -102,7 +103,7 @@ describe('cannon system', () => {
       physics,
       config,
       state: cannonState,
-      gameState: { isPaused: false }
+      gameState: { isPaused: false, difficultyPreset: DEFAULT_DIFFICULTY_PRESET }
     });
 
     physics.step(stepContext.fixedDeltaSeconds);

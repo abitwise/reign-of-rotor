@@ -1,6 +1,7 @@
 import { Color3, DynamicTexture, MeshBuilder, StandardMaterial, Vector3 } from '@babylonjs/core';
 import type { Scene } from '@babylonjs/core';
 import type { AbstractMesh } from '@babylonjs/core';
+import type { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import type { TransformProvider } from '../meshBindingSystem';
 import {
   WORLD_CONFIG,
@@ -59,8 +60,8 @@ const createTerrainMaterial = (scene: Scene): StandardMaterial => {
 
   gridTexture.update();
   material.diffuseTexture = gridTexture;
-  material.diffuseTexture.uScale = WORLD_CONFIG.render.textureScale;
-  material.diffuseTexture.vScale = WORLD_CONFIG.render.textureScale;
+  (material.diffuseTexture as Texture).uScale = WORLD_CONFIG.render.textureScale;
+  (material.diffuseTexture as Texture).vScale = WORLD_CONFIG.render.textureScale;
   return material;
 };
 

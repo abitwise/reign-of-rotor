@@ -5,6 +5,7 @@ import type { CannonState } from '../cannon';
 import type { MissileState } from '../missile';
 import { createEnemyState } from '../enemies';
 import type { GameState } from '../../boot/createApp';
+import { DEFAULT_DIFFICULTY_PRESET } from '../../content/difficulty';
 
 const baseMission: MissionRuntime = {
   seed: 1,
@@ -65,7 +66,7 @@ describe('mission stats system', () => {
     missiles.missilesFired = 1;
     missiles.damageEvents.push({ source: 3, target: 4, amount: 5 });
 
-    const gameState: GameState = { isPaused: false };
+    const gameState: GameState = { isPaused: false, difficultyPreset: DEFAULT_DIFFICULTY_PRESET };
 
     const system = createMissionStatsSystem({
       stats,
@@ -90,7 +91,7 @@ describe('mission stats system', () => {
     const enemies = createEnemyState();
     const cannon = createCannonState();
     const missiles = createMissileState();
-    const gameState: GameState = { isPaused: false };
+    const gameState: GameState = { isPaused: false, difficultyPreset: DEFAULT_DIFFICULTY_PRESET };
 
     const system = createMissionStatsSystem({
       stats,

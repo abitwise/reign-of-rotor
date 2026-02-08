@@ -13,6 +13,7 @@ import {
   spawnSamSite,
   spawnVehicle
 } from '../enemies';
+import { DEFAULT_DIFFICULTY_PRESET } from '../../content/difficulty';
 
 const stepContext: FixedStepContext = {
   fixedDeltaMs: 100,
@@ -100,7 +101,7 @@ describe('enemy systems', () => {
       target: { entity: targetEntity, body: targetBody },
       cannon: cannonState,
       missiles: missileState,
-      gameState: { isPaused: false }
+      gameState: { isPaused: false, difficultyPreset: DEFAULT_DIFFICULTY_PRESET }
     });
 
     for (let i = 0; i < 5; i += 1) {
@@ -174,7 +175,7 @@ describe('enemy systems', () => {
       target: { entity: targetEntity, body: targetBody },
       cannon: cannonState,
       missiles: missileState,
-      gameState: { isPaused: false }
+      gameState: { isPaused: false, difficultyPreset: DEFAULT_DIFFICULTY_PRESET }
     });
 
     for (let i = 0; i < 2; i += 1) {
@@ -271,7 +272,7 @@ describe('enemy systems', () => {
       target: { entity: targetEntity, body: targetBody },
       cannon: cannonState,
       missiles: missileState,
-      gameState: { isPaused: false },
+      gameState: { isPaused: false, difficultyPreset: DEFAULT_DIFFICULTY_PRESET },
       countermeasures,
       countermeasureConfig: {
         name: 'Test CM',

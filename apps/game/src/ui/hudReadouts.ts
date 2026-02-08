@@ -280,7 +280,7 @@ const formatMissileLockState = (state: MissileState, config: MissileConfig): str
 
 export const selectPriorityAlert = (
   alerts: AlertCandidate[],
-  priorityOrder = ALERT_PRIORITY_ORDER
+  priorityOrder: readonly string[] = ALERT_PRIORITY_ORDER
 ): AlertCandidate | null => {
   if (!alerts.length) {
     return null;

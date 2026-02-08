@@ -7,6 +7,7 @@ import { DEFAULT_RADAR_CONFIG } from '../../content/enemies';
 import { createPlayerInputState } from '../../core/input/playerInput';
 import { createConvoyState } from '../convoy';
 import { createMissionRuntime, createMissionSystem } from '../missionDirector';
+import { DEFAULT_DIFFICULTY_PRESET } from '../../content/difficulty';
 
 const stepContext: FixedStepContext = {
   fixedDeltaMs: 16,
@@ -56,7 +57,7 @@ describe('mission director', () => {
       enemies,
       convoy: createConvoyState(),
       input,
-      gameState: { isPaused: false }
+      gameState: { isPaused: false, difficultyPreset: DEFAULT_DIFFICULTY_PRESET }
     });
 
     system.step(stepContext);

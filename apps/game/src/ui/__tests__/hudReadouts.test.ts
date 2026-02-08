@@ -15,6 +15,7 @@ import type { MissileState } from '../../sim/missile';
 import type { EnemyState } from '../../sim/enemies';
 import type { MissionStatsState } from '../../sim/missionStats';
 import type { MissionRuntime } from '../../sim/missionDirector';
+import { LandingState } from '../../sim/altimeter';
 
 const baseReadout: AvionicsReadout = {
   altitude: 20,
@@ -23,7 +24,7 @@ const baseReadout: AvionicsReadout = {
   heading: 0,
   pitch: 0,
   roll: 0,
-  landingState: 'airborne',
+  landingState: LandingState.Airborne,
   isGrounded: false,
   impactSeverity: 0,
   rotorRpm: 100,
