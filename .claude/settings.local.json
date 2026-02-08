@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm test:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm build:*)",
+      "Bash(git -C /Users/olgeroeselg/Projects/public/reign-of-rotor status)",
+      "Bash(git -C /Users/olgeroeselg/Projects/public/reign-of-rotor diff)",
+      "Bash(git -C /Users/olgeroeselg/Projects/public/reign-of-rotor log --oneline -5)",
+      "Bash(npm view:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
