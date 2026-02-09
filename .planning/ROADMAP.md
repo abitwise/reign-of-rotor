@@ -2,16 +2,17 @@
 
 ## Overview
 
-The core engine, flight physics, weapons, enemies, and mission systems are built and running. What remains is closing the gap between "implemented" and "playable": a proper mission flow with state machine and UI screens, player-facing combat feedback (audio, HUD indicators, damage display), working mission types end-to-end, and visual polish. Four phases deliver a shippable MVP in strict dependency order: foundation first, then flow, then feedback, then polish.
+The core engine, flight physics, weapons, enemies, and mission systems are built and running. Before building new features, Phase 0 fixes the broken basics: invisible enemies, invisible missiles, bad flight feel, and ugly terrain. Then four phases close the gap from "implemented" to "playable": mission flow, mission loop, combat feedback, and visual polish.
 
 ## Phases
 
 **Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
+- Integer phases (0, 1, 2, ...): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 Decimal phases appear between their surrounding integers in numeric order.
 
+- [ ] **Phase 0: Fix the Basics** - Make enemies visible, missiles visible, flight controllable, terrain decent
 - [ ] **Phase 1: Mission Flow Foundation** - Game state machine, teardown/restart, pause, and tab backgrounding
 - [ ] **Phase 2: Mission Loop** - Briefing, debrief, mission select, completion prompt, and all 3 mission types end-to-end
 - [ ] **Phase 3: Combat Feedback** - Audio, missile lock feedback, RWR display, damage indicators, and HUD completeness
@@ -19,9 +20,29 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ## Phase Details
 
+### Phase 0: Fix the Basics
+**Goal**: Make the existing game playable — enemies visible with procedural meshes, missiles visible with trails, flight arcade-smooth and fun, terrain desert/arid with hills and props
+**Depends on**: Nothing (first phase — fixes before features)
+**Requirements**: FIX-01 through FIX-10 (new requirements for broken basics)
+**Success Criteria** (what must be TRUE):
+  1. Player can see all enemy types (SAM sites, radar sites, vehicles) as distinct procedural mesh shapes in uniform military colors
+  2. Player can see HUD markers showing enemy positions at distance
+  3. Player missiles and SAM missiles are visible as glowing cylinders with smoke/fire trails
+  4. Cannon fire shows bright tracer lines from gun toward impact
+  5. Hits produce a simple explosion flash (bright flash + expanding sphere)
+  6. Helicopter flight is arcade-smooth: strong auto-leveling, auto-hover on collective release, not twitchy
+  7. Terrain is desert/arid with hills and valleys, no obvious tiling repetition
+  8. Simple procedural props (buildings/structures) scattered on terrain
+**Plans**: TBD
+
+Plans:
+- [ ] 00-01: TBD
+- [ ] 00-02: TBD
+- [ ] 00-03: TBD
+
 ### Phase 1: Mission Flow Foundation
 **Goal**: Player can start, pause, restart, and quit missions without page reload, and the game handles tab backgrounding gracefully
-**Depends on**: Nothing (first phase)
+**Depends on**: Phase 0 (basics must work first)
 **Requirements**: FLOW-03, FLOW-08
 **Success Criteria** (what must be TRUE):
   1. Player can pause the game mid-flight and resume, restart the mission, or quit to menu from a pause overlay
@@ -86,10 +107,11 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4
+Phases execute in numeric order: 0 -> 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
+| 0. Fix the Basics | 0/TBD | Not started | - |
 | 1. Mission Flow Foundation | 0/TBD | Not started | - |
 | 2. Mission Loop | 0/TBD | Not started | - |
 | 3. Combat Feedback | 0/TBD | Not started | - |
@@ -97,4 +119,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 ---
 *Roadmap created: 2026-02-08*
-*Last updated: 2026-02-08*
+*Last updated: 2026-02-08 — Phase 0 inserted*
