@@ -1,9 +1,4 @@
-import {
-  Color3,
-  Mesh,
-  MeshBuilder,
-  StandardMaterial
-} from '@babylonjs/core';
+import { Color3, Mesh, MeshBuilder, StandardMaterial } from '@babylonjs/core';
 import type { AbstractMesh, Scene } from '@babylonjs/core';
 import type { Entity } from '@/physics/types';
 import type { TransformProvider } from '@/render/meshBindingSystem';
@@ -78,7 +73,11 @@ export class EnemyVisualManager {
     );
     base.position.y = 0.4;
 
-    const turret = MeshBuilder.CreateBox('samTurret', { width: 1.4, height: 1.2, depth: 1.8 }, this.scene);
+    const turret = MeshBuilder.CreateBox(
+      'samTurret',
+      { width: 1.4, height: 1.2, depth: 1.8 },
+      this.scene
+    );
     turret.position.y = 1.4;
 
     const launcherLeft = MeshBuilder.CreateCylinder(
@@ -161,14 +160,7 @@ export class EnemyVisualManager {
     );
     cabin.position.set(0, 1.8, -0.8);
 
-    const merged = Mesh.MergeMeshes(
-      [body, cabin],
-      true,
-      true,
-      undefined,
-      false,
-      true
-    );
+    const merged = Mesh.MergeMeshes([body, cabin], true, true, undefined, false, true);
     const mesh = merged ?? body;
     mesh.name = 'enemy-vehicle';
     mesh.material = this.material;

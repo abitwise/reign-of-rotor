@@ -20,6 +20,11 @@ import {
   buildMissionReadout
 } from '../ui/hudReadouts';
 import { DEFAULT_DIFFICULTY_PRESET, type DifficultyPreset } from '../content/difficulty';
+import { Vector3, Quaternion } from '@babylonjs/core';
+import { EnemyVisualManager } from '../render/visuals/enemyVisualManager';
+import { MissileVisualManager } from '../render/visuals/missileVisualManager';
+import { WeaponVfxManager } from '../render/visuals/weaponVfxManager';
+import { HudMarkerManager } from '../render/visuals/hudMarkerManager';
 
 export type GameState = {
   isPaused: boolean;
@@ -55,7 +60,12 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
     })
   );
   const gameState: GameState = { isPaused: false, difficultyPreset: DEFAULT_DIFFICULTY_PRESET };
-  const rootUi = createRootUi({ target: layout.uiHost, config, bindings: input.bindings, gameState });
+  const rootUi = createRootUi({
+    target: layout.uiHost,
+    config,
+    bindings: input.bindings,
+    gameState
+  });
   rootUi.setTrimStateProvider?.(() => controlState.trim);
   rootUi.setControlStateProvider?.(() => controlState);
   const physics = bootstrapPhysics(scheduler);
@@ -70,6 +80,8 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
     scheduler,
     onFrame: (metrics) => rootUi.setLoopMetrics?.(metrics)
   });
+
+  const visualManagerDisposers: Array<() => void> = [];
 
   const gameplay = Promise.all([physics, renderer])
     .then(async ([physicsContext, renderContext]) => {
@@ -129,6 +141,67 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       renderContext.setTerrainFocus(gameplayContext.player.entity);
       renderContext.setPropDressingFocus(gameplayContext.player.entity);
 
+      // Visual managers for enemies, missiles, weapon VFX, and HUD markers
+      const transformProvider = (entity: number) => physicsContext.getEntityTransform(entity);
+      const enemyVisuals = new EnemyVisualManager(renderContext.scene);
+      const missileVisuals = new MissileVisualManager(renderContext.scene);
+      const weaponVfx = new WeaponVfxManager(renderContext.scene);
+      const hudMarkers = new HudMarkerManager(layout.uiHost, 32);
+
+      visualManagerDisposers.push(
+        () => enemyVisuals.dispose(),
+        () => missileVisuals.dispose(),
+        () => weaponVfx.dispose(),
+        () => hudMarkers.dispose()
+      );
+
+      const gunOffset = new Vector3(0, -0.1, 2.1);
+      const gunOriginScratch = new Vector3();
+      const rotQuat = new Quaternion();
+
+      renderContext.scene.onBeforeRenderObservable.add(() => {
+        enemyVisuals.update(gameplayContext.enemies, transformProvider);
+
+        missileVisuals.update(
+          gameplayContext.missiles.missiles,
+          gameplayContext.enemies.samMissiles,
+          gameplayContext.missiles.missileMap,
+          gameplayContext.enemies.samMissileMap,
+          transformProvider
+        );
+
+        // Compute gun origin from player helicopter transform
+        const heliTransform = transformProvider(gameplayContext.player.entity);
+        if (heliTransform) {
+          rotQuat.set(
+            heliTransform.rotation.x,
+            heliTransform.rotation.y,
+            heliTransform.rotation.z,
+            heliTransform.rotation.w
+          );
+          const rotated = gunOffset.clone();
+          rotated.rotateByQuaternionToRef(rotQuat, rotated);
+          gunOriginScratch.set(
+            heliTransform.translation.x + rotated.x,
+            heliTransform.translation.y + rotated.y,
+            heliTransform.translation.z + rotated.z
+          );
+        }
+        weaponVfx.processCannonImpacts(gameplayContext.cannon.impactEvents, gunOriginScratch);
+
+        const allExplosions = [
+          ...gameplayContext.enemies.explosionEvents,
+          ...gameplayContext.missiles.explosionEvents
+        ];
+        weaponVfx.processExplosions(allExplosions);
+
+        hudMarkers.update(
+          gameplayContext.enemies.units,
+          renderContext.camera,
+          renderContext.engine
+        );
+      });
+
       return gameplayContext;
     })
     .catch((error) => {
@@ -137,11 +210,13 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
     });
 
   // Wait for gameplay to be ready before starting the loop
-  gameplay.then(() => {
-    loop.start();
-  }).catch((error) => {
-    console.error('Failed to start game loop', error);
-  });
+  gameplay
+    .then(() => {
+      loop.start();
+    })
+    .catch((error) => {
+      console.error('Failed to start game loop', error);
+    });
 
   return {
     config,
@@ -157,9 +232,14 @@ export const createApp = (rootElement: HTMLElement, config: AppConfig = appConfi
       loop.stop();
       input.destroy();
       rootUi.destroy();
-      renderer.then((renderContext) => renderContext.dispose()).catch((error) => {
-        console.error('Error disposing renderer', error);
-      });
+      for (const disposer of visualManagerDisposers) {
+        disposer();
+      }
+      renderer
+        .then((renderContext) => renderContext.dispose())
+        .catch((error) => {
+          console.error('Error disposing renderer', error);
+        });
       layout.destroy();
     }
   };
