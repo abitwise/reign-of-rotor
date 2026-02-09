@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** A satisfying cockpit helicopter combat loop where the player flies, fights, and survives against deadly but fair threats -- all running in a browser with no install.
-**Current focus:** Phase 0: Fix the Basics
+**Current focus:** Phase 1: Mission Flow Foundation
 
 ## Current Position
 
-Phase: 0 of 4 (Fix the Basics)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-09 -- Completed 00-01-PLAN.md (enemy/missile/weapon visuals + HUD markers)
+Phase: 1 of 4 (Mission Flow Foundation)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-02-09 -- Phase 0 complete (3/3 plans, verified)
 
-Progress: [##........] ~20%
+Progress: [##........] 20%
 
 ## Performance Metrics
 
@@ -68,5 +68,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-09
-Stopped at: Completed 00-01-PLAN.md (enemy/missile/weapon visuals + HUD markers)
+Stopped at: Phase 0 complete, ready to plan Phase 1
 Resume file: None
