@@ -173,6 +173,27 @@ export const BUILDING_ARCHETYPES: BuildingArchetype[] = [
     height: 6,
     color: '#a1a9a5',
     hasCollider: true
+  },
+  {
+    id: 'desert-hut-1',
+    footprint: { width: 4, depth: 4 },
+    height: 3,
+    color: '#c4a87a',
+    hasCollider: false
+  },
+  {
+    id: 'desert-compound-1',
+    footprint: { width: 8, depth: 6 },
+    height: 4,
+    color: '#b8a070',
+    hasCollider: true
+  },
+  {
+    id: 'desert-tower-1',
+    footprint: { width: 3, depth: 3 },
+    height: 8,
+    color: '#a89060',
+    hasCollider: true
   }
 ];
 
@@ -204,6 +225,13 @@ export const BIOME_PRESETS: BiomePreset[] = [
     buildingDensity: 0.1,
     treeVariants: ['pine-a', 'oak-a'],
     buildingVariants: ['cottage-1']
+  },
+  {
+    id: 'desert',
+    treeDensity: 0,
+    buildingDensity: 0.15,
+    treeVariants: [],
+    buildingVariants: ['desert-hut-1', 'desert-compound-1', 'desert-tower-1', 'warehouse-1']
   }
 ];
 
@@ -216,7 +244,7 @@ export const PROP_DRESSING_CONFIG: PropDressingConfig = {
   roadWidth: 14,
   roadOffsetY: 0.08,
   greenPatchOffsetY: 0.12,
-  greenPatchDensity: 1.2,
+  greenPatchDensity: 0,
   maxGreenPatchesPerTile: 6,
   greenPatchSizeMin: 60,
   greenPatchSizeMax: 180,
@@ -236,8 +264,8 @@ const VARIANT_LOOKUP = new Map(TREE_VARIANTS.map((variant) => [variant.id, varia
 const BUILDING_LOOKUP = new Map(BUILDING_ARCHETYPES.map((variant) => [variant.id, variant]));
 const BIOME_LOOKUP = new Map(BIOME_PRESETS.map((preset) => [preset.id, preset]));
 
-const VILLAGE_BUILDING_VARIANTS = ['cottage-1', 'house-2', 'row-3'];
-const TOWN_BUILDING_VARIANTS = ['house-2', 'row-3', 'midrise-4', 'tower-5', 'warehouse-1', 'hangar-2'];
+const VILLAGE_BUILDING_VARIANTS = ['desert-hut-1', 'cottage-1', 'desert-compound-1'];
+const TOWN_BUILDING_VARIANTS = ['desert-compound-1', 'desert-tower-1', 'warehouse-1', 'hangar-2', 'watchtower-3'];
 
 export const getTreeVariant = (id: string): TreeVariant => {
   const variant = VARIANT_LOOKUP.get(id);
@@ -336,16 +364,13 @@ const pickSettlementType = (
 const pickBiome = (tileX: number, tileZ: number): BiomePreset => {
   const random = createSeededRandom(hashTileSeed(tileX, tileZ, PROP_DRESSING_CONFIG.seed));
   const roll = random();
-  if (roll < 0.35) {
-    return getBiomePreset('temperate');
-  }
-  if (roll < 0.6) {
-    return getBiomePreset('farmland');
+  if (roll < 0.7) {
+    return getBiomePreset('desert');
   }
   if (roll < 0.85) {
-    return getBiomePreset('greenbelt');
+    return getBiomePreset('industrial');
   }
-  return getBiomePreset('industrial');
+  return getBiomePreset('farmland');
 };
 
 export const getTileDressing = (tileX: number, tileZ: number): TileDressing => {
