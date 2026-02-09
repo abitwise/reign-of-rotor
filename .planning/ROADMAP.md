@@ -33,12 +33,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   6. Helicopter flight is arcade-smooth: strong auto-leveling, auto-hover on collective release, not twitchy
   7. Terrain is desert/arid with hills and valleys, no obvious tiling repetition
   8. Simple procedural props (buildings/structures) scattered on terrain
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 00-01: TBD
-- [ ] 00-02: TBD
-- [ ] 00-03: TBD
+- [ ] 00-01-PLAN.md — Enemy, missile, cannon, and explosion visuals + HUD markers
+- [ ] 00-02-PLAN.md — Arcade flight tuning + auto-hover on collective release
+- [ ] 00-03-PLAN.md — Desert terrain rework + desert biome props
 
 ### Phase 1: Mission Flow Foundation
 **Goal**: Player can start, pause, restart, and quit missions without page reload, and the game handles tab backgrounding gracefully
@@ -111,7 +111,7 @@ Phases execute in numeric order: 0 -> 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 0. Fix the Basics | 0/TBD | Not started | - |
+| 0. Fix the Basics | 0/3 | Planned | - |
 | 1. Mission Flow Foundation | 0/TBD | Not started | - |
 | 2. Mission Loop | 0/TBD | Not started | - |
 | 3. Combat Feedback | 0/TBD | Not started | - |
@@ -119,4 +119,4 @@ Phases execute in numeric order: 0 -> 1 -> 2 -> 3 -> 4
 
 ---
 *Roadmap created: 2026-02-08*
-*Last updated: 2026-02-08 — Phase 0 inserted*
+*Last updated: 2026-02-09 — Phase 0 planned (3 plans, 1 wave)*
