@@ -1,7 +1,6 @@
-import { Color3, DynamicTexture, MeshBuilder, StandardMaterial, Vector3 } from '@babylonjs/core';
+import { Color3, MeshBuilder, StandardMaterial, Vector3, VertexBuffer } from '@babylonjs/core';
 import type { Scene } from '@babylonjs/core';
 import type { AbstractMesh } from '@babylonjs/core';
-import type { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import type { TransformProvider } from '../meshBindingSystem';
 import {
   WORLD_CONFIG,
@@ -25,43 +24,72 @@ type TerrainChunk = {
   mesh: AbstractMesh;
 };
 
+/**
+ * Simple integer hash for noise corners.
+ * Returns a value in [0, 1).
+ */
+const hashNoise = (x: number, z: number): number =>
+  (((x * 73856093) ^ (z * 19349663) ^ 48291) >>> 0) % 65536 / 65536;
+
+/**
+ * Smoothstep interpolation (Hermite).
+ */
+const smoothstep = (t: number): number => t * t * (3 - 2 * t);
+
+/**
+ * Single octave of value noise using bilinear interpolation with smoothstep.
+ */
+const valueNoise = (x: number, z: number): number => {
+  const ix = Math.floor(x);
+  const iz = Math.floor(z);
+  const fx = smoothstep(x - ix);
+  const fz = smoothstep(z - iz);
+
+  const n00 = hashNoise(ix, iz);
+  const n10 = hashNoise(ix + 1, iz);
+  const n01 = hashNoise(ix, iz + 1);
+  const n11 = hashNoise(ix + 1, iz + 1);
+
+  const nx0 = n00 + (n10 - n00) * fx;
+  const nx1 = n01 + (n11 - n01) * fx;
+
+  return nx0 + (nx1 - nx0) * fz;
+};
+
+/**
+ * Multi-octave value noise terrain height at a world position.
+ * Returns height in meters (gentle hills, base amplitude ~8m).
+ */
+export const terrainHeight = (worldX: number, worldZ: number): number => {
+  const octaves = 3;
+  const baseAmplitude = 8;
+  const baseFrequency = 0.002;
+
+  let amplitude = baseAmplitude;
+  let frequency = baseFrequency;
+  let height = 0;
+
+  for (let i = 0; i < octaves; i += 1) {
+    height += (valueNoise(worldX * frequency, worldZ * frequency) - 0.5) * 2 * amplitude;
+    amplitude *= 0.45;
+    frequency *= 2.1;
+  }
+
+  return height;
+};
+
+/**
+ * Hash for vertex color variation (different seed from height noise).
+ */
+const colorHash = (x: number, z: number): number =>
+  (((x * 12345689) ^ (z * 98765431) ^ 77777) >>> 0) % 65536 / 65536;
+
 const createTerrainMaterial = (scene: Scene): StandardMaterial => {
   const material = new StandardMaterial('terrainMaterial', scene);
-  material.diffuseColor = new Color3(0.85, 0.79, 0.62);
-  material.specularColor = new Color3(0.06, 0.05, 0.04);
-  material.emissiveColor = new Color3(0.05, 0.045, 0.035);
-
-  const gridTexture = new DynamicTexture('terrainGrid', 512, scene, false);
-  const ctx = gridTexture.getContext();
-  ctx.fillStyle = '#d9c98b';
-  ctx.fillRect(0, 0, 512, 512);
-  ctx.strokeStyle = '#b79f63';
-  ctx.lineWidth = 2;
-
-  for (let i = 0; i < 28; i += 1) {
-    const x = Math.floor(Math.random() * 480);
-    const y = Math.floor(Math.random() * 480);
-    const w = 24 + Math.floor(Math.random() * 80);
-    const h = 24 + Math.floor(Math.random() * 80);
-    ctx.fillStyle = '#7fa86a';
-    ctx.fillRect(x, y, w, h);
-  }
-
-  for (let i = 0; i <= 512; i += 64) {
-    ctx.beginPath();
-    ctx.moveTo(i, 0);
-    ctx.lineTo(i, 512);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, i);
-    ctx.lineTo(512, i);
-    ctx.stroke();
-  }
-
-  gridTexture.update();
-  material.diffuseTexture = gridTexture;
-  (material.diffuseTexture as Texture).uScale = WORLD_CONFIG.render.textureScale;
-  (material.diffuseTexture as Texture).vScale = WORLD_CONFIG.render.textureScale;
+  // White diffuse so vertex colors show through unmodified
+  material.diffuseColor = new Color3(1, 1, 1);
+  material.specularColor = new Color3(0.04, 0.04, 0.03);
+  material.emissiveColor = new Color3(0, 0, 0);
   return material;
 };
 
@@ -182,6 +210,52 @@ export class TerrainChunkManager {
         this.scene
       );
       mesh.position = new Vector3(center.x, 0, center.z);
+
+      // Vertex displacement for hills
+      const positions = mesh.getVerticesData(VertexBuffer.PositionKind);
+      if (positions) {
+        const vertexCount = positions.length / 3;
+        const vertexColors = new Float32Array(vertexCount * 4);
+
+        for (let i = 0; i < vertexCount; i += 1) {
+          const pi = i * 3;
+          const ci = i * 4;
+
+          // Compute world position from local vertex + mesh center
+          const worldX = positions[pi] + center.x;
+          const worldZ = positions[pi + 2] + center.z;
+
+          // Displace vertex height
+          positions[pi + 1] = terrainHeight(worldX, worldZ);
+
+          // Per-vertex color variation for desert appearance
+          const hashX = Math.floor(worldX * 0.5);
+          const hashZ = Math.floor(worldZ * 0.5);
+          const noise1 = colorHash(hashX, hashZ);
+          const noise2 = colorHash(hashX + 7, hashZ + 13);
+          const noise3 = colorHash(hashX + 31, hashZ + 53);
+
+          // Check for rocky patch
+          const rockyCheck = colorHash(hashX + 97, hashZ + 61);
+          if (rockyCheck < 0.05) {
+            // Rocky/darker patch
+            vertexColors[ci] = 0.59 + (noise1 - 0.5) * 0.04;
+            vertexColors[ci + 1] = 0.51 + (noise2 - 0.5) * 0.04;
+            vertexColors[ci + 2] = 0.39 + (noise3 - 0.5) * 0.04;
+          } else {
+            // Sandy base with noise variation
+            vertexColors[ci] = 0.82 + (noise1 - 0.5) * 0.12;
+            vertexColors[ci + 1] = 0.72 + (noise2 - 0.5) * 0.12;
+            vertexColors[ci + 2] = 0.55 + (noise3 - 0.5) * 0.12;
+          }
+          vertexColors[ci + 3] = 1.0;
+        }
+
+        mesh.updateVerticesData(VertexBuffer.PositionKind, positions);
+        mesh.setVerticesData(VertexBuffer.ColorKind, vertexColors);
+        mesh.createNormals(true);
+      }
+
       mesh.receiveShadows = true;
       mesh.material = this.material;
       mesh.isPickable = false;
