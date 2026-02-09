@@ -1,16 +1,18 @@
 import type { HelicopterFlightTuning } from '../ecs/components/helicopter';
 
+// Arcade-smooth tuning: low torques + high damping + aggressive leveling = forgiving flight.
+// Designed for "Battlefield helicopter" feel: fun first, sim second.
 export const DEFAULT_HELICOPTER_FLIGHT: HelicopterFlightTuning = {
   density: 200,
-  maxLiftForce: 200,
-  maxPitchTorque: 18,
-  maxRollTorque: 16,
-  maxYawTorque: 16,
-  linearDamping: 0.2,
-  angularDamping: 1.4,
-  stabilityAngularDamping: 0.85,
-  stabilityLevelingTorqueScale: 0.7,
-  stabilityLevelingDeadzone: 0.02,
+  maxLiftForce: 240,
+  maxPitchTorque: 10,
+  maxRollTorque: 8,
+  maxYawTorque: 10,
+  linearDamping: 0.6,
+  angularDamping: 3.0,
+  stabilityAngularDamping: 0.7,
+  stabilityLevelingTorqueScale: 1.2,
+  stabilityLevelingDeadzone: 0.01,
   nominalRotorRpm: 1,
   minRotorRpm: 0.6,
   maxRotorRpm: 1.05,
