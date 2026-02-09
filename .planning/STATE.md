@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 ## Current Position
 
 Phase: 0 of 4 (Fix the Basics)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-09 -- Completed 00-02-PLAN.md (arcade flight tuning + auto-hover)
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-02-09 -- Completed 00-03-PLAN.md (desert terrain + biome props)
 
-Progress: [#.........] ~7%
+Progress: [##........] ~13%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 2 min
-- Total execution time: 2 min
+- Total plans completed: 2
+- Average duration: 2.5 min
+- Total execution time: 5 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 00-fix-the-basics | 1/3 | 2 min | 2 min |
+| 00-fix-the-basics | 2/3 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 00-02 (2 min)
-- Trend: -
+- Last 5 plans: 00-02 (2 min), 00-03 (3 min)
+- Trend: stable
 
 *Updated after each plan completion*
 
@@ -48,6 +48,9 @@ Recent decisions affecting current work:
 - [00-02]: Auto-hover is always active when collective released (not behind toggle) -- forgiving flight by default.
 - [00-02]: Lateral drift dampening remains behind X key toggle as separate hover behavior.
 - [00-02]: Gravity compensation uses mass * 9.81 with velocity damping factor of mass * 4.0.
+- [00-03]: Per-vertex colors instead of tiled DynamicTexture -- avoids tiling artifacts entirely.
+- [00-03]: terrainHeight() with 8m amplitude and 3 octaves -- visible hills but flat physics colliders still usable.
+- [00-03]: Desert biome at 70% with industrial (15%) and farmland (15%) for variety.
 
 ### Pending Todos
 
@@ -57,9 +60,10 @@ None yet.
 
 - [Research]: Audio system design (rotor sound, RWR tones) may need experimentation during Phase 3 planning.
 - [Research]: Game currently uses window.location.reload() for restart -- Phase 1 must replace this with proper teardown.
+- [00-03]: Physics terrain colliders are still flat planes -- terrainHeight() is exported for future height-conforming colliders if needed.
 
 ## Session Continuity
 
 Last session: 2026-02-09
-Stopped at: Completed 00-02-PLAN.md (arcade flight tuning + auto-hover)
+Stopped at: Completed 00-03-PLAN.md (desert terrain + biome props)
 Resume file: None
