@@ -407,26 +407,31 @@ const applyCollectiveDownBrake = (heli: PlayerHelicopter): void => {
 };
 
 const applyHoverAssist = (heli: PlayerHelicopter): void => {
+  const rawCollective = heli.control.collective.raw;
+
+  // Auto-hover: when collective is released (no R/F key), hold altitude via gravity compensation
+  // + vertical velocity damping. This is always active regardless of hover toggle.
+  if (rawCollective === 0) {
+    const mass = heli.body.mass();
+    const gravityForce = mass * 9.81;
+    const velocityY = heli.body.linvel().y;
+    const dampingFactor = mass * 4.0;
+    const hoverForce = gravityForce + -velocityY * dampingFactor;
+    heli.body.addForce({ x: 0, y: hoverForce, z: 0 }, true);
+  }
+
+  // Lateral drift dampening is controlled by the X key hover toggle
   if (!heli.assists.hover) {
     return;
   }
 
-  // Hover assist activates when collective is in "hover range"
-  const collectiveInput = heli.control.collective.filtered;
-  const isInHoverRange = collectiveInput >= 0.3 && collectiveInput <= 0.7;
-
-  if (!isInHoverRange) {
-    return;
-  }
-
   const linearVelocity = heli.body.linvel();
-  const lateralDampingFactor = 0.88; // Stronger damping for lateral drift
+  const lateralDampingFactor = 0.88;
 
-  // Dampen lateral (X/Z) velocity to reduce drift
   heli.body.setLinvel(
     {
       x: linearVelocity.x * lateralDampingFactor,
-      y: linearVelocity.y, // Don't dampen vertical velocity
+      y: linearVelocity.y,
       z: linearVelocity.z * lateralDampingFactor
     },
     true
