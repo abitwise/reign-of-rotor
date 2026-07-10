@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 Phase: 1 of 4 (Mission Flow Foundation)
 Plan: 0 of TBD in current phase
 Status: Ready to plan
-Last activity: 2026-02-09 -- Phase 0 complete (3/3 plans, verified)
+Last activity: 2026-07-10 -- Completed quick task 260710-jdl: Audit the helicopter controls and visual glitches and fix them.
 
 Progress: [##........] 20%
 
@@ -64,6 +64,12 @@ None yet.
 - [Research]: Audio system design (rotor sound, RWR tones) may need experimentation during Phase 3 planning.
 - [Research]: Game currently uses window.location.reload() for restart -- Phase 1 must replace this with proper teardown.
 - [00-03]: Physics terrain colliders are still flat planes -- terrainHeight() is exported for future height-conforming colliders if needed.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260710-jdl | Audit the helicopter controls and visual glitches and fix them. | 2026-07-10 | 961c6e9 | [260710-jdl-audit-the-helicopter-controls-and-visual](./quick/260710-jdl-audit-the-helicopter-controls-and-visual/) |
 
 ## Session Continuity
 
