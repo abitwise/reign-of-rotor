@@ -24,6 +24,10 @@ export type PlayerHelicopter = {
   altimeter: AltimeterState;
   power: HelicopterPowerState;
   damage: PlayerDamageState;
+  // World gravity along Y captured at spawn. Auto-hover compensates exactly this
+  // (so in a zero-gravity world the compensation is zero and collective is the
+  // only vertical force), keeping the hover baseline physically consistent.
+  gravityY: number;
 };
 
 export type HelicopterPowerState = {
@@ -85,7 +89,8 @@ export const spawnPlayerHelicopter = (
     control,
     altimeter: createAltimeterState(),
     power: createPowerState(flight),
-    damage: options.damageState ?? createPlayerDamageState(DEFAULT_DIFFICULTY_PRESET)
+    damage: options.damageState ?? createPlayerDamageState(DEFAULT_DIFFICULTY_PRESET),
+    gravityY: physics.world.gravity.y
   };
 };
 
@@ -115,6 +120,15 @@ export const createHelicopterFlightSystem = (heli: PlayerHelicopter, gameState: 
 
     // Keep the body awake so gravity and control forces continue to apply.
     heli.body.wakeUp();
+
+    // Rapier's addForce/addTorque accumulate and PERSIST across steps until reset.
+    // The flight model is per-frame (each system re-derives the force/torque it wants
+    // this tick), so clear the accumulators first. Without this, hover compensation and
+    // control torques compound every frame -- the helicopter balloons upward and
+    // rotation authority becomes erratic. resetForces/resetTorques only clear the user
+    // accumulators; gravity is applied separately and is unaffected.
+    heli.body.resetForces(false);
+    heli.body.resetTorques(false);
 
     updatePowerModel(heli, context.fixedDeltaSeconds);
     applyRotorForces(heli);
@@ -408,17 +422,27 @@ const applyCollectiveDownBrake = (heli: PlayerHelicopter): void => {
 
 const applyHoverAssist = (heli: PlayerHelicopter): void => {
   const rawCollective = heli.control.collective.raw;
+  const mass = heli.body.mass();
 
-  // Auto-hover: when collective is released (no R/F key), hold altitude via gravity compensation
-  // + vertical velocity damping. This is always active regardless of hover toggle.
+  // Gravity-compensating baseline: ALWAYS cancel the body's weight so collective
+  // commands climb/descend ABOUT the hover point instead of fighting full gravity.
+  // Without this, pressing collective replaced the only up-force with ~maxLiftForce,
+  // which is a tiny fraction of weight -- so the aircraft sank the instant the player
+  // commanded a climb. Compensation tracks the actual world gravity captured at spawn,
+  // so a zero-gravity world contributes zero baseline (collective is then the only
+  // vertical force, preserving the zero-gravity regression tests).
+  let hoverForce = -mass * heli.gravityY;
+
+  // Auto-hover: when collective is released (no R/F key), additionally damp vertical
+  // velocity so the aircraft holds altitude rather than drifting. Active regardless of
+  // the X hover toggle.
   if (rawCollective === 0) {
-    const mass = heli.body.mass();
-    const gravityForce = mass * 9.81;
     const velocityY = heli.body.linvel().y;
     const dampingFactor = mass * 4.0;
-    const hoverForce = gravityForce + -velocityY * dampingFactor;
-    heli.body.addForce({ x: 0, y: hoverForce, z: 0 }, true);
+    hoverForce += -velocityY * dampingFactor;
   }
+
+  heli.body.addForce({ x: 0, y: hoverForce, z: 0 }, true);
 
   // Lateral drift dampening is controlled by the X key hover toggle
   if (!heli.assists.hover) {

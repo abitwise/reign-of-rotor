@@ -244,6 +244,124 @@ describe('helicopter flight system', () => {
   });
 });
 
+describe('helicopter flight under real gravity', () => {
+  let rapier: Awaited<ReturnType<typeof loadRapier>>;
+  const yawRateTuning = { maxRateRad: 1.6, damping: 0.8 };
+
+  const stepContext: FixedStepContext = {
+    fixedDeltaMs: 16,
+    fixedDeltaSeconds: 1 / 60,
+    stepIndex: 0,
+    elapsedMs: 0
+  };
+
+  beforeAll(async () => {
+    rapier = await loadRapier();
+  });
+
+  // Under a zero-gravity world the weak-lift bug never surfaced because there was
+  // no weight to out-lift. These tests run in the DEFAULT gravity world so climb,
+  // descent, altitude-hold and maneuver authority are exercised realistically.
+  const spawnInGravity = (
+    controlState: ReturnType<typeof createControlState>
+  ) => {
+    const physics = createPhysicsWorld(rapier);
+    const input = createPlayerInputState();
+    const heli = spawnPlayerHelicopter(physics, DEFAULT_HELICOPTER_FLIGHT, input, controlState, {
+      yawRateTuning
+    });
+    const gameState: GameState = { isPaused: false, difficultyPreset: DEFAULT_DIFFICULTY_PRESET };
+    const system = createHelicopterFlightSystem(heli, gameState);
+    return { physics, heli, system };
+  };
+
+  it('climbs when collective-up is held under gravity', () => {
+    const controlState = createControlState();
+    controlState.collective.raw = 1;
+    controlState.collective.filtered = 1;
+
+    const { physics, heli, system } = spawnInGravity(controlState);
+    const startY = heli.body.translation().y;
+
+    for (let i = 0; i < 30; i += 1) {
+      system.step(stepContext);
+      physics.step(stepContext.fixedDeltaSeconds);
+    }
+
+    // Aircraft must gain altitude and hold a positive vertical velocity, not sink.
+    expect(heli.body.linvel().y).toBeGreaterThan(0.3);
+    expect(heli.body.translation().y).toBeGreaterThan(startY);
+  });
+
+  it('descends when collective-down is held under gravity', () => {
+    const controlState = createControlState();
+    controlState.collective.raw = -1;
+    controlState.collective.filtered = -1;
+
+    const { physics, heli, system } = spawnInGravity(controlState);
+    const startY = heli.body.translation().y;
+
+    for (let i = 0; i < 30; i += 1) {
+      system.step(stepContext);
+      physics.step(stepContext.fixedDeltaSeconds);
+    }
+
+    expect(heli.body.linvel().y).toBeLessThan(-0.3);
+    expect(heli.body.translation().y).toBeLessThan(startY);
+  });
+
+  it('holds altitude when collective is neutral (auto-hover)', () => {
+    const controlState = createControlState();
+    controlState.collective.raw = 0;
+    controlState.collective.filtered = 0;
+
+    const { physics, heli, system } = spawnInGravity(controlState);
+    const startY = heli.body.translation().y;
+
+    for (let i = 0; i < 90; i += 1) {
+      system.step(stepContext);
+      physics.step(stepContext.fixedDeltaSeconds);
+    }
+
+    // Neither sinking hard nor ballooning: vertical velocity stays near zero and the
+    // aircraft stays close to where it started.
+    expect(Math.abs(heli.body.linvel().y)).toBeLessThan(0.5);
+    expect(Math.abs(heli.body.translation().y - startY)).toBeLessThan(2);
+  });
+
+  it('produces usable pitch authority from sustained cyclic input under gravity', () => {
+    const controlState = createControlState();
+    controlState.cyclicY.raw = 1;
+    controlState.cyclicY.filtered = 1;
+
+    const { physics, heli, system } = spawnInGravity(controlState);
+
+    for (let i = 0; i < 20; i += 1) {
+      system.step(stepContext);
+      physics.step(stepContext.fixedDeltaSeconds);
+    }
+
+    // Sustained pitch input must build a meaningful pitch rate within a few ticks,
+    // not be crushed to ~zero by weak torque + heavy angular damping.
+    expect(Math.abs(heli.body.angvel().x)).toBeGreaterThan(0.05);
+  });
+
+  it('produces usable roll authority from sustained cyclic input under gravity', () => {
+    const controlState = createControlState();
+    controlState.cyclicX.raw = 1;
+    controlState.cyclicX.filtered = 1;
+
+    const { physics, heli, system } = spawnInGravity(controlState);
+
+    for (let i = 0; i < 20; i += 1) {
+      system.step(stepContext);
+      physics.step(stepContext.fixedDeltaSeconds);
+    }
+
+    expect(Math.abs(heli.body.angvel().z)).toBeGreaterThan(0.05);
+  });
+});
+
 describe('stability assist system', () => {
   let rapier: Awaited<ReturnType<typeof loadRapier>>;
   const yawRateTuning = { maxRateRad: 1.6, damping: 0.8 };
