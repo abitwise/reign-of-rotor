@@ -36,6 +36,12 @@ export type WorldConfig = {
   spawnZones: SpawnZone[];
 };
 
+/**
+ * Camera far clip distance in meters. Mission enemy spawns must fall inside
+ * this radius or they are clipped and never rendered.
+ */
+export const CAMERA_FAR_PLANE = 8000;
+
 export const WORLD_CONFIG: WorldConfig = {
   bounds: {
     minX: -50000,

@@ -9,6 +9,7 @@ import {
 } from '@babylonjs/core';
 import type { AbstractMesh } from '@babylonjs/core';
 import type { Nullable } from '@babylonjs/core/types';
+import { CAMERA_FAR_PLANE } from '../content/world';
 import { MeshBindingSystem, type TransformProvider } from './meshBindingSystem';
 import { RenderAssetLoader } from './assets/assetLoader';
 import { loadAssetManifest } from './assets/manifest';
@@ -76,7 +77,7 @@ export const bootstrapRenderer = async ({
   camera.inputs.clear();
   camera.rotationQuaternion = new Quaternion();
   camera.minZ = 0.05;
-  camera.maxZ = 5000;
+  camera.maxZ = CAMERA_FAR_PLANE;
   camera.fov = 0.94;
   camera.inertia = 0;
   camera.checkCollisions = false;

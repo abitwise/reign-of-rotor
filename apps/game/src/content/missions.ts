@@ -1,4 +1,5 @@
 import type { EnemySpawn, VehicleConfig } from './enemies';
+import { terrainHeight } from './terrainHeight';
 import { WORLD_CONFIG, clampToWorldBounds, type WorldConfig } from './world';
 
 export type MissionTemplateId = 'convoy-strike' | 'radar-sweep' | 'escort';
@@ -81,8 +82,10 @@ export type MissionPlan = {
 };
 
 export const MISSION_DIRECTOR_CONFIG: MissionDirectorConfig = {
-  minDistanceFromPlayer: 6500,
-  maxDistanceFromPlayer: 14000,
+  // Keeps the approach flight while staying inside CAMERA_FAR_PLANE once the
+  // largest in-template enemy offset (~500m) is added.
+  minDistanceFromPlayer: 2000,
+  maxDistanceFromPlayer: 4000,
   rotationVarianceDegrees: 360,
   convoySpacing: 18,
   convoySpeed: 12
@@ -330,7 +333,7 @@ const buildConvoyPlan = (
 ): ConvoyPlan => ({
   route: convoy.routeOffsets.map((offset) => {
     const rotated = rotateOffset(origin, offset, rotation);
-    return { x: rotated.x, y: 0, z: rotated.z };
+    return { x: rotated.x, y: terrainHeight(rotated.x, rotated.z), z: rotated.z };
   }),
   unitCount: convoy.unitCount,
   spacing: config.convoySpacing,
@@ -355,7 +358,8 @@ const toWorldPosition = (
   const rotated = rotateOffset(origin, { x: offset.x, z: offset.z }, rotation);
   return {
     x: rotated.x,
-    y: offset.y,
+    // offset.y is a height above ground, not an absolute world Y.
+    y: terrainHeight(rotated.x, rotated.z) + offset.y,
     z: rotated.z
   };
 };
